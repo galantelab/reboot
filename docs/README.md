@@ -184,7 +184,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
     
 ## Outputs
  
-   1. The regression option
+1. Regression option
 
    Generated outputs comprise 1 text file and 2 plots. The text file is in the follwing format:
 	
@@ -197,8 +197,8 @@ Reboot is built in R scripts. In order to work properly, the following packages 
    The plots in the output are a histogram with the distribution of the coefficients and a lollipop plot with the most relevant coefficients
 
 
-2. The survival option
+2. Survival option
 
 
-3. The complete option
+3. Complete option
 
