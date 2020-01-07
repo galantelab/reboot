@@ -13,12 +13,12 @@
 Reboot is a modular tool, comprising two main functionalities: regression and survival.
 It was built to provide the freedom of choice for regression and survival analysis; only regression analysis; or only survival analysis
 
-![Reboots worflow. First module runs a regression analysis. Second module runs survival analysis based on a generated signature](reboots_flux.png)
+![Reboot worflow. First module runs a regression analysis. Second module runs survival analysis based on a generated signature](reboots_flux.png)
 
 ## Installation
 Reboot can be obtained from github and run locally, this method requires all dependencies to be installed previously:
 
-```git clone git@github.com:galantelab/Reboot.git```
+```git clone git@github.com:galantelab/reboot.git```
 
 Reboot is also available in a docker image, ready to be used, contemplating all dependecies (this option is indicated):
 
@@ -26,7 +26,7 @@ Reboot is also available in a docker image, ready to be used, contemplating all 
 
 ## Dependencies
 
-Reboots is built in R scripts. In order to work properly, the following packages are necessary (provided by docker environment):
+Reboot is built in R scripts. In order to work properly, the following packages are necessary (provided by docker environment):
 
 * survival
 * survminer
@@ -71,7 +71,7 @@ Reboots is built in R scripts. In order to work properly, the following packages
 
    All sub-options are provided by: 
 
-   ```Rscript reboots.R regression -h```
+   ```Rscript reboot.R regression -h```
 
 
    If you are using docker container:
@@ -118,7 +118,7 @@ Reboots is built in R scripts. In order to work properly, the following packages
 
    All sub-options are provided by: (give a more detailed table after command)
 
-   ```Rscript reboots.R complete -h```
+   ```Rscript reboot.R complete -h```
 
    If you are using docker container:
 
@@ -174,7 +174,7 @@ Reboots is built in R scripts. In order to work properly, the following packages
    This command returns 2 tsv files, mentioned above, called expression.tsv and clinical.tsv
    The composition of expression dataset comprises clinical variables: OS (survival status) and OS.time (follow up time) and 50 random picked gene expression (FPKM).
 
-   Finally, reboots can be run in the complete mode:
+   Finally, reboot can be run in the complete mode:
 
    ```Rscript reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R```
 
