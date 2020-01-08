@@ -80,14 +80,14 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    In summary, options are: 
 
-   | short flag | full flag | Description|
-   | ------ | ------ | ------ |
-   | -I<br> | - -filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
-   | -O<br> | - -outprefix |  Output file prefix. Default: reboot |
-   | -B<br> | - -bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
-   | -G<br> | - -groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
-   | -P<br> | - -percentagefilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
-   | -V<br> | - -variancefilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
+   | short option | full option | Description|
+   | ----------- | ----------- | ----------- |
+   | -I | - -filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
+   | -O | - -outprefix |  Output file prefix. Default: reboot |
+   | -B | - -bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
+   | -G | - -groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
+   | -P | - -percentagefilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
+   | -V | - -variancefilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
 
    <br>	
 
@@ -105,6 +105,8 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    In summary, options are:
 
+   | short option | full option | Description|
+   | ----------- | ----------- | ----------- |
    | -I | --filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
    | -O | --outprefix |  Output file prefix. Default: reboot |
    | -M | --multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
@@ -126,6 +128,8 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    In summary, options are:
 
+   | short option | full option | Description|
+   | ----------- | ----------- | ----------- |
    | -I | --filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
    | -O | --outprefix |  Output file prefix. Default: reboot |
    | -B | --bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
