@@ -30,7 +30,6 @@ tmp_clin <- cbind(barcode,status,follow_up) %>%
 tmp_clin$barcode <- as.character(tmp_clin$barcode)
 
 ###Integrating expression and clinical data###
-
 pre_inp <- left_join(expression,tmp_clin, by="barcode") %>%
         drop_na() %>%
         filter(status!="Not Reported")
@@ -41,18 +40,33 @@ aux1 <- pre_inp[,c(1,len-1,len)]
 random <- sample.int((len-2),50)        #Modify the number of genes as you wish (50).
 aux2 <- pre_inp[,random]
 input1 <- cbind(aux1,aux2)
-colnames(input1) <- c("sample", "OS", "OS.time", colnames(input[4:(dim(input1)[2])]))
+colnames(input1) <- c("sample", "OS", "OS.time", colnames(input1[4:(dim(input1)[2])]))
 input1 <- input1 %>%
         mutate(OS = if_else(OS=="Alive",1,0))
 
+# EXPRESSION DATA TABLE!
 write.table(input1, "expression.tsv", quote=F, col.names=T, row.names=F)
-
 
 #############################################
 
 ###Building clinical file###
 
 ##Retrieving therapy info##
+query <- GDCquery(project = "TCGA-GBM", data.category = "Clinical", file.type = "xml")
+GDCdownload(query = query, method = "api")
+clinical <- GDCprepare_clinic(query = query, clinical.info = "patient")
+
+#Get and combine IDH and MGMT status
+barcode <- exp_data$patient
+barcode <- gsub("-","\\.",barcode)
+IDH.status <- exp_data$paper_IDH.status
+MGMT.status <- exp_data$paper_MGMT.promoter.status
+first_clin <- cbind(barcode, IDH.status, MGMT.status) %>%
+		as.data.frame()
+
+first_clin <- first_clin %>%
+		mutate(IDH.status = if_else(IDH.status=="1", "MUT", "WT")) %>%
+		mutate(MGMT.status = if_else(MGMT.status=="1", "Methylated", "Unmethylated"))
 
 #Edit and filter Drug info
 clinical.drug <- GDCprepare_clinic(query = query, clinical.info = "drug")
@@ -92,8 +106,26 @@ for (col in colnames(new_clinical)){
   new_clinical[[col]] <- droplevels(as.factor(new_clinical[[col]]))
 }
 
+#Merge all clinical sub data frames
 merge_therapies <- merge(tmp_rad, final_drug, by = "barcode", all = T)
 outclin <- merge(new_clinical, merge_therapies, by = "barcode", all = T)
+finalclin <- merge(outclin, first_clin, by = "barcode", all = T)
 
-write.table(x = outclin, file = "clinical.tsv", col.names = T, row.names = F,
+#Get unique barcode IDs for expressin existance check
+barfinalclin <- !(duplicated(finalclin$barcode))
+uniqindex <- which(barfinalclin)
+finalclin <- finalclin[uniqindex,]
+
+
+#Get patients only if there is expression data
+input1$sample <- substring(text = input1$sample, first=0, last=12)
+exp_patients <- gsub("-","\\.", as.character(input1$sample))
+exp_patients <- as.vector(unique(exp_patients))
+finalclin <- finalclin[finalclin$barcode %in% exp_patients,]
+
+for (col in colnames(finalclin)){
+  finalclin[[col]] <- toupper(finalclin[[col]])
+}
+
+write.table(x = finalclin, file = "clinical.tsv", col.names = T, row.names = F,
             quote = F, sep = "\t", eol = "\n", na = "NA", dec = ".")
