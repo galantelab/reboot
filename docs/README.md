@@ -86,8 +86,8 @@ Reboot is built in R scripts. In order to work properly, the following packages 
    | -O | - -outprefix |  Output file prefix. Default: reboot |
    | -B | - -bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
    | -G | - -groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
-   | -P | - -percentagefilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
-   | -V | - -variancefilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
+   | -P | - -pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
+   | -V | - -varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
 
    <br>	
 
@@ -107,12 +107,12 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    | short option | full option | Description|
    | ----------- | ----------- | ----------- |
-   | -I | --filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
-   | -O | --outprefix |  Output file prefix. Default: reboot |
-   | -M | --multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
-   | -C | --clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
-   | -R | --roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
-   | -S | --signature | Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients |
+   | -I | - -filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
+   | -O | - -outprefix |  Output file prefix. Default: reboot |
+   | -M | - -multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
+   | -C | - -clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
+   | -R | - -roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
+   | -S | - -signature | Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients |
 
    <br>
 
@@ -130,15 +130,15 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    | short option | full option | Description|
    | ----------- | ----------- | ----------- |
-   | -I | --filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
-   | -O | --outprefix |  Output file prefix. Default: reboot |
-   | -B | --bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
-   | -G | --groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
-   | -P | --percentagefilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
-   | -V | --variancefilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
-   | -M | --multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
-   | -C | --clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
-   | -R | --roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
+   | -I | - -filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
+   | -O | - -outprefix |  Output file prefix. Default: reboot |
+   | -B | - -bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
+   | -G | - -groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
+   | -P | - -percentagefilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
+   | -V | - -variancefilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
+   | -M | - -multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
+   | -C | - -clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
+   | -R | - -roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
 
    <br>
 
@@ -202,6 +202,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
 
 2. Survival option
+
 
 
 3. Complete option

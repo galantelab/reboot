@@ -10,6 +10,7 @@ query <- GDCquery(project="TCGA-GBM",                   #project-tissue option
         data.type="Gene Expression Quantification",     #type
         experimental.strategy="RNA-Seq",                #experimental strategy
         workflow.type="HTSeq - FPKM")                   #Workflow, given abundance units
+
 GDCdownload(query, method = "api")                      #directory structure: "path"/GDCdata/TCGA-GBM/harmonized/Transcriptome_Profiling/Gen$
 
 ####Data loading and formatting###
@@ -111,7 +112,7 @@ merge_therapies <- merge(tmp_rad, final_drug, by = "barcode", all = T)
 outclin <- merge(new_clinical, merge_therapies, by = "barcode", all = T)
 finalclin <- merge(outclin, first_clin, by = "barcode", all = T)
 
-#Get unique barcode IDs for expressin existance check
+#Get unique barcode IDs for expressin existence check
 barfinalclin <- !(duplicated(finalclin$barcode))
 uniqindex <- which(barfinalclin)
 finalclin <- finalclin[uniqindex,]
