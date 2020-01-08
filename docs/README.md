@@ -81,7 +81,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
    In summary, options are: 
 
    | short option | full option | Description|
-   | ----------- | ----------------------- | ----------- |
+   | ----------------------- | ----------------------------- | ----------------------- |
    | -I | - -filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
    | -O | - -outprefix |  Output file prefix. Default: reboot |
    | -B | - -bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
@@ -106,7 +106,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
    In summary, options are:
 
    | short option | full option | Description|
-   | ------------ | ----------------------- | ----------- |
+   | ------------------------ | ----------------------------- | ----------------------- |
    | -I | - -filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
    | -O | - -outprefix |  Output file prefix. Default: reboot |
    | -M | - -multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
@@ -129,7 +129,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
    In summary, options are:
 
    | short option | full option | Description|
-   | ----------- | ----------------------- | ----------- |
+   | ----------------------- | ----------------------------- | ----------------------- |
    | -I | - -filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
    | -O | - -outprefix |  Output file prefix. Default: reboot |
    | -B | - -bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
