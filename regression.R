@@ -218,14 +218,19 @@ bootstrapfun <- function(full_data, booty, nel , out, pf){
 	
 ######Variance filter######
 
-varfun <- function(male_data,var) {
+varfun <- function(male_data, var, file) {
   maxes <- matrix(apply(male_data[,3:ncol(male_data)],2,max), nrow=1)
+  if (0 %in% maxes){
+	cat("Columns with only 0s found in ", file, ". Remove such columns and try again.", "\n")
+	q(status=0)
+  }
   dividendo <- bind_rows(replicate(nrow(male_data), as.data.frame(maxes), simplify=F))
   divisor <- male_data[,3:ncol(male_data)]
   normalized <- divisor/dividendo
   variances <- apply(normalized,2,var)
   trash <- c()
   for (i in (1:length(variances))) {
+    variances[i]
     if (variances[i] < var){
       trash <- c(trash,names(variances[i]))
     }
@@ -346,7 +351,7 @@ numberfilter1(full_data, in_object$nel, in_object$out)
 
 #Perform variance filter#
 
-full_data <- varfun(full_data, in_object$var)
+full_data <- varfun(full_data, in_object$var, in_object$fname)
 
 #check file error 2#
 

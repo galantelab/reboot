@@ -38,8 +38,22 @@ pre_inp <- left_join(expression,tmp_clin, by="barcode") %>%
 #Formatting and tossing genes#
 len <- length(colnames(pre_inp))
 aux1 <- pre_inp[,c(1,len-1,len)]
+
+#Ensure there are no columns with only 0
+include_cols <- c()
+for (col in 2:(ncol(pre_inp)-2))
+{
+  max_value <- max(pre_inp[[col]])
+  if (max_value != 0)
+  {
+    include_cols <- append(x = include_cols, values = col)
+  }
+}
+
+tmp_pre_inp <- pre_inp[,c(1,include_cols,(ncol(pre_inp)-1),ncol(pre_inp))]
+len <- length(colnames(tmp_pre_inp))
 random <- sample.int((len-2),50)        #Modify the number of genes as you wish (50).
-aux2 <- pre_inp[,random]
+aux2 <- tmp_pre_inp[,random]
 input1 <- cbind(aux1,aux2)
 colnames(input1) <- c("sample", "OS", "OS.time", colnames(input1[4:(dim(input1)[2])]))
 input1 <- input1 %>%
