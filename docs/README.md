@@ -18,7 +18,7 @@ It was built to provide the freedom of choice for regression and survival analys
 ## Installation
 Reboot can be obtained from github and run locally, this method requires all dependencies to be installed previously:
 
-```git clone git@github.com:galantelab/reboot.git```
+```git clone https://github.com/galantelab/reboot.git```
 
 Reboot is also available in a docker image, ready to be used, contemplating all dependecies (this option is indicated):
 
@@ -61,9 +61,11 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    In summary, options are:
 
-   | signature | generates signature through multivariate cox regression analys |
+
+   | regression | generates signature through multivariate cox regression analys |
    | survival | applies sgnature in survival analysis |
    | complete | generates and applies signature | 
+
  
    <br>
 
