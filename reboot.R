@@ -169,7 +169,7 @@ if (args$sub_name=="complete"){
 	}	
 	
 	system(paste(
-	"Rscript bootstrap.R",
+	"Rscript regression.R",
 	"-I", args$fname,
 	"-O", args$out,
 	"-B", args$booty,
