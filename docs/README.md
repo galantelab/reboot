@@ -1,6 +1,6 @@
 ## Outline
 
-1. Overview
+1. [create an anchor](Overview)
 2. Installation
 3. Dependencies
 4. Usage and options
@@ -8,7 +8,7 @@
 6. Toy example 
 7. Outputs
 
-[create an anchor](##Overview)
+##Overview
 
 Reboot is a modular tool, comprising two main functionalities: regression and survival.
 It was built to provide the freedom of choice for regression and survival analysis; only regression analysis; or only survival analysis
