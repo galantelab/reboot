@@ -228,7 +228,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
       | clin variable 2 | coefficient value | hazard.ratio value | log.rank.pvalue value | low.high.samples value | median.survival.low value | median.survival.low value | prognosis value|
       | ... | ... | ... | ... | ... | ... | ... | ... |
 
-      Plots returned for this mode are: a forest plot for all clinical variables considered, a Kaplan Meyer plot and a proportional hazard assumption plot metioned in the univariate mode. If the option --ROC is also selected then the split of the patients in better and worse prognosis is done based on a ROC curve, also provided. 
+      Plots returned for this mode are: a forest plot for all clinical variables considered, a Kaplan Meyer plot and a proportional hazard assumption plot metioned in the univariate mode. If the option --ROC is also selected then the split of the patients in high and low signature score is done based on a ROC curve, also provided. 
 
 3. Complete option
 
