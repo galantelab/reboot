@@ -132,10 +132,6 @@ finalclin <- finalclin %>%
   mutate(IDH.status = if_else(IDH.status=="1", "MUT", "WT")) %>%
   mutate(MGMT.status = if_else(MGMT.status=="1", "Methylated", "Unmethylated"))
 
-for (col in colnames(finalclin)){
-  finalclin[[col]] <- toupper(finalclin[[col]])
-}
-
 #Purge duplicated IDs from expression data
 input1$sample <- substring(text = input1$sample, first=0, last=12)
 input1$sample <- gsub("-","\\.", as.character(input1$sample))
@@ -161,6 +157,11 @@ for (col in 2:ncol(finalclin))
   }
 }
 finalclin <- finalclin[,keep_cols]
+colnames(finalclin) <- c("barcode", "gender", "age", "race", "ethnicity","chemotherapy","IDH.status","MGMT.status")
+
+for (col in 2:ncol(finalclin)){
+  finalclin[[col]] <- tolower(finalclin[[col]])
+}
 
 ##Exporting two tables: expression and clinical data##
 

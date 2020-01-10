@@ -8,7 +8,7 @@
 6. Toy example 
 7. Outputs
 
-## Overview
+[create an anchor](##Overview)
 
 Reboot is a modular tool, comprising two main functionalities: regression and survival.
 It was built to provide the freedom of choice for regression and survival analysis; only regression analysis; or only survival analysis
@@ -228,7 +228,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
       | clin variable 2 | coefficient value | hazard.ratio value | log.rank.pvalue value | low.high.samples value | median.survival.low value | median.survival.low value | prognosis value|
       | ... | ... | ... | ... | ... | ... | ... | ... |
 
-      Plots returned for this mode are: frequency plot for the bootstrap procedure, a forest plot for all clinical variables considered, the Kaplan Meyer plot and the proportionous hazard assumption plot metioned in the univariate mode.
+      Plots returned for this mode are: frequency plot for the bootstrap procedure, a forest plot for all clinical variables considered, a Kaplan Meyer plot and a proportionous hazard assumption plot metioned in the univariate mode.
 
    #### ROC curve
 
