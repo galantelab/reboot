@@ -39,7 +39,7 @@ pre_inp <- left_join(expression,tmp_clin, by="barcode") %>%
 len <- length(colnames(pre_inp))
 aux1 <- pre_inp[,c(1,len-1,len)]
 
-#Ensure there are no columns with only 0
+#Ensure there are no columns (genes) with only expression value equals to 0
 include_cols <- c()
 for (col in 2:(ncol(pre_inp)-2))
 {
@@ -57,16 +57,13 @@ aux2 <- tmp_pre_inp[,random]
 input1 <- cbind(aux1,aux2)
 colnames(input1) <- c("sample", "OS", "OS.time", colnames(input1[4:(dim(input1)[2])]))
 input1 <- input1 %>%
-        mutate(OS = if_else(OS=="Alive",1,0))
-
-# EXPRESSION DATA TABLE!
-write.table(input1, "expression.tsv", quote=F, col.names=T, row.names=F)
+        mutate(OS = if_else(OS=="Alive", 0, 1))
 
 #############################################
 
 ###Building clinical file###
 
-##Retrieving therapy info##
+##Retrieving general info##
 query <- GDCquery(project = "TCGA-GBM", data.category = "Clinical", file.type = "xml")
 GDCdownload(query = query, method = "api")
 clinical <- GDCprepare_clinic(query = query, clinical.info = "patient")
@@ -78,10 +75,6 @@ IDH.status <- exp_data$paper_IDH.status
 MGMT.status <- exp_data$paper_MGMT.promoter.status
 first_clin <- cbind(barcode, IDH.status, MGMT.status) %>%
 		as.data.frame()
-
-first_clin <- first_clin %>%
-		mutate(IDH.status = if_else(IDH.status=="1", "MUT", "WT")) %>%
-		mutate(MGMT.status = if_else(MGMT.status=="1", "Methylated", "Unmethylated"))
 
 #Edit and filter Drug info
 clinical.drug <- GDCprepare_clinic(query = query, clinical.info = "drug")
@@ -110,37 +103,70 @@ new_clinical <- clinical[,c("bcr_patient_barcode", "history_of_neoadjuvant_treat
 colnames(new_clinical) <- c("barcode", "history_of_neoadjuvant_treatment", "gender",
                             "age_at_initial_pathologic_diagnosis", "race_list", "ethnicity")
 
+#Ensure all variables are binary (2 categories only)
 new_clinical$barcode <- gsub("-","\\.", as.character(new_clinical$barcode))
 new_clinical[new_clinical == ""] <- NA
 age_median <- median(new_clinical$age_at_initial_pathologic_diagnosis, na.rm = T)
-new_clinical$age_at_initial_pathologic_diagnosis <- ifelse(new_clinical$age_at_initial_pathologic_diagnosis >= age_median, "High", "Low")
+new_clinical$age_at_initial_pathologic_diagnosis <- ifelse(new_clinical$age_at_initial_pathologic_diagnosis >= age_median, "HIGH", "LOW")
 new_clinical$race_list <- ifelse(is.na(new_clinical$race_list), NA,
-                                 ifelse(grepl(pattern = "white", x = new_clinical$race_list, ignore.case = T), "white", "no white"))
+                                 ifelse(grepl(pattern = "white", x = new_clinical$race_list, ignore.case = T), "WHITE", "NO WHITE"))
 
 for (col in colnames(new_clinical)){
   new_clinical[[col]] <- droplevels(as.factor(new_clinical[[col]]))
 }
 
-#Merge all clinical sub data frames
+#Merge all clinical tables
 merge_therapies <- merge(tmp_rad, final_drug, by = "barcode", all = T)
 outclin <- merge(new_clinical, merge_therapies, by = "barcode", all = T)
 finalclin <- merge(outclin, first_clin, by = "barcode", all = T)
 
-#Get unique barcode IDs for expressin existence check
-barfinalclin <- !(duplicated(finalclin$barcode))
+#Purge duplicated IDs from clinical data
+dupfor <- duplicated(finalclin$barcode)
+duprev <- duplicated(finalclin$barcode, fromLast=T)
+dup <- dupfor + duprev
+barfinalclin <- !(dup)
 uniqindex <- which(barfinalclin)
 finalclin <- finalclin[uniqindex,]
 
-
-#Get patients only if there is expression data
-input1$sample <- substring(text = input1$sample, first=0, last=12)
-exp_patients <- gsub("-","\\.", as.character(input1$sample))
-exp_patients <- as.vector(unique(exp_patients))
-finalclin <- finalclin[finalclin$barcode %in% exp_patients,]
+finalclin <- finalclin %>%
+  mutate(IDH.status = if_else(IDH.status=="1", "MUT", "WT")) %>%
+  mutate(MGMT.status = if_else(MGMT.status=="1", "Methylated", "Unmethylated"))
 
 for (col in colnames(finalclin)){
   finalclin[[col]] <- toupper(finalclin[[col]])
 }
 
+#Purge duplicated IDs from expression data
+input1$sample <- substring(text = input1$sample, first=0, last=12)
+input1$sample <- gsub("-","\\.", as.character(input1$sample))
+dupfor<-duplicated(input1$sample)
+duprev<-duplicated(input1$sample, fromLast=T)
+dup <- dupfor + duprev
+barfinalclin <- !(dup)
+uniqindex <- which(barfinalclin)
+input1 <- input1[uniqindex,]
+
+#Get patients from clinical data only if there is corresponding expression data
+exp_patients <- as.vector(unique(as.character(input1$sample)))
+finalclin <- finalclin[finalclin$barcode %in% exp_patients,]
+
+#Keep columns that have only 2 categories in clinical table
+keep_cols <- c(1)
+for (col in 2:ncol(finalclin))
+{
+  check <- nlevels(as_factor(finalclin[[col]]))
+  if (check == 2)
+  {
+    keep_cols <- append(x = keep_cols, values = col)
+  }
+}
+finalclin <- finalclin[,keep_cols]
+
+##Exporting two tables: expression and clinical data##
+
+# EXPRESSION DATA TABLE
+write.table(x = input1, file = "expression.tsv", quote = F, col.names = T, row.names = F)
+
+# CLINICAL DATA TABLE
 write.table(x = finalclin, file = "clinical.tsv", col.names = T, row.names = F,
             quote = F, sep = "\t", eol = "\n", na = "NA", dec = ".")
