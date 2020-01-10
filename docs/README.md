@@ -1,12 +1,12 @@
 ## Outline
 
-1. [Overview](## Overview)
-2. Installation
-3. Dependencies
-4. Usage and options
-5. Inputs
-6. Toy example 
-7. Outputs
+[1. Overview](##overview)
+[2. Installation](##installation)
+[3. Dependencies](##dependencies)
+[4. Usage and options](##usage-and-options)
+[5. Inputs](##inputs)
+[6. Toy example](##toy-example)
+[7. Outputs](##outputs)
 
 ## Overview
 
