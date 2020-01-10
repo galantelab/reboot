@@ -1,6 +1,6 @@
 ## Outline
 
-1. [create an anchor](Overview)
+1. [Overview](##Overview)
 2. Installation
 3. Dependencies
 4. Usage and options
