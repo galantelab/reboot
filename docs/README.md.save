@@ -192,7 +192,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
  
 1. Regression option
 
-   Generated outputs comprise one log file, a tsv containing relevance coefficients and 2 plots. The text file is in the following format:
+   Generated outputs comprise 1 text file and 2 plots. The text file is in the follwing format:
 	
    | Feature name | coefficient | 
    | --- | --- |
@@ -200,26 +200,12 @@ Reboot is built in R scripts. In order to work properly, the following packages 
    | Feature2 | coefficient2 |
    | ... | ... |
 
-   The plots in the output are a histogram with the distribution of the coefficients and a lollipop plot with the most relevant coefficients.
+   The plots in the output are a histogram with the distribution of the coefficients and a lollipop plot with the most relevant coefficients
 
 
 2. Survival option
 
-   Survival analysis may be done in multivariate or univariate mode.
-
-#### Univariate mode
-
-   If the analysis is performed in univariate mode, reboot returns a log and a lograng.txt file, containing the statistics of the signature.
-   Plots returned for this mode are proportionous hazard assumptions plot, containing a Schoenfeld test and a Kaplan Mayer plot.
-
-#### Multivariate mode
- 
-   If the analysis is performed in multivariate mode, reboot returns a multicox.txt file containing the statistics of the signature, besides the log file.
-   Plots returned for this mode are  a frequency plot for the bootstrap procedure, a forest plot for all clinical variables considered and the Kaplan Meyer plot and the proportionous hazard assumption plot metioned in the univariate mode.
-
-#### ROC curve
-
-   If option --ROC is selected, then the split of the patients in better and worse prognosis is done based on a ROC curve, also provided.
+   Survival analysis allows
 
 3. Complete option
 
