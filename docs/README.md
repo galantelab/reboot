@@ -207,19 +207,19 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    Survival analysis may be done in multivariate or univariate mode.
 
-#### Univariate mode
+   #### Univariate mode
 
-   If the analysis is performed in univariate mode, reboot returns a log and a lograng.txt file, containing the statistics of the signature.
-   Plots returned for this mode are proportionous hazard assumptions plot, containing a Schoenfeld test and a Kaplan Mayer plot.
+      If the analysis is performed in univariate mode, reboot returns a log and a lograng.txt file, containing the statistics of the signature.
+      Plots returned for this mode are proportionous hazard assumptions plot, containing a Schoenfeld test and a Kaplan Mayer plot.
 
-#### Multivariate mode
+   #### Multivariate mode
  
-   If the analysis is performed in multivariate mode, reboot returns a multicox.txt file containing the statistics of the signature, besides the log file.
-   Plots returned for this mode are  a frequency plot for the bootstrap procedure, a forest plot for all clinical variables considered and the Kaplan Meyer plot and the proportionous hazard assumption plot metioned in the univariate mode.
+      If the analysis is performed in multivariate mode, reboot returns a multicox.txt file containing the statistics of the signature, besides the log file.
+      Plots returned for this mode are  a frequency plot for the bootstrap procedure, a forest plot for all clinical variables considered and the Kaplan Meyer plot and the proportionous hazard assumption plot metioned in the univariate mode.
 
-#### ROC curve
+   #### ROC curve
 
-   If option --ROC is selected, then the split of the patients in better and worse prognosis is done based on a ROC curve, also provided.
+      If option --ROC is selected, then the split of the patients in better and worse prognosis is done based on a ROC curve, also provided.
 
 3. Complete option
 
