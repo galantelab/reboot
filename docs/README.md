@@ -175,9 +175,9 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    It is also possible to obtain toy datasets from reboot docker image, using the following:
 
-   ```docker run --rm --entrypoint=["Rscript", "/reboot/toyscript.R"] galantelab/reboot```
+   ```docker run -u $(id -u):$(id -g) --rm -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot Rscript reboot/toyscript.R```
 
-   This command returns 2 tsv files, mentioned above, called expression.tsv and clinical.tsv
+   This command returns 2 tsv files, mentioned above, called expression.tsv and clinical.tsv. A MANIFEST.txt file and a set of expression and clinical data are also created, as intermediates of TCGA dowload process.
    The composition of expression dataset comprises clinical variables: OS (survival status) and OS.time (follow up time) and 50 random picked gene expression (FPKM).
 
    Finally, reboot can be run in the complete mode:
@@ -186,7 +186,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    Docker:
    
-   ```docker run -u $(id -u):$(id -g) --rm -ti -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R```
+   ```docker run -u $(id -u):$(id -g) --rm -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R```
     
 ## Outputs
  
