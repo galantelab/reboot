@@ -55,13 +55,11 @@ suppressMessages(library("sjstats"))
 suppressMessages(library("data.table"))
 suppressMessages(library("plyr"))
 suppressMessages(library("dplyr"))
-suppressMessages(library("scriptName"))
 
 cat("\n\n============================================================")
 cat(" Apply Signature ")
 cat("============================================================\n\n")
 
-scriptname <- current_filename()
 cat("Chosen parameters: ")
 cat(paste(commandArgs(trailingOnly = T), collapse = " "))
 cat("\n\n")
@@ -503,7 +501,7 @@ merge_tables <- function(tables_list, covariates)
   }
   
   final_table[[1]] = tmp_covariates
-
+  
   return(final_table)
 }
 
@@ -540,10 +538,11 @@ barplot_co_variables <- function(plot_df, filename, covariates)
 
 }
 
-#tmp_merged_table <- NULL
-
 #Create function to run multivariate Cox regression for score + clinical parameters
 multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
+  
+  roc_curve2 <<- F
+  filters <<- T
 
   #Select only relevant clinical parameters for multivariable Cox regression (p<0.2)
   covariates = c("score",rownames(univ_result[(!is.na(univ_result$Cox.pvalue) & univ_result$Cox.pvalue<0.2),]))
@@ -563,9 +562,10 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
       # Ensure table without 'NAs' has at least 70% of the samples from the original dataframe
       while (tmp_table < sample_cutoff)
       {
-        if (counter < 6){
-          cat("Warning: Minimum number of co-variables (3) not achieved. Please check variables provided in clinical file. ")
-          cat("Performing multivariate regression without bootstrap resampling...\n")
+        
+        if (counter < 5){
+          cat("\tWarning: Minimum number of co-variables (3) not achieved. Please check variables provided in clinical file. ")
+          cat("Performing multivariate regression without bootstrap resampling...\n\n")
           break
         } else {
           
@@ -582,7 +582,14 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
           }
           
           remove_col <- which.max(remove_var_vec)
-          temporary_table <- temporary_table[,c(1:(remove_col-1),(remove_col+1):ncol(temporary_table))]
+          
+          if (remove_col == length(remove_var_vec))
+          {
+            temporary_table <- temporary_table[,c(1:(remove_col-1))]
+          } else {
+            temporary_table <- temporary_table[,c(1:(remove_col-1),(remove_col+1):ncol(temporary_table))]
+          }
+          
           tmp_table <- nrow(temporary_table[complete.cases(temporary_table),])
           dat <- temporary_table[complete.cases(temporary_table),]
           counter <- counter - 1
@@ -623,16 +630,21 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
           }
         }
       }
-
+      
       dat <- dat[, tmp_cols]
       
       n_cols_aft <- ncol(dat)
       n_cols_diff <- n_cols_bef - n_cols_aft
       
       counter <- counter - n_cols_diff
-      barPlot_counter = counter
+      barPlot_counter <- counter
       
-      if (counter < 6){
+      if (counter < 5){
+        
+        filters <<- F
+        
+        cat("\tWarning: Minimum number of co-variables (3) not achieved. Please check variables provided in clinical file. ")
+        cat("Performing multivariate regression without bootstrap resampling...\n\n")
         dat <- backup_dat
         
         #Run multivariate Cox
@@ -652,88 +664,129 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
         if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
         res = res[,c(1,7,4,8)]
       } else {
+        
         # Update covariates
-        covariates <- names(dat)[3:length(covariates)]
-        
-        tables_list <- list()
-        boot_backup_dat <- dat
-        
-        boot_tmp <- bootstrap(data = dat, n = 100, size = .6)
-        boot_loop <- 0
-        boot_control <- 0
-        cat("\tBootstrap progress:\n\t")
-        
-        while(boot_loop < 100)
+        update_covariates <- c()
+        for (col in 3:ncol(dat))
         {
-          boot_loop <- boot_loop + 1
-          dat <- my_bootstrap_method(raw_df = boot_backup_dat, boot_df = boot_tmp, boot_sample = boot_control)
-          
-          if (class(dat) != "data.frame") {
-            boot_loop <- boot_loop - 1
-            boot_control <- 0
-            boot_tmp <- bootstrap(data = boot_backup_dat, n = (100 - boot_loop), size = .6)
-          } else {
-            boot_control <- boot_control + 1
-            
-            if (boot_loop == 100) {cat("# 100%\n\n")} else {cat("#")}
-            
-            #Run multivariate Cox
-            res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates, collapse = " + "))) , data = dat)
-            
-            #Extract results
-            coef = as.data.frame(coef(summary(res)))
-            ci = as.data.frame(summary(res)$conf.int)
-            res = merge(coef,ci,by=0)
-            res = res[,c(1:3,6,9:10)]
-            
-            colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
-            res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
-            res$Cox.pvalue = round(res$Cox.pvalue,4)
-            res$prognosis = NA
-            if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient<0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient<0,]$prognosis <- "better"}
-            if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
-            res = res[,c(1,7,4,8)]
-            
-            tables_list[[boot_loop]] <- res
-          }
-        }
-        
-        merged_table <<- merge_tables(tables_list = tables_list, covariates = uni_covariates)
-        
-        #Select only frequent (at least 50%) parameters for multivariable cox regression
-        tmp_merged_table <- merged_table[merged_table$Frequency >= 25,]
-        new_covariates <- as.vector(tmp_merged_table[[1]])
-        tmp_covariates <- c()
-
-        #Match string to get from 'new covariates' the original 'covariates' name
-        for(var in new_covariates)
-        {
-          for(var2 in covariates)
+          tmp_colName <- colnames(dat[col])
+          if (tmp_colName %in% covariates)
           {
-            if(grepl(var2, var)){tmp_covariates <- append(tmp_covariates, var2)}
+            update_covariates <- append(x = update_covariates, values = tmp_colName)
           }
         }
         
-        #Run multivariate Cox
-        dat <- boot_backup_dat
-        covariates <- tmp_covariates
-        res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
-        
-        #Extract results
-        coef = as.data.frame(coef(summary(res)))
-        ci = as.data.frame(summary(res)$conf.int)
-        res = merge(coef,ci,by=0)
-        res = res[,c(1:3,6,9:10)]
-        
-        colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
-        res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
-        res$Cox.pvalue = round(res$Cox.pvalue,4)
-        res$prognosis = NA
-        if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient<0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient<0,]$prognosis <- "better"}
-        if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
-        res = res[,c(1,7,4,8)]
+        if (length(update_covariates) < 3){
+          
+          filters <<- F
+          
+          cat("\tWarning: Minimum number of co-variables (3) not achieved. Please check variables provided in clinical file. ")
+          cat("Performing multivariate regression without bootstrap resampling...\n\n")
+          dat <- backup_dat
+          
+          #Run multivariate Cox
+          res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
+          
+          #Extract results
+          coef = as.data.frame(coef(summary(res)))
+          ci = as.data.frame(summary(res)$conf.int)
+          res = merge(coef,ci,by=0)
+          res = res[,c(1:3,6,9:10)]
+          
+          colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
+          res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
+          res$Cox.pvalue = round(res$Cox.pvalue,4)
+          res$prognosis = NA
+          if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient<0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient<0,]$prognosis <- "better"}
+          if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
+          res = res[,c(1,7,4,8)]
+        } else {
+          
+          covariates <- update_covariates
+          
+          roc_curve2 <<- T
+          
+          tables_list <- list()
+          boot_backup_dat <- dat
+          
+          boot_tmp <- bootstrap(data = dat, n = 100, size = .6)
+          boot_loop <- 0
+          boot_control <- 0
+          cat("\tBootstrap progress:\n\t")
+          
+          while(boot_loop < 100)
+          {
+            boot_loop <- boot_loop + 1
+            dat <- my_bootstrap_method(raw_df = boot_backup_dat, boot_df = boot_tmp, boot_sample = boot_control)
+            
+            if (class(dat) != "data.frame") {
+              boot_loop <- boot_loop - 1
+              boot_control <- 0
+              boot_tmp <- bootstrap(data = boot_backup_dat, n = (100 - boot_loop), size = .6)
+            } else {
+              boot_control <- boot_control + 1
+              
+              if (boot_loop == 100) {cat("# 100%\n\n")} else {cat("#")}
+              
+              #Run multivariate Cox
+              res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates, collapse = " + "))) , data = dat)
+              
+              #Extract results
+              coef = as.data.frame(coef(summary(res)))
+              ci = as.data.frame(summary(res)$conf.int)
+              res = merge(coef,ci,by=0)
+              res = res[,c(1:3,6,9:10)]
+              
+              colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
+              res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
+              res$Cox.pvalue = round(res$Cox.pvalue,4)
+              res$prognosis = NA
+              if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient<0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient<0,]$prognosis <- "better"}
+              if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
+              res = res[,c(1,7,4,8)]
+              
+              tables_list[[boot_loop]] <- res
+            }
+          }
+          
+          merged_table <<- merge_tables(tables_list = tables_list, covariates = uni_covariates)
+          
+          #Select only frequent (at least 50%) parameters for multivariable cox regression
+          tmp_merged_table <- merged_table[merged_table$Frequency >= 25,]
+          new_covariates <- as.vector(tmp_merged_table[[1]])
+          tmp_covariates <- c()
+          
+          #Match string to get from 'new covariates' the original 'covariates' name
+          for(var in new_covariates)
+          {
+            for(var2 in covariates)
+            {
+              if(grepl(var2, var)){tmp_covariates <- append(tmp_covariates, var2)}
+            }
+          }
+          
+          #Run multivariate Cox
+          dat <- boot_backup_dat
+          covariates <- tmp_covariates
+          res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
+          
+          #Extract results
+          coef = as.data.frame(coef(summary(res)))
+          ci = as.data.frame(summary(res)$conf.int)
+          res = merge(coef,ci,by=0)
+          res = res[,c(1:3,6,9:10)]
+          
+          colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
+          res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
+          res$Cox.pvalue = round(res$Cox.pvalue,4)
+          res$prognosis = NA
+          if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient<0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient<0,]$prognosis <- "better"}
+          if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
+          res = res[,c(1,7,4,8)]
+        }
       }
     } else {
+
       #Run multivariate Cox
       res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
       
@@ -801,7 +854,7 @@ multiCox.model <- function(dat, univ_result, covariates){
   #Select only relevant clinical parameters for multivariable Cox regression (p<0.2)
   covariates = c("score",covariates)
 
-  if(roc_curve)
+  if(roc_curve & filters)
   {
     new_covariates = c(univ_result[(univ_result$multivariate.prognosis != "----"),1])
   } else
@@ -864,7 +917,7 @@ if(type & clin_file != ""){
   
   #Makes bar plot if ROC curve option is TRUE
   #Check if provided files exist
-  if(roc_curve){
+  if(roc_curve2){
     cat("\tMaking BarPlot...\n")
     barplot_co_variables(plot_df = merged_table, filename = paste(out, "_frequency_bootstrap.pdf", sep = ""), covariates = uni_covariates)
     cat("\tDone\n\n")
@@ -883,14 +936,14 @@ end_time <- Sys.time()
 elapsed_time <- difftime(time1 = end_time, time2 = start_time, units = "secs")
 
 if (elapsed_time >= 3600) {
-  cat(paste("Time to run '", scriptname, "': ", round(x = (elapsed_time[[1]] / 3600), digits = 2),
+  cat(paste("Time to run 'survival' analysis: ", round(x = (elapsed_time[[1]] / 3600), digits = 2),
             " hours.\n", sep = ""))
 } else {
   if (elapsed_time >= 60) {
-    cat(paste("Time to run '", scriptname, "': ", round(x = (elapsed_time[[1]] / 60), digits = 2),
+    cat(paste("Time to run 'survival' analysis: ", round(x = (elapsed_time[[1]] / 60), digits = 2),
               " minutes.\n", sep = ""))
   } else {
-    cat(paste("Time to run '", scriptname, "': ", round(x = elapsed_time[[1]], digits = 2),
+    cat(paste("Time to run 'survival' analysis: ", round(x = elapsed_time[[1]], digits = 2),
               " seconds.\n", sep = ""))
   }
 }
