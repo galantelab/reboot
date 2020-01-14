@@ -12,33 +12,37 @@ RUN apt-get -y install r-base
 
 #Survival analysis package#
 
-Run Rscript -e 'install.packages(c("survival","survminer","BiocManager"))'
+RUN Rscript -e 'install.packages(c("survival","survminer","BiocManager"))'
 
-Run Rscript -e 'BiocManager::install("survcomp")'
+RUN Rscript -e 'BiocManager::install("survcomp")'
 
-Run Rscript -e 'install.packages("optparse")'
+RUN Rscript -e 'install.packages("optparse")'
 
-Run Rscript -e 'install.packages(c("OptimalCutpoints","survivalROC","forestmodel","sjstats","data.table"))'
+RUN Rscript -e 'install.packages(c("OptimalCutpoints","survivalROC","forestmodel","sjstats","data.table"))'
 
-Run Rscript -e 'install.packages("scriptName")'
+RUN Rscript -e 'install.packages("scriptName")'
 
 #Regression analysis package#
 
-Run Rscript -e 'install.packages(c("penalized", "tidyverse", "hash", "R.utils"))'
+RUN Rscript -e 'install.packages(c("penalized", "tidyverse", "hash", "R.utils"))'
 
 #Main packages#
 
-Run Rscript -e 'install.packages(c("argparse","extrafont"))'
+RUN Rscript -e 'install.packages(c("argparse","extrafont"))'
 
 #TCGA tutorial#
 
-Run Rscript -e 'BiocManager::install("remotes")'
+RUN Rscript -e 'BiocManager::install("remotes")'
+
 Run Rscript -e 'BiocManager::install("BioinformaticsFMRP/TCGAbiolinks")'
+
+RUN Rscript -e 'BiocManager::install("biomaRt")'
 
 #Tool insertion#
 
-COPY *.R /reboot/
+COPY regression.R reboot.R apply_signature.R toyfordocker.R /reboot/
 
 #Automatic running#
 
-ENTRYPOINT ["Rscript", "/reboot/reboot.R"]
+CMD ["Rscript", "/reboot/reboot.R"]
+
