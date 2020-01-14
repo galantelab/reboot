@@ -186,7 +186,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    Docker:
   
-   ```docker run -u $(id -u):$(id -g) --rm -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot``` 
+   ```docker run -u $(id -u):$(id -g) --rm -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R``` 
     
 ## Outputs
  
