@@ -15,4 +15,4 @@ Rscript -e 'install.packages(c("survival",
 
 Rscript -e 'BiocManager::install("survcomp")'
 
-cp *.R /usr/bin
+cp *.R /usr/local/bin
