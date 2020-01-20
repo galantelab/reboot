@@ -1,5 +1,5 @@
 suppressMessages(library(optparse))
-options(lifecycle_disable_verbose_retirement = TRUE)
+#options(lifecycle_disable_verbose_retirement = TRUE)
 options(warn=-1)
 
 #Time counter
@@ -31,13 +31,12 @@ type='numeric', dest = "var", default = "0.03", help="Minimum normalized varianc
 opo <- OptionParser(option_list=option_list, add_help_option = T)
 in_object <- parse_args(opo)
 logname <- in_object$out
-in_object$out <- paste(in_object$out, "_signature.txt", sep="")
-
+outname <- paste(in_object$out, "_signature.txt", sep="")
+outplot <- in_object$out
 
 #####Importing libraries####
 
 suppressMessages(library("penalized"))
-suppressMessages(library("survival"))
 suppressMessages(library("tidyverse"))
 suppressMessages(library("hash"))
 suppressMessages(library("R.utils"))
@@ -77,7 +76,7 @@ cat("\n\n")
 
 ######Error check 1#######
 
-numberfilter1 <- function(dataf, g, out) {
+numberfilter1 <- function(dataf, g, outname, outplot) {
 	if ((ncol(dataf)-2) < g){
 		cat("The number of columns per group exceeds the number of columns", "\n", "\n")
 		cat("Performing single multivariate regression","\n","\n")
@@ -87,8 +86,8 @@ numberfilter1 <- function(dataf, g, out) {
 		if (any(!(coefficient==0))){
 			coemale <- cbind(feature,coefficient)
 			#coemale <- gsub("@#!", "-", coemale)   #back to initial names
-			write.table(coemale, out, sep="\t", row.names=F, quote=F)
-			histogram(out,coemale)
+			write.table(coemale, outname, sep="\t", row.names=F, quote=F)
+			histogram(outplot,coemale)
 			cat("Done", "\n")
 		}
 		else {
@@ -100,7 +99,7 @@ numberfilter1 <- function(dataf, g, out) {
 
 ######Error check 2#######
 
-numberfilter2 <- function(dataf, g, out) {
+numberfilter2 <- function(dataf, g, outname, outplot) {
 
 	if (ncol(dataf) <= 2) {
 		cat("No column was left after variance filter", "\n","\n")
@@ -116,8 +115,8 @@ numberfilter2 <- function(dataf, g, out) {
 		    if (any(!(coefficient==0))){
                         coemale <- cbind(feature,coefficient)
 			#coemale <- gsub("@#!", "-", coemale)   #back to initial names
-                        write.table(coemale, out ,sep="\t", row.names=F, quote=F)
-			histogram(out,coemale)
+                        write.table(coemale, outname ,sep="\t", row.names=F, quote=F)
+			histogram(outplot,coemale)
                         cat("Done", "\n")
                     }
                     else {
@@ -157,7 +156,7 @@ corfun <- function(male_data, pf){
 
 ######Bootfunction######
 
-bootstrapfun <- function(full_data, booty, nel , out, pf){
+bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
 	
 	##setting up hash## 
 	
@@ -201,12 +200,15 @@ bootstrapfun <- function(full_data, booty, nel , out, pf){
 	aux <- rbind(aux, cbind(feature, coefficient))
 	}	
 	tt <- as.data.frame(aux)
+
+	tt <- tt %>%
+		filter(coefficient!=0)
 	
 	if (any(!(tt==0))){
 		tt$feature <- gsub("__","-",tt$feature)
-		write.table(tt, out, sep="\t", row.names=F, quote=F)
-		histogram(out,tt)
-		lolli(out,tt)
+		write.table(tt, outname, sep="\t", row.names=F, quote=F)
+		histogram(outplot,tt)
+		lolli(outplot,tt)
 	}
 	else {
 		cat("No signature found, all coefficients are equal 0", "\n")
@@ -347,7 +349,7 @@ histogram <- function(out,tt){
 
 #check file error#
 
-numberfilter1(full_data, in_object$nel, in_object$out)
+numberfilter1(full_data, in_object$nel, outname, outplot)
 
 #Perform variance filter#
 
@@ -355,11 +357,11 @@ full_data <- varfun(full_data, in_object$var, in_object$fname)
 
 #check file error 2#
 
-numberfilter2(full_data, in_object$nel, in_object$out)
+numberfilter2(full_data, in_object$nel, outname, outplot)
 
 #Perform Regression#
 
-bootstrapfun(full_data, in_object$booty, in_object$nel, in_object$out, in_object$pf)
+bootstrapfun(full_data, in_object$booty, in_object$nel, outname, outplot, in_object$pf)
 
 
 ####Time feedback####
