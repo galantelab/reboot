@@ -1,3 +1,5 @@
+#!/usr/bin/Rscript
+
 ####Required libraries###
 
 library("TCGAbiolinks")

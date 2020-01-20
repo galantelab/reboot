@@ -1,3 +1,5 @@
+#!/usr/bin/Rscript
+
 start_time <- Sys.time()
 
 suppressMessages(library("optparse"))

@@ -33,16 +33,12 @@ RUN Rscript -e 'install.packages(c("argparse","extrafont"))'
 #TCGA tutorial#
 
 RUN Rscript -e 'BiocManager::install("remotes")'
-
 Run Rscript -e 'BiocManager::install("BioinformaticsFMRP/TCGAbiolinks")'
-
-RUN Rscript -e 'BiocManager::install("biomaRt")'
 
 #Tool insertion#
 
-COPY regression.R reboot.R apply_signature.R toyfordocker.R /reboot/
+COPY *.R /usr/local/bin/
 
 #Automatic running#
 
-CMD ["Rscript", "/reboot/reboot.R"]
-
+CMD ["Rscript", "reboot.R"]

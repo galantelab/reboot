@@ -1,3 +1,5 @@
+#!/usr/bin/Rscript
+
 library(argparse)
 
 #create the top-level parser
@@ -113,7 +115,8 @@ if (length(newargs)==0){
 
 if (args$sub_name=="regression"){
 	system(paste(
-		"Rscript regression.R",
+#		"Rscript regression.R",
+		"regression.R",
 		"-I", args$fname,
 		"-O", args$out,
 		"-B", args$booty,
@@ -137,7 +140,8 @@ if (args$sub_name=="survival"){
 			q(status=0)
 		}else{		
 			system(paste(
-			"Rscript apply_signature.R",
+#			"Rscript survival.R",
+			"survival.R",
 			"-I", args$fname,
 			"-O", args$out,
 			"-S", args$sig,
@@ -148,7 +152,8 @@ if (args$sub_name=="survival"){
 		}
 	}else{
 		system(paste(
-		"Rscript apply_signature.R",
+#		"Rscript survival.R",
+		"survival.R",		
 		"-I", args$fname,
 		"-O", args$out,
 		"-S", args$sig,
@@ -169,7 +174,8 @@ if (args$sub_name=="complete"){
 	}	
 	
 	system(paste(
-	"Rscript regression.R",
+#	"Rscript regression.R",
+	"regression.R",
 	"-I", args$fname,
 	"-O", args$out,
 	"-B", args$booty,
@@ -187,7 +193,8 @@ if (args$sub_name=="complete"){
 			q(status=0)
 		}else{		
 			system(paste(
-			"Rscript apply_signature.R",
+#			"Rscript survival.R",
+			"survival.R",
 			"-I", args$fname,
 			"-O", args$out,
 			"-S", assinatura,
@@ -197,9 +204,9 @@ if (args$sub_name=="complete"){
 			collapse=" "))
 		}
 	}else{
-		print("teste")
 		system(paste(
-		"Rscript apply_signature.R",
+#		"Rscript survival.R",
+		"survival.R",
 		"-I", args$fname,
 		"-O", args$out,
 		"-S", assinatura,

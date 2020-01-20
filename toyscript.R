@@ -2,6 +2,10 @@
 
 library("TCGAbiolinks")
 library("tidyverse")
+library("biomaRt")
+
+####Run in current dir####
+setwd(getwd())
 
 ####Gene expression retrieval###
                                                         #Modifiable options:
@@ -16,6 +20,7 @@ GDCdownload(query, method = "api")                      #directory structure: "p
 ####Data loading and formatting###
 
 #Gene expression#
+biomartCacheClear()
 exp_data <- GDCprepare(query)
 expmatrix <- SummarizedExperiment::assay(exp_data)
 expression <- t(expmatrix) %>%
