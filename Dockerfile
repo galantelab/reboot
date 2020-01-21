@@ -39,6 +39,3 @@ Run Rscript -e 'BiocManager::install("BioinformaticsFMRP/TCGAbiolinks")'
 
 COPY *.R /usr/local/bin/
 
-#Automatic running#
-
-CMD ["Rscript", "reboot.R"]
