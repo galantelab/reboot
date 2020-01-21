@@ -15,4 +15,14 @@ Rscript -e 'install.packages(c("survival",
 
 Rscript -e 'BiocManager::install("survcomp")'
 
+Rscript -e 'install.packages(c("survival",
+			       "penalized",
+			       "tidyverse",
+			       "hash",
+			       "R.utils",
+			       "argparse"))'
+
+Rscript -e 'BiocManager::install("remotes")'
+Rscript -e 'BiocManager::install("BioinformaticsFMRP/TCGAbiolinks")'
+
 cp *.R /usr/local/bin
