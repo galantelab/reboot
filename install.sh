@@ -3,25 +3,15 @@
 #Installation script for reboot
 #Requirements:R (version >= 3.6)
 
-Rscript -e 'install.packages(c("survival",
-			       "survminer",
-			       "BiocManager",
-			       "optparse",
-			       "OptimalCutpoints",
-			       "survivalROC",
-			       "forestmodel",
-			       "sjstats",
-			       "data.table"))'
-
+#Packages for survival analysis
+Rscript -e 'install.packages(c("survival", "survminer", "BiocManager", "optparse", "OptimalCutpoints", "survivalROC", "forestmodel", "sjlabelled", "sjstats", "sjmisc", "data.table"))'
 Rscript -e 'BiocManager::install("survcomp")'
 
-Rscript -e 'install.packages(c("survival",
-			       "penalized",
-			       "tidyverse",
-			       "hash",
-			       "R.utils",
-			       "argparse"))'
+#Packages  for regression analysis 
+Rscript -e 'install.packages(c("survival", "penalized", "tidyverse", "hash", "R.utils", "argparse"))'
 
+
+#Packages for toy sample generation
 Rscript -e 'BiocManager::install("remotes")'
 Rscript -e 'BiocManager::install("BioinformaticsFMRP/TCGAbiolinks")'
 
