@@ -16,9 +16,14 @@ It was built to provide the freedom of choice for regression and survival analys
 ![Reboot worflow. First module runs a regression analysis. Second module runs survival analysis based on a generated signature](reboots_flux.png)
 
 ## Installation
-Reboot can be obtained from github and run locally, this method requires all dependencies to be installed previously:
+
+Reboot can be obtained from github, this method requires R version >= 3.6:
 
 ```git clone https://github.com/galantelab/reboot.git```
+
+Reboot is installation is performed by 
+
+```sudo sh reboot/install.sh```
 
 Reboot is also available in a docker image, ready to be used, contemplating all dependecies (this option is indicated):
 
@@ -53,7 +58,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    Main options are regression, survival or complete and can be invoked by the help menu:
 
-   ```Rscript reboot.R -h```
+   ```reboot.R -h```
 
    The same can be performed in a docker container:
 
@@ -73,7 +78,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    All sub-options are provided by: 
 
-   ```Rscript reboot.R regression -h```
+   ```reboot.R regression -h```
 
 
    If you are using docker container:
@@ -122,7 +127,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    All sub-options are provided by: (give a more detailed table after command)
 
-   ```Rscript reboot.R complete -h```
+   ```reboot.R complete -h```
 
    If you are using docker container:
 
@@ -171,7 +176,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
    In order to ilustrate usage, a toy script is provided to download and format expression and clinical data of glioblastoma patients from TCGA.
    Running the following code in the reboot directory provides both inputs:
 	
-   ```Rscript toyscript.R```
+   ```toyscript.R```
 
    It is also possible to obtain toy datasets from reboot docker image, using the following:
 
