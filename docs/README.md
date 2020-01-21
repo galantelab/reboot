@@ -41,6 +41,8 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 * OptimalCutpoints
 * survivalROC
 * forestmodel
+* sjlabelled
+* sjmisc
 * sjstats
 * data.table
 * penalized
@@ -102,7 +104,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    All sub-options are provided by:
 
-   ```Rscript reboot.R survival -h```
+   ```reboot.R survival -h```
 
 
    If you are using docker container:
