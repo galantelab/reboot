@@ -10,7 +10,7 @@ subparsers = parser$add_subparsers(dest="sub_name", metavar = "<subcommand>", he
 
 #create the parser for the "regression" command
 
-parser_reg = subparsers$add_parser('regression', help= "generates signature through multivariate cox regression analys")
+parser_reg = subparsers$add_parser('regression', help= "generates signature through multivariate cox regression")
 
 parser_reg$add_argument("-I", "--filein", type="character", dest = "fname", metavar ='',
 			help="Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters")
