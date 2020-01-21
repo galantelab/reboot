@@ -13,10 +13,10 @@ subparsers = parser$add_subparsers(dest="sub_name", metavar = "<subcommand>", he
 parser_reg = subparsers$add_parser('regression', help= "generates signature through multivariate cox regression")
 
 parser_reg$add_argument("-I", "--filein", type="character", dest = "fname", metavar ='',
-			help="Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters")
+			help="Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival data")
 
 parser_reg$add_argument("-O", "--outprefix", type="character", dest = "out", metavar = '',
-			default = "reboot", help='Output file prefix. Default: reboot')
+			default = "reboot", help='Output file prefix (str). Default: reboot')
 
 parser_reg$add_argument("-B","--bootstrap", type = "integer", dest = "booty",  metavar = '',
                         default = "1", 
@@ -28,7 +28,7 @@ parser_reg$add_argument("-G", "--groupsize", type="integer", dest = "nel",  meta
 
 parser_reg$add_argument("-P", "--pcentfilter", type="character", dest = "pf",  metavar = '',
                         default = "0.3",
-                        help="Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3")
+                        help="Percentage of correlated gene/transcript pairs allowed in each iteration (double). Default: 0.3")
 
 parser_reg$add_argument("-V", "--varfilter", type="character", dest = "var",  metavar = '',
                         default = "0.01",
@@ -66,10 +66,10 @@ parser_sur$add_argument("-S", "--signature",  metavar = '',
 
 #create the parser for the "complete" command
 
-parser_all = subparsers$add_parser('complete', help = "generates and applies signature")
+parser_all = subparsers$add_parser('complete', help = "generates and applies signature (integrated analysis)")
 
 parser_all$add_argument("-I", "--filein", type="character", dest = "fname", metavar ='',
-                        help='Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters')
+                        help='Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival data')
 
 parser_all$add_argument("-O", "--outprefix", type="character", dest = "out", metavar = '',
                         default = "reboot", help='Output file prefix. Default: reboot')
@@ -158,6 +158,7 @@ if (args$sub_name=="survival"){
 		"-O", args$out,
 		"-S", args$sig,
 		"-M", args$type,
+		"-R", args$roc_curve,
 		collapse=" "))
 	
 	}

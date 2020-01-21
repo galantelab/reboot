@@ -17,14 +17,12 @@ It was built to provide the freedom of choice for regression and survival analys
 *Figure 1: Reboot worflow. First module runs a regression analysis. Second module runs survival analysis based on a generated signature* 
 
 Regression module produces significance coefficients based on a Cox regression for genes or transcripts. 
-Survival module produces signature for all individuals based on the performed regression. 
-Other clinical variables may be included for a survival analysis, including statistical tests for prognosis, patient score categorization for genetic signature and relevance of each variable.
-Given a multivariate survival analysis, reboot provides the option for a ROC curve based on high and low genetic score cutoff, besides median based cutoff.
-ROC curves are produced by NNE (Neares Neighbour Estimate) method.
+Survival module produces and applies survival score for all individuals based on the performed regression. 
+Other clinical variables may be included for a survival analysis, such as therapy, age, gender, among others. Statistical tests for prognosis, patient score categorization for genetic signature and relevance of each variable are also provided.
+Univariate and multivariate survival analysis use median cutoff as default for high and low score genetic signature. 
+Reboot also provides the option for a ROC curve, using NNE (Neares Neighbour Estimate) method, yielding a cutoff for high and low genetic score.
 ROC based classification performs Youden statistics: J = [sensitivity + (specificity -1)], in order to choose the ideal cutoff.
 If two or more J coefficients are presented, then, the first one is chosen.
-
-
  
 
 
