@@ -11,9 +11,10 @@
 ## Overview
 
 Reboot is a modular tool, comprising two main functionalities: regression and survival.
-It was built to provide the freedom of choice for regression and survival analysis; only regression analysis; or only survival analysis
+It was built to provide the freedom of choice for regression and survival analysis; only regression analysis; or only survival analysis	
 
-![Reboot worflow. First module runs a regression analysis. Second module runs survival analysis based on a generated signature](Paper_figure.png)
+![](Paper_figure.png)
+*Figure 1: Reboot worflow. First module runs a regression analysis. Second module runs survival analysis based on a generated signature* 
 
 ## Installation
 
