@@ -13,7 +13,7 @@
 Reboot is a modular tool, comprising two main functionalities: regression and survival.
 It was built to provide the freedom of choice for regression and survival analysis; only regression analysis; or only survival analysis
 
-![Reboot worflow. First module runs a regression analysis. Second module runs survival analysis based on a generated signature](reboots_flux.png)
+![Reboot worflow. First module runs a regression analysis. Second module runs survival analysis based on a generated signature](Paper_figure.png)
 
 ## Installation
 
@@ -64,7 +64,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    The same can be performed in a docker container:
 
-   ```docker run --rm galantelab/reboot -h```
+   ```docker run --rm galantelab/reboot reboot.R -h```
 
    In summary, options are:
 
@@ -109,7 +109,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    If you are using docker container:
 
-   ```docker run --rm galantelab/reboot survival -h```
+   ```docker run --rm galantelab/reboot reboot.R survival -h```
 
 
    In summary, options are:
@@ -133,7 +133,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    If you are using docker container:
 
-   ```docker run --rm  galantelab/reboot complete -h```
+   ```docker run --rm  galantelab/reboot reboot.R complete -h```
 
    In summary, options are:
 
@@ -182,7 +182,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    It is also possible to obtain toy datasets from reboot docker image, using the following:
 
-   ```docker run --env MYID=$(id -u) --rm -ti -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot Rscript /reboot/toyfordocker.R```
+   ```docker run --env MYID=$(id -u) --rm -ti -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot toyfordocker.R```
 
    This command returns 2 tsv files, mentioned above, called expression.tsv and clinical.tsv. A MANIFEST.txt file and a set of expression and clinical data are also created, as intermediates of TCGA dowload process.
    The composition of expression dataset comprises clinical variables: OS (survival status) and OS.time (follow up time) and 50 random picked gene expression (FPKM).
@@ -193,7 +193,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    Docker:
   
-   ```docker run -u $(id -u):$(id -g) --rm -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R``` 
+   ```docker run -u $(id -u):$(id -g) --rm -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R``` 
     
 ## Outputs
  
