@@ -57,6 +57,7 @@ for (col in 2:(ncol(pre_inp)-2))
 
 tmp_pre_inp <- pre_inp[,c(1,include_cols,(ncol(pre_inp)-1),ncol(pre_inp))]
 len <- length(colnames(tmp_pre_inp))
+set.seed(71113)
 random <- sample.int((len-2),50)        #Modify the number of genes as you wish (50).
 aux2 <- tmp_pre_inp[,random]
 input1 <- cbind(aux1,aux2)
@@ -104,9 +105,11 @@ tmp_rad$radiotherapy <- ifelse(tmp_rad$radiotherapy == 1, "yes", "no")
 
 #Building final clinical toy dataset
 new_clinical <- clinical[,c("bcr_patient_barcode", "history_of_neoadjuvant_treatment", "gender",
-                            "age_at_initial_pathologic_diagnosis", "race_list", "ethnicity")]
+                            "age_at_initial_pathologic_diagnosis", "race_list", "ethnicity",
+                            "person_neoplasm_cancer_status", "karnofsky_performance_score")]
 colnames(new_clinical) <- c("barcode", "history_of_neoadjuvant_treatment", "gender",
-                            "age_at_initial_pathologic_diagnosis", "race_list", "ethnicity")
+                            "age_at_initial_pathologic_diagnosis", "race_list", "ethnicity",
+                            "person_neoplasm_cancer_status", "karnofsky_performance_score")
 
 #Ensure all variables are binary (2 categories only)
 new_clinical$barcode <- gsub("-","\\.", as.character(new_clinical$barcode))
@@ -115,6 +118,8 @@ age_median <- median(new_clinical$age_at_initial_pathologic_diagnosis, na.rm = T
 new_clinical$age_at_initial_pathologic_diagnosis <- ifelse(new_clinical$age_at_initial_pathologic_diagnosis >= age_median, "HIGH", "LOW")
 new_clinical$race_list <- ifelse(is.na(new_clinical$race_list), NA,
                                  ifelse(grepl(pattern = "white", x = new_clinical$race_list, ignore.case = T), "WHITE", "NO WHITE"))
+karnofsky_median <- median(new_clinical$karnofsky_performance_score, na.rm = T)
+new_clinical$karnofsky_performance_score <- ifelse(new_clinical$karnofsky_performance_score >= karnofsky_median, "HIGH", "LOW")
 
 for (col in colnames(new_clinical)){
   new_clinical[[col]] <- droplevels(as.factor(new_clinical[[col]]))
@@ -166,11 +171,17 @@ for (col in 2:ncol(finalclin))
   }
 }
 finalclin <- finalclin[,keep_cols]
-colnames(finalclin) <- c("barcode", "gender", "age", "race", "ethnicity","chemotherapy","IDH.status","MGMT.status")
+colnames(finalclin) <- c("barcode", "gender", "age", "race", "ethnicity","cancer.status",
+                         "karnofsky","chemotherapy","IDH.status","MGMT.status")
 
 for (col in 2:ncol(finalclin)){
   finalclin[[col]] <- tolower(finalclin[[col]])
 }
+
+finalclin[is.na(finalclin)] <- "NA"
+finalclin$chemotherapy <- ifelse(finalclin$chemotherapy == "NA", "no", ifelse(finalclin$chemotherapy == "yes", "yes", "no"))
+finalclin$karnofsky <- ifelse(finalclin$karnofsky == "NA", "low", ifelse(finalclin$karnofsky == "high", "high", "low"))
+finalclin[finalclin == "NA"] <- NA
 
 ##Exporting two tables: expression and clinical data##
 
@@ -180,3 +191,4 @@ write.table(x = input1, file = "expression.tsv", quote = F, col.names = T, row.n
 # CLINICAL DATA TABLE
 write.table(x = finalclin, file = "clinical.tsv", col.names = T, row.names = F,
             quote = F, sep = "\t", eol = "\n", na = "NA", dec = ".")
+
