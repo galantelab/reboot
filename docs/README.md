@@ -16,16 +16,18 @@ It was built to provide the freedom of choice for regression and survival analys
 ![](Paper_figure.png)
 *Figure 1: Reboot worflow. First module runs a regression analysis. Second module runs survival analysis based on a generated signature* 
 
-<center>
 Regression module produces significance coefficients (genetic signature) based on a Cox regression for genes and/or transcripts.
 Dimension is a critical variable for regression 
+{: .alert .alert-info .text-justify}
 
 The survival module produces and applies a score for all individuals based on the performed regression module. Both univariate and multivariate survival analyses use by default the median score value as cutoff for stratification of patients in high and low score genetic signature, unless the ROC option is chosen. In that case, the cutoff value is based on the ROC curve using NNE (Nearest Neighbour Estimate) method and the Youden statistics, where J = [sensitivity + (specificity -1)]. If more than one J coefficients are present, then the first one is chosen.
+{: .alert .alert-info .text-justify}
 
 Reboot also offers the multivariate option, where other clinical variables such as therapy, age, gender, among others can be included for a multivariate survival analysis. Multiple univariate analysis are made and only variables with a p-value <= 0.2 are selected for the final multivariate analysis. Statistical tests are performed in order to evaluate the relevance of each co-variable as a prognostic factor of a given event (overall / progression-free / recurrence-free survival).
+{: .alert .alert-info .text-justify}
 
 Additionally, if the ROC option is chosen along with the multivariate option, the multivariate analysis is done with a bootstrap resampling method if the clinical dataset provided passes the filters: (i) final dataset with at least 70% of the original one (NAs filter) and; (ii) the frequency of the less abundant category for each co-variable is not less than 20% (proportion filter). Otherwise, a multivariate analysis is performed without the bootstrap method. After 100 iterations, the relevance frequency of each co-variable with the event is calculated. Several plots are drawn for variables whose frequencies are at least 25% 
-</center>
+{: .alert .alert-info .text-justify}
 
 ## Installation
 
