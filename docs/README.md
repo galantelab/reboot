@@ -111,8 +111,12 @@ In summary, 3 subcommands are available:
 
    | short option | full option | Description|
    | -------------------------- | ----------------------------------------- | ----------------------- |
-   | -I | -\-filein &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
-   | -O | -\-outprefix |  Output file prefix. Default: reboot |
+
+
+   ^4 -I ^9 -\-filein ^14 Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters
+   ^4 -O ^9 -\-outprefix ^14  Output file prefix. Default: reboot 
+
+
    | -B | -\-bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
    | -G | -\-groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
    | -P | -\-pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
