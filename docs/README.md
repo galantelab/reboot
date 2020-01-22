@@ -1,4 +1,4 @@
-## Outline
+## Contents
 
 1. [Overview](#overview)
 2. [Installation](#installation)
@@ -10,14 +10,13 @@
 
 ## Overview
 
-Reboot is a modular tool, comprising two main functionalities: regression and survival.
+Reboot is a modular tool, developed in R 3.6, comprising two main functionalities: regression and survival.
 It was built to provide the freedom of choice for regression and survival analysis; only regression analysis; or only survival analysis	
 
 ![](Paper_figure.png)
 *Figure 1: Reboot worflow. First module runs a regression analysis. Second module runs survival analysis based on a generated signature* 
 
-Regression module produces significance coefficients (genetic signature) based on a Cox regression for genes and/or transcripts.
-Dimension is a critical variable for regression 
+Regression module produces significance coefficients (genetic signature) based on a Cox regression for genes and/or transcripts. Dimension is a critical variable for algorithm convergence in regression procedures. 
 {: .alert .alert-info .text-justify}
 
 The survival module produces and applies a score for all individuals based on the performed regression module. Both univariate and multivariate survival analyses use by default the median score value as cutoff for stratification of patients in high and low score genetic signature, unless the ROC option is chosen. In that case, the cutoff value is based on the ROC curve using NNE (Nearest Neighbour Estimate) method and the Youden statistics, where J = [sensitivity + (specificity -1)]. If more than one J coefficients is present, then the first one is chosen.
@@ -31,25 +30,32 @@ Additionally, if the ROC option is chosen along with the multivariate option, th
 
 ## Installation
 
-Reboot can be obtained from github, this method requires R version >= 3.6:
 
-```git clone https://github.com/galantelab/reboot.git```
+Reboot can be obtained from github, through direct installation or docker container (recommended).
 
-Reboot is installation is performed by 
+1. Via docker
+	
+	This method works on any distribution or operational systems, as long as [docker](https://docs.docker.com/install) is installed.
 
-```sudo sh reboot/install.sh```
+	```docker pull galantelab/reboot```
 
-Reboot is also available in a docker image, ready to be used, contemplating all dependecies (this option is indicated):
+2. Direct
 
-```docker pull galantelab/reboot```
+	This method requires previous installation of  [R version >= 3.6](https://cran.r-project.org/doc/manuals/r-devel/R-admin.html):
+
+	```git clone https://github.com/galantelab/reboot.git```
+
+
+	```sudo sh reboot/install.sh```
+
 
 ## Dependencies
 
-Reboot is built in R scripts. In order to work properly, the following packages are necessary (provided by docker environment):
+In order to work properly, the following packages are necessary (included in the installation procedures):
 
 * survival
 * survminer
-* BiocManager
+* [BiocManager](https://cran.r-project.org/web/packages/BiocManager/vignettes/BiocManager.html)
 * survcomp
 * optparse
 * OptimalCutpoints
@@ -70,27 +76,24 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
 ## Usage and options 
 
-1. Main options
+Main options are regression, survival or complete and can be invoked by the help menu:
 
-   Main options are regression, survival or complete and can be invoked by the help menu:
+```reboot.R -h```
 
-   ```reboot.R -h```
+The same can be performed in a docker container:
 
-   The same can be performed in a docker container:
+```docker run --rm galantelab/reboot reboot.R -h```
 
-   ```docker run --rm galantelab/reboot reboot.R -h```
-
-   In summary, options are:
+In summary, options are:
 
 
-   | regression | generates signature through multivariate cox regression analys |
-   | survival | applies sgnature in survival analysis |
-   | complete | generates and applies signature | 
+| regression | generates signature through multivariate cox regression analysis |
+| survival | applies sgnature in survival analysis |
+| complete | generates and applies signature | 
 
- 
-   <br>
+<br>
 
-2. Regression option
+1. Regression option
 
    All sub-options are provided by: 
 
@@ -114,7 +117,7 @@ Reboot is built in R scripts. In order to work properly, the following packages 
 
    <br>	
 
-3. Survival option
+2. Survival option
 
    All sub-options are provided by:
 
