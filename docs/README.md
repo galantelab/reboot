@@ -52,26 +52,26 @@ Reboot can be obtained from github, through direct installation or docker contai
 
 In order to work properly, the following packages are necessary (included in the installation procedures):
 
-* survival
-* survminer
+* [argparse](https://cran.r-project.org/web/packages/argparse/index.html){:target="_blank"}
 * [BiocManager](https://cran.r-project.org/web/packages/BiocManager/vignettes/BiocManager.html){:target="_blank"}
-* survcomp
-* optparse
-* OptimalCutpoints
-* survivalROC
-* forestmodel
-* sjlabelled
-* sjmisc
-* sjstats
-* data.table
-* penalized
-* tidyverse
-* hash
-* R.utils
-* argparse
-* extrafont
-* remotes (from BiocManager)
-* BioinformaticsFMRP/TCGAbiolinks (from BiocManager)
+* [BioinformaticsFMRP/TCGAbiolinks](https://github.com/BioinformaticsFMRP/TCGAbiolinks){:target="_blank"} (from BiocManager)
+* [data.table](https://cran.r-project.org/web/packages/data.table/index.html){:target="_blank"}
+* [extrafont](https://cran.r-project.org/web/packages/extrafont/index.html){:target="_blank"}
+* [forestmodel](https://cran.r-project.org/web/packages/forestmodel/index.html){:target="_blank"}
+* [hash](https://cran.r-project.org/web/packages/hash/index.html){:target="_blank"}
+* [OptimalCutpoints](https://cran.r-project.org/web/packages/OptimalCutpoints/index.html){:target="_blank"}
+* [optparse](https://cran.r-project.org/web/packages/optparse/index.html){:target="_blank"}
+* [penalized](https://cran.r-project.org/web/packages/penalized/index.html){:target="_blank"}
+* [remotes](https://cran.r-project.org/web/packages/remotes/index.html){:target="_blank"} (from BiocManager)
+* [R.utils](https://cran.r-project.org/web/packages/R.utils/index.html){:target="_blank"}
+* [sjlabelled](https://cran.r-project.org/web/packages/sjlabelled/index.html){:target="_blank"}
+* [sjmisc](https://cran.r-project.org/web/packages/sjmisc/index.html){:target="_blank"}
+* [sjstats](https://cran.r-project.org/web/packages/sjstats/index.html){:target="_blank"}
+* [survcomp](http://www.bioconductor.org/packages/release/bioc/html/survcomp.html){:target="_blank"} (from BiocManager)
+* [survival](https://cran.r-project.org/web/packages/survival/index.html){:target="_blank"}
+* [survivalROC](https://cran.r-project.org/web/packages/survivalROC/index.html){:target="_blank"}
+* [survminer](https://cran.r-project.org/web/packages/survminer/index.html){:target="_blank"}
+* [tidyverse](https://cran.r-project.org/web/packages/tidyverse/index.html){:target="_blank"}
 
 ## Commands and options 
 
@@ -112,12 +112,12 @@ In summary, 3 subcommands are available:
    | short option | full option | Description|
    | ----------------------- | ----------------------------- | ----------------------- |
    | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
-   | -O | [--]outprefix |  Output file prefix. Default: reboot |
-   | -B | [--]bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
-   | -G | [--]groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
-   | -P | [--]pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
-   | -V | [--]varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
-   | -h | [--]help      | Show this help message and exit |
+   | -O | -\-outprefix |  Output file prefix. Default: reboot |
+   | -B | -\-bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
+   | -G | -\-groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
+   | -P | -\-pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
+   | -V | -\-varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
+   | -h | -\-help      | Show this help message and exit |
 
    <br>	
 
@@ -136,13 +136,13 @@ In summary, 3 subcommands are available:
 
    | short option | full option | Description|
    | ------------------------ | ----------------------------- | ----------------------- |
-   | -I | - -filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
-   | -O | - -outprefix |  Output file prefix. Default: reboot |
-   | -M | - -multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
-   | -C | - -clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
-   | -R | - -roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
-   | -S | - -signature | Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients |
-   | -h | [--]help      | Show this help message and exit |
+   | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
+   | -O | -\-outprefix |  Output file prefix. Default: reboot |
+   | -M | -\-multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
+   | -C | -\-clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
+   | -R | -\-roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
+   | -S | -\-signature | Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients |
+   | -h | -\-help      | Show this help message and exit |
 
    <br>
 
@@ -161,16 +161,17 @@ In summary, 3 subcommands are available:
 
    | short option | full option | Description|
    | ----------------------- | ----------------------------- | ----------------------- |
-   | -I | - -filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
-   | -O | - -outprefix |  Output file prefix. Default: reboot |
-   | -B | - -bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
-   | -G | - -groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
-   | -P | - -pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
-   | -V | - -varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
-   | -M | - -multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
-   | -C | - -clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
-   | -R | - -roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
-   | -h | - -help      | Show this help message and exit |
+   | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
+   | -O | -\-outprefix |  Output file prefix. Default: reboot |
+   | -B | -\-bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
+   | -G | -\-groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
+   | -P | -\-pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
+   | -V | -\-varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
+   | -M | -\-multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
+   | -C | -\-clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
+   | -R | -\-roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
+   | -h | -\-help      | Show this help message and exit |
+
    <br>
 
 ## Inputs
