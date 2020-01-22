@@ -110,7 +110,7 @@ In summary, 3 subcommands are available:
    Regression options are: 
 
    | short option | full option | Description|
-   | ----------------------- | ----------------------------- | ----------------------- |
+   | -------------------------- | ----------------------------------------- | ----------------------- |
    | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
    | -O | -\-outprefix |  Output file prefix. Default: reboot |
    | -B | -\-bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
@@ -135,7 +135,7 @@ In summary, 3 subcommands are available:
    Survival options are:
 
    | short option | full option | Description|
-   | ------------------------ | ----------------------------- | ----------------------- |
+   | ------------------------ | --------------------------------------- | ----------------------- |
    | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
    | -O | -\-outprefix |  Output file prefix. Default: reboot |
    | -M | -\-multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
@@ -160,7 +160,7 @@ In summary, 3 subcommands are available:
    Complete options are:
 
    | short option | full option | Description|
-   | ----------------------- | ----------------------------- | ----------------------- |
+   | ----------------------- | ----------------------------------------- | ----------------------- |
    | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
    | -O | -\-outprefix |  Output file prefix. Default: reboot |
    | -B | -\-bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
