@@ -30,7 +30,6 @@ Additionally, if the ROC option is chosen along with the multivariate option, th
 
 ## Installation
 
-
 Reboot can be obtained from github, through direct installation or docker container (recommended).
 
 1. Via docker
@@ -76,15 +75,19 @@ In order to work properly, the following packages are necessary (included in the
 
 ## Usage and options 
 
-Main options are regression, survival or complete and can be invoked by the help menu:
+Reboot works with a command/subcommands structure:
+
+```reboot.R [subcommand] <options>```
+
+
+Subcommands may be invoked by the help menu:
+
+```docker run --rm galantelab/reboot reboot.R -h``` or optionally,
 
 ```reboot.R -h```
 
-The same can be performed in a docker container:
 
-```docker run --rm galantelab/reboot reboot.R -h```
-
-In summary, options are:
+In summary, subcommands are:
 
 
 | regression | generates signature through multivariate cox regression analysis |
