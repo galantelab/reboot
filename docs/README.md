@@ -101,7 +101,7 @@ In summary, 3 subcommands are available:
    In order to generate a genetic signature, run the following: 
 
 
-   ```docker run --rm galantelab/reboot regression <options>``` , or optionally:
+   ```docker run --rm galantelab/reboot regression <options>``` , optionally:
 
 
    ```reboot.R regression <options>```
@@ -121,18 +121,15 @@ In summary, 3 subcommands are available:
 
    <br>	
 
-2. Survival option
+2. **survival**
 
-   In order to generate a survival analysis, run the follwing:
+   In order to generate a survival analysis, run the following:
 
 
-   ```docker run --rm galantelab/reboot reboot.R survival <options>```, or optionally:
+   ```docker run --rm galantelab/reboot reboot.R survival <options>```, optionally:
 
 
    ```reboot.R survival <options>```
-
-
-   If you are using docker container:
 
 
    Survival options are:
@@ -149,17 +146,18 @@ In summary, 3 subcommands are available:
 
    <br>
 
-4. Complete option
+4. **complete**
 
-   All sub-options are provided by: (give a more detailed table after command)
+   In order to generate a survival analysis, run the following:
+
+
+   ```docker run --rm  galantelab/reboot reboot.R complete -h``` , optionally:
+
 
    ```reboot.R complete -h```
 
-   If you are using docker container:
 
-   ```docker run --rm  galantelab/reboot reboot.R complete -h```
-
-   In summary, options are:
+   Complete options are:
 
    | short option | full option | Description|
    | ----------------------- | ----------------------------- | ----------------------- |
@@ -172,7 +170,7 @@ In summary, 3 subcommands are available:
    | -M | - -multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
    | -C | - -clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
    | -R | - -roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
-
+   | -h | - -help      | Show this help message and exit |
    <br>
 
 ## Inputs
