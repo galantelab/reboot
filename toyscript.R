@@ -1,4 +1,4 @@
-#!/usr/local/bin
+#!/usr/bin/Rscript
 
 ####Required libraries###
 
