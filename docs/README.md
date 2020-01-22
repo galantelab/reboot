@@ -34,13 +34,13 @@ Reboot can be obtained from github, through direct installation or docker contai
 
 1. Via docker
 	
-	This method works on any distribution or operational systems, as long as [docker](https://docs.docker.com/install) is installed.
+	This method works on any distribution or operational systems, as long as [docker](https://docs.docker.com/install){:target="_blank"} is installed.
 
 	```docker pull galantelab/reboot```
 
 2. Direct
 
-	This method requires previous installation of  [R version >= 3.6](https://cran.r-project.org/doc/manuals/r-devel/R-admin.html):
+	This method requires previous installation of  [R version >= 3.6](https://cran.r-project.org/doc/manuals/r-devel/R-admin.html){:target="_blank"}:
 
 	```git clone https://github.com/galantelab/reboot.git```
 
@@ -54,7 +54,7 @@ In order to work properly, the following packages are necessary (included in the
 
 * survival
 * survminer
-* [BiocManager](https://cran.r-project.org/web/packages/BiocManager/vignettes/BiocManager.html)
+* [BiocManager](https://cran.r-project.org/web/packages/BiocManager/vignettes/BiocManager.html){:target="_blank"}
 * survcomp
 * optparse
 * OptimalCutpoints
@@ -73,7 +73,7 @@ In order to work properly, the following packages are necessary (included in the
 * remotes (from BiocManager)
 * BioinformaticsFMRP/TCGAbiolinks (from BiocManager)
 
-## Usage and options 
+## Commands and options 
 
 Reboot works with a command/subcommands structure:
 
@@ -82,57 +82,60 @@ Reboot works with a command/subcommands structure:
 
 Subcommands may be invoked by the help menu:
 
-```docker run --rm galantelab/reboot reboot.R -h``` or optionally,
+```docker run --rm galantelab/reboot reboot.R -h```  or optionally:
 
 ```reboot.R -h```
 
 
-In summary, subcommands are:
+In summary, 3 subcommands are available:
 
 
-| regression | generates signature through multivariate cox regression analysis |
-| survival | applies sgnature in survival analysis |
-| complete | generates and applies signature | 
+| **regression** | generates signature through multivariate cox regression analysis |
+| **survival** | applies signature in survival analysis |
+| **complete** | generates and applies signature | 
 
 <br>
 
-1. Regression option
+1. **regression**
 
-   All sub-options are provided by: 
-
-   ```reboot.R regression -h```
+   In order to generate a genetic signature, run the following: 
 
 
-   If you are using docker container:
+   ```docker run --rm galantelab/reboot regression <options>``` , or optionally:
 
-   ```docker run --rm galantelab/reboot regression -h```
 
-   In summary, options are: 
+   ```reboot.R regression <options>```
+
+
+   Regression options are: 
 
    | short option | full option | Description|
    | ----------------------- | ----------------------------- | ----------------------- |
-   | -I | - -filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
-   | -O | - -outprefix |  Output file prefix. Default: reboot |
-   | -B | - -bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
-   | -G | - -groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
-   | -P | - -pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
-   | -V | - -varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
+   | -I | [--]filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
+   | -O | [--]outprefix |  Output file prefix. Default: reboot |
+   | -B | [--]bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
+   | -G | [--]groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
+   | -P | [--]pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
+   | -V | [--]varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
+   | -h | [--]help      | Show this help message and exit |
 
    <br>	
 
 2. Survival option
 
-   All sub-options are provided by:
+   In order to generate a survival analysis, run the follwing:
 
-   ```reboot.R survival -h```
+
+   ```docker run --rm galantelab/reboot reboot.R survival <options>```, or optionally:
+
+
+   ```reboot.R survival <options>```
 
 
    If you are using docker container:
 
-   ```docker run --rm galantelab/reboot reboot.R survival -h```
 
-
-   In summary, options are:
+   Survival options are:
 
    | short option | full option | Description|
    | ------------------------ | ----------------------------- | ----------------------- |
@@ -142,6 +145,7 @@ In summary, subcommands are:
    | -C | - -clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
    | -R | - -roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
    | -S | - -signature | Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients |
+   | -h | [--]help      | Show this help message and exit |
 
    <br>
 
