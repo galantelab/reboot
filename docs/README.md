@@ -18,13 +18,12 @@ It was built to provide the freedom of choice for regression and survival analys
 
 Regression module produces significance coefficients (genetic signature) based on a Cox regression for genes and/or transcripts.
 Dimension is a critical variable for regression 
-Survival module produces and applies survival score for all individuals based on the performed regression. 
-Other clinical variables may be included for a survival analysis, such as therapy, age, gender, among others. Statistical tests for prognosis, patient score categorization for genetic signature and relevance of each variable are also provided.
-Univariate and multivariate survival analysis use median cutoff as default for high and low score genetic signature, if multivariate and ROC paramaters are chosen together, a bootstrap procedure is performed for variable significance. 
-Reboot also provides the option for a ROC curve, using NNE (Nearest Neighbour Estimate) method, yielding a cutoff for high and low genetic score.
-ROC based classification performs Youden statistics: J = [sensitivity + (specificity -1)], in order to choose the ideal cutoff.
-If two or more J coefficients are presented, then, the first one is chosen.
- 
+
+The survival module produces and applies a score for all individuals based on the performed regression module. Both univariate and multivariate survival analyses use by default the median score value as cutoff for stratification of patients in high and low score genetic signature, unless the ROC option is chosen. In that case, the cutoff value is based on the ROC curve using NNE (Nearest Neighbour Estimate) method and the Youden statistics, where J = [sensitivity + (specificity -1)]. If more than one J coefficients are present, then the first one is chosen.
+
+Reboot also offers the multivariate option, where other clinical variables such as therapy, age, gender, among others can be included for a multivariate survival analysis. Multiple univariate analysis are made and only variables with a p-value <= 0.2 are selected for the final multivariate analysis. Statistical tests are performed in order to evaluate the relevance of each co-variable as a prognostic factor of a given event (overall / progression-free / recurrence-free survival).
+
+Additionally, if the ROC option is chosen along with the multivariate option, the multivariate analysis is done with a bootstrap resampling method if the clinical dataset provided passes the filters: (i) final dataset with at least 70% of the original one (NAs filter) and; (ii) the frequency of the less abundant category for each co-variable is not less than 20% (proportion filter). Otherwise, a multivariate analysis is performed without the bootstrap method. After 100 iterations, the relevance frequency of each co-variable with the event is calculated. Several plots are drawn for variables whose frequencies are at least 25% 
 
 
 ## Installation
