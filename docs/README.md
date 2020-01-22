@@ -109,13 +109,14 @@ In summary, 3 subcommands are available:
 
    Regression options are: 
 
-   | short option | full option | Description|
-   | -------------------------- | ----------------------------------------- | ----------------------- |
-
 
    ^4 -I ^9 -\-filein ^14 Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters
    ^4 -O ^9 -\-outprefix ^14  Output file prefix. Default: reboot 
 
+   <br>
+
+   | short option | full option | Description|
+   | -------------------------- | ----------------------------------------- | ----------------------- |
 
    | -B | -\-bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
    | -G | -\-groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
