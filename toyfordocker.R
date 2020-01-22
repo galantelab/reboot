@@ -4,7 +4,6 @@
 
 library("TCGAbiolinks")
 library("tidyverse")
-library("biomaRt")
 
 ####Run in current dir####
 setwd(getwd())
@@ -22,7 +21,6 @@ GDCdownload(query, method = "api")                      #directory structure: "p
 ####Data loading and formatting###
 
 #Gene expression#
-biomartCacheClear()
 exp_data <- GDCprepare(query)
 expmatrix <- SummarizedExperiment::assay(exp_data)
 expression <- t(expmatrix) %>%
@@ -152,6 +150,10 @@ input1 <- input1[uniqindex,]
 #Get patients from clinical data only if there is corresponding expression data
 exp_patients <- as.vector(unique(as.character(input1$sample)))
 finalclin <- finalclin[finalclin$barcode %in% exp_patients,]
+
+for (col in colnames(finalclin)){
+  finalclin[[col]] <- droplevels(as.factor(finalclin[[col]]))
+}
 
 #Keep columns that have only 2 categories in clinical table
 keep_cols <- c(1)
