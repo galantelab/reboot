@@ -40,7 +40,6 @@ suppressMessages(library("penalized"))
 suppressMessages(library("tidyverse"))
 suppressMessages(library("hash"))
 suppressMessages(library("R.utils"))
-suppressMessages(library("scriptName"))
 
 ######read input file######
 
