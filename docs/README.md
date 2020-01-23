@@ -161,13 +161,14 @@ In summary, 3 subcommands are available:
 
    | short option | full option | Description|
    | ------------------------ | --------------------------------------- | ----------------------- |
-   | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
+   | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters |
    | -O | -\-outprefix |  Output file prefix. Default: reboot |
    | -M | -\-multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
    | -C | -\-clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
    | -R | -\-roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
    | -S | -\-signature | Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients |
    | -h | -\-help      | Show this help message and exit |
+
    <br>
  
    ### Inputs
@@ -183,6 +184,7 @@ In summary, 3 subcommands are available:
          | Feature1 | coefficient1 |
          | Feature2 | coefficient2 |
          | ... | ... |
+
          <br>      
       
       #### Multivariate mode
@@ -194,6 +196,7 @@ In summary, 3 subcommands are available:
          | Sample1 | clin_var1(status) | clin_var2(status) | clin_var3(status) | ... | 
          | Sample2 | clin_var1(status) | clin_var2(status) | clin_var3(status) | ... |
          | ... | ... | ... | ... | ... |
+
          <br>
 
    ### Outputs
@@ -207,6 +210,7 @@ In summary, 3 subcommands are available:
          | feature | coefficient | hazard.ratio | log.rank.pvalue | low.high.samples | median.survival.low | median.survival.low | prognosis |
          | --------------- | ----------- | ------------ | --------------- | ---------------- | ------------------- | ------------------- | --------- | 
          | signature_score | coefficient value | hazard.ratio value | log.rank.pvalue value | low.high.samples value | median.survival.low value | median.survival.low value | prognosis value |
+
          <br>
        
          Plots returned for this mode are proportional hazard assumptions plot, containing a Schoenfeld test and a Kaplan Mayer plot.
@@ -221,6 +225,7 @@ In summary, 3 subcommands are available:
          | clin variable 1 | coefficient value | hazard.ratio value | log.rank.pvalue value | low.high.samples value | median.survival.low value | median.survival.low value | prognosis value |
          | clin variable 2 | coefficient value | hazard.ratio value | log.rank.pvalue value | low.high.samples value | median.survival.low value | median.survival.low value | prognosis value|
          | ... | ... | ... | ... | ... | ... | ... | ... |
+
          <br>
 
          Plots returned for this mode are: a forest plot for all clinical variables considered, a Kaplan Meier plot and a proportional hazard assumption plot metioned in the univariate mode. If the option --ROC is also selected then the split of the patients in high and low signature score is done based on a ROC curve, also provided.  
@@ -250,6 +255,7 @@ In summary, 3 subcommands are available:
    | -C | -\-clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
    | -R | -\-roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
    | -h | -\-help      | Show this help message and exit |
+
    <br>
 
 ## Toy example
