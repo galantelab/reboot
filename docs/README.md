@@ -175,7 +175,7 @@ In summary, 3 subcommands are available:
 
       Survival analysis may be done in multivariate or univariate mode and inputs depends on this choice.
 
-      #### Univariate mode
+      1. Univariate mode
          
          This is the simplest mode and requires a single input. The expected file is a tsv with a feature name column and coefficient (provided as output by regression analysis):
 
@@ -187,7 +187,7 @@ In summary, 3 subcommands are available:
 
          <br>      
       
-      #### Multivariate mode
+      2. Multivariate mode
 
          In case multivariate survival option is invoked, clinical information is also necessary in a tsv format, in the following configuration (all clinical variables MUST be categorical and present ONLY 2 classes):
 
@@ -203,7 +203,7 @@ In summary, 3 subcommands are available:
 
       Survival analysis may be done in multivariate or univariate mode.
 
-      #### Univariate mode
+      1. Univariate mode
 
          If the analysis is performed in univariate mode, reboot returns a log and a lograng.txt file, containing the statistics of the signature:
 
@@ -215,7 +215,7 @@ In summary, 3 subcommands are available:
        
          Plots returned for this mode are proportional hazard assumptions plot, containing a Schoenfeld test and a Kaplan Mayer plot.
 
-      #### Multivariate mode
+      2. Multivariate mode
  
          If the analysis is performed in multivariate mode, reboot returns a multicox.txt file containing the statistics of the signature and all other clinical variables, besides the log file:
 
