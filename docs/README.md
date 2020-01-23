@@ -10,18 +10,10 @@
 
 Reboot is a flexible, easy-to-use tool to identify sets of genes or transcripts whose expression values are highly correlated with patient survival. Using a multivariate strategy with penalized Cox regression (Lasso method), Reboot presents efficient convergence of the regression coefficients during the creation of a gene/transcript signature. Once a signature is obtained, Reboot also provides functionality to produce, apply and validate a score, which is calculated based on the obtained signature, for a given set of samples.
 
-Reboot is a modular tool developed in R version 3.6. It comprises two main modules: **regression** and **survival**. Module *regression* provides functionality for obtaining gene/transcript signatures correlated with patient survival using multivariate penalized Cox regression. In turn, module **survival** provides functionality for producing, applying and validating a signature score in patient datasets. Finally, Reboot also provides the execution option complete, which integratively executes the two aforementioned modules.
+Reboot is a modular tool developed in R version 3.6. It comprises two main modules: **regression** and **survival**. Module *regression* provides functionality for obtaining gene/transcript signatures correlated with patient survival using multivariate penalized Cox regression. In turn, module **survival** provides functionality for producing, applying and validating a signature score in patient datasets. Finally, Reboot also provides the execution option **complete**, which integratively executes the two aforementioned modules.
 
 ![](Paper_figure.png)
 *Figure 1: Reboot workflow. First module runs a regression analysis to identify a gene/transcript signature. Second module runs a survival analysis based on a score calculated based on the obtained signature*
-
-Regression module produces significance coefficients (genetic signature) based on a Cox regression for genes and/or transcripts. Dimension is a critical variable for algorithm convergence in regression procedures. Too many attributes (genes/transcripts) may impair the analysis speed or make it infeasable. On the other hand, complex biological mechanisms may arise from synergic interactions and multiple regression analysis   
-
-The survival module produces and applies a score for all individuals based on the performed regression module. Both univariate and multivariate survival analyses use by default the median score value as cutoff for stratification of patients in high and low score genetic signature, unless the ROC option is chosen. In that case, the cutoff value is based on the ROC curve using NNE (Nearest Neighbour Estimate) method and the Youden statistics, where J = [sensitivity + (specificity -1)]. If more than one J coefficients is present, then the first one is chosen.
-
-Reboot also offers the multivariate option, where other clinical variables such as therapy, age, gender, among others can be included for a multivariate survival analysis. Multiple univariate analysis are made and only variables with a p-value <= 0.2 are selected for the final multivariate analysis. Statistical tests are performed in order to evaluate the relevance of each co-variable as a prognostic factor of a given event (overall / progression-free / recurrence-free survival).
-
-Additionally, if the ROC option is chosen along with the multivariate option, the multivariate analysis is done with a bootstrap resampling method if the clinical dataset provided passes the filters: (i) final dataset with at least 70% of the original one (NAs filter) and; (ii) the frequency of the less abundant category for each co-variable is not less than 20% (proportion filter). Otherwise, a multivariate analysis is performed without the bootstrap method. After 100 iterations, the relevance frequency of each co-variable with the event is calculated. Several plots are drawn for variables whose frequencies are at least 25%.
 
 ## Installation
 
@@ -91,7 +83,7 @@ In summary, 3 subcommands are available:
 
 <br>
 
-## Generation of gene/transcript signatures correlated with patient survival
+## Generation of gene/transcript signatures relevant to patient survival
 
    Reboot produces a genetic signature (significance coefficients) correlated with patient survival based on a multivariate Cox regression of genes and/or transcripts. Dimension is a critical variable for algorithm convergence in regression procedures.
 
@@ -147,7 +139,7 @@ In summary, 3 subcommands are available:
 
       The plots in the output are a histogram with the distribution of the coefficients and a lollipop plot with the most relevant coefficients.
 
-## Validation of generated gene/transcript signature in survival data
+## Application of generated gene/transcript signatures in survival data
 
    Reboot produces and applies a score for all samples based on the signature previously obtained from the regression module. Note that, at this step, a different sample set may be provided for validation purposes, for example.
 
@@ -217,34 +209,34 @@ In summary, 3 subcommands are available:
 
       1. Univariate mode
 
-         If the analysis is performed in univariate mode, reboot returns a log and a lograng.txt file, containing the statistics of the signature:
+         If the analysis is performed in univariate mode, reboot returns a log and a lograng.txt file, containing the survival results for the signature score:
 
          | feature | coefficient | hazard.ratio | log.rank.pvalue | low.high.samples | median.survival.low | median.survival.low | prognosis |
          | --------------- | ----------- | ------------ | --------------- | ---------------- | ------------------- | ------------------- | --------- | 
-         | signature_score | coefficient value | hazard.ratio value | log.rank.pvalue value | low.high.samples value | median.survival.low value | median.survival.low value | prognosis value |
+         | score | -1.0091 | 0.3645 (95% CI, 0.2456-0.541) | 0.003 | 52/53 | 532 (95% CI, 455-648) | 313 (95% CI, 231-362) | better |
 
          <br>
        
-         Plots returned for this mode are proportional hazard assumptions plot, containing a Schoenfeld test and a Kaplan Mayer plot.
+         Plots returned in this mode include: a proportional hazard assumptions plot (results of Schoenfeld tests) and a Kaplan Meier plot.
 
       2. Multivariate mode
  
-         If the analysis is performed in multivariate mode, reboot returns a multicox.txt file containing the statistics of the signature and all other clinical variables, besides the log file:
+         If the analysis is performed in multivariate mode, reboot returns all files created in the univariate mode in addition to a multicox.txt file, which contains the survival results of the signature score along with all other clinical variables:
 
-         | feature | coefficient | hazard.ratio | log.rank.pvalue | low.high.samples | median.survival.low | median.survival.low | prognosis |
+         | variable | reference | univariate.hazard.ratio | univariate.Cox.pvalue |  univariate.prognosis | multivariate.hazard.ratio | multivariate.Cox.pvalue | multivariate.prognosis |
          | --------------- | ----------- | ------------ | --------------- | ---------------- | ------------------- | ------------------- | --------- |
-         | signature_score | coefficient value | hazard.ratio value | log.rank.pvalue value | low.high.samples value | median.survival.low value | median.survival.low value | prognosis value |
-         | clin variable 1 | coefficient value | hazard.ratio value | log.rank.pvalue value | low.high.samples value | median.survival.low value | median.survival.low value | prognosis value |
-         | clin variable 2 | coefficient value | hazard.ratio value | log.rank.pvalue value | low.high.samples value | median.survival.low value | median.survival.low value | prognosis value|
+         | score | low | 0.3645 (95% CI, 0.2456-0.541) | 0.001 | better | 0.3904 (95% CI, 0.2248-0.6779) | 8e-04 | better |
+         | age | 56+ years | 1.369 (95% CI, 0.9086-2.0625) | 0.1332 | worse | 1.1104 (95% CI, 0.6314-1.9531) | 0.7161 | ---- |
+         | gender | MALE | 0.9474 (95% CI, 0.6381-1.4066) | 0.7886 | ---- | ---- | ---- | ---- |
          | ... | ... | ... | ... | ... | ... | ... | ... |
 
          <br>
 
-         Plots returned for this mode are: a forest plot for all clinical variables considered, a Kaplan Meier plot and a proportional hazard assumption plot metioned in the univariate mode. If the option --ROC is also selected then the split of the patients in high and low signature score is done based on a ROC curve, also provided.  
+         Plots returned in this mode include: a forest plot for all clinical variables, a Kaplan Meier plot and a proportional hazard assumptions plot (Schoenfeld tests). If option --ROC is selected, a ROC curve and a plot of co-variable frequencies are also provided.
 
-3. **complete**
+##Integrative analysis
 
-   In order to perform a complete analysis, run the following:
+   Reboot also provides a subcommand to perform the analyses in an integrative way (**regression** followed by **survival**). To execute the complete analysis, run the following:
 
 
    ```docker run --rm  galantelab/reboot reboot.R complete <options>``` , optionally:
@@ -272,23 +264,18 @@ In summary, 3 subcommands are available:
 
 ## Toy example
 
-   In order to ilustrate usage, a toy script is provided to download and format expression and clinical data of glioblastoma patients from TCGA.
+   In order to ilustrate tool usage, a toy script is also provided to download and format gene expression and clinical data of glioblastoma patients from [TCGA](https://www.cancer.gov/about-nci/organization/ccg/research/structural-genomics/tcga){:target="_blank"}.
    Running the following code in the reboot directory provides both inputs:
 	
-   ```toyscript.R```
+   ```docker run --env MYID=$(id -u) --rm -ti -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot toyfordocker.R``` , optionally:
 
-   It is also possible to obtain toy datasets from reboot docker image, using the following:
+   ```toyscript.R``` 
 
-   ```docker run --env MYID=$(id -u) --rm -ti -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot toyfordocker.R```
-
-   This command returns 2 tsv files, mentioned above, called expression.tsv and clinical.tsv. A MANIFEST.txt file and a set of expression and clinical data are also created, as intermediates of TCGA dowload process.
+   This command returns 2 tsv files, mentioned above, called expression.tsv and clinical.tsv. A MANIFEST.txt file and a set of expression and clinical data are also created, as intermediates of TCGA download process.
    The composition of expression dataset comprises clinical variables: OS (survival status) and OS.time (follow up time) and 50 random picked gene expression (FPKM).
 
    Finally, reboot can be run in the complete mode:
 
-   ```Rscript reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R```
+   ```docker run -u $(id -u):$(id -g) --rm -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R``` , optionally:
 
-   Docker:
-  
-   ```docker run -u $(id -u):$(id -g) --rm -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R``` 
-    
+   ```Rscript reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R```    
