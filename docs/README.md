@@ -127,17 +127,17 @@ In summary, 3 subcommands are available:
 
 ### Output
 
-      As result, Reboot generates one log file, a tsv containing regression coefficients and 2 plots. The tsv file is in the following format:
+   As result, Reboot generates one log file, a tsv containing regression coefficients and 2 plots. The tsv file is in the following format:
 	
-      | Feature name | coefficient | 
-      | --- | --- |
-      | PARPBP | 0.17014 | 
-      | CXCR6 | 0.22173 |
-      | ... | ... |
+   | Feature name | coefficient | 
+   | --- | --- |
+   | PARPBP | 0.17014 | 
+   | CXCR6 | 0.22173 |
+   | ... | ... |
  
-      <br>
+   <br>
 
-      The plots in the output are a histogram with the distribution of the coefficients and a lollipop plot with the most relevant coefficients.
+   The plots in the output are a histogram with the distribution of the coefficients and a lollipop plot with the most relevant coefficients.
 
 ## Application of generated gene/transcript signatures in survival data
 
@@ -149,92 +149,92 @@ In summary, 3 subcommands are available:
 
    Additionally, if the ROC option is chosen along with the multivariate option, the multivariate analysis is done with a bootstrap resampling method once the clinical dataset provided passes the filters: (i) final dataset with at least 70% of the original one (NAs filter) and; (ii) the frequency of the less abundant category for each co-variable is not less than 20% (proportion filter). Otherwise, a multivariate analysis is performed without the bootstrap method. After 100 iterations, the relevance frequency of each co-variable with the event is calculated. Several plots are drawn for variables whose frequencies are at least 25%.
 
-###Usage
+### Usage
 
-      To validate a gene/transcript signature in survival analysis, run the following:
-
-
-      ```docker run --rm galantelab/reboot reboot.R survival <options>```, optionally:
+   To validate a gene/transcript signature in survival analysis, run the following:
 
 
-      ```reboot.R survival <options>```
+   ```docker run --rm galantelab/reboot reboot.R survival <options>```, optionally:
 
 
-      Survival options are:
+   ```reboot.R survival <options>```
 
-      | short option | full option | Description|
-      | ------------------------ | --------------------------------------- | ----------------------- |
-      | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters |
-      | -O | -\-outprefix |  Output file prefix. Default: reboot |
-      | -M | -\-multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
-      | -C | -\-clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
-      | -R | -\-roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
-      | -S | -\-signature | Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients |
-      | -h | -\-help      | Show this help message and exit |
 
-      <br>
+   Survival options are:
+
+   | short option | full option | Description|
+   | ------------------------ | --------------------------------------- | ----------------------- |
+   | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters |
+   | -O | -\-outprefix |  Output file prefix. Default: reboot |
+   | -M | -\-multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
+   | -C | -\-clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
+   | -R | -\-roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
+   | -S | -\-signature | Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients |
+   | -h | -\-help      | Show this help message and exit |
+
+   <br>
  
 ### Inputs
 
-      Survival analysis may be run in univariate or multivariate mode. Required inputs depend on this choice.
+   Survival analysis may be run in univariate or multivariate mode. Required inputs depend on this choice.
 
-      1. Univariate mode
-         
-         This is the simplest mode and requires a single input file. The expected tsv file contains a set of features (genes/transcripts) and their corresponding coefficients provided as output by the **regression** module:
+   1. Univariate mode
+       
+      This is the simplest mode and requires a single input file. The expected tsv file contains a set of features (genes/transcripts) and their corresponding coefficients provided as output by the **regression** module:
 
 
-         | Feature name | coefficient |
-         | --- | --- |
-         | PARPBP | 0.17014 |
-         | CXCR6 | 0.22173 |
-         | ... | ... |
+      | Feature name | coefficient |
+      | --- | --- |
+      | PARPBP | 0.17014 |
+      | CXCR6 | 0.22173 |
+      | ... | ... |
 
-         <br>      
-      
-      2. Multivariate mode
+      <br>      
+    
+   2. Multivariate mode
 
-         In case multivariate mode is chosen, a tsv file containing clinical information is also necessary. Note that all clinical variables MUST be categorical and present ONLY 2 classes (NA values are allowed):
+      In case multivariate mode is chosen, a tsv file containing clinical information is also necessary. Note that all clinical variables MUST be categorical and present ONLY 2 classes (NA values are allowed):
 
-         | Sample ID | age | gender | therapy | ... |   
-         |---|---|---|---|---|
-         | patient_1 | 18-55 years | male | radiation | ... | 
-         | patient_2 | 56+ years | female | chemoradiation | ... |
-         | ... | ... | ... | ... | ... |
+      | Sample ID | age | gender | therapy | ... |   
+      |---|---|---|---|---|
+      | patient_1 | 18-55 years | male | radiation | ... | 
+      | patient_2 | 56+ years | female | chemoradiation | ... |
+      | ... | ... | ... | ... | ... |
 
-         <br>
+      <br>
 
 ### Outputs
 
-      Depending on whether survival analysis was performed in univariate or multivariate mode, a different set of output files are created.
+   Depending on whether survival analysis was performed in univariate or multivariate mode, a different set of output files are created.
 
-      1. Univariate mode
+   1. Univariate mode
 
-         If the analysis is performed in univariate mode, reboot returns a log and a lograng.txt file, containing the survival results for the signature score:
+      If the analysis is performed in univariate mode, reboot returns a log and a lograng.txt file, containing the survival results for the signature score:
 
-         | feature | coefficient | hazard.ratio | log.rank.pvalue | low.high.samples | median.survival.low | median.survival.low | prognosis |
-         | --------------- | ----------- | ------------ | --------------- | ---------------- | ------------------- | ------------------- | --------- | 
-         | score | -1.0091 | 0.3645 (95% CI, 0.2456-0.541) | 0.003 | 52/53 | 532 (95% CI, 455-648) | 313 (95% CI, 231-362) | better |
+      | feature | coefficient | hazard.ratio | log.rank.pvalue | low.high.samples | median.survival.low | median.survival.low | prognosis |
+      | --------------- | ----------- | ------------ | --------------- | ---------------- | ------------------- | ------------------- | --------- | 
+      | score | -1.0091 | 0.3645 (95% CI, 0.2456-0.541) | 0.003 | 52/53 | 532 (95% CI, 455-648) | 313 (95% CI, 231-362) | better |
 
-         <br>
+      <br>
        
-         Plots returned in this mode include: a proportional hazard assumptions plot (results of Schoenfeld tests) and a Kaplan Meier plot.
+      Plots returned in this mode include: a proportional hazard assumptions plot (results of Schoenfeld tests) and a Kaplan Meier plot.
 
-      2. Multivariate mode
+   2. Multivariate mode
  
-         If the analysis is performed in multivariate mode, reboot returns all files created in the univariate mode in addition to a multicox.txt file, which contains the survival results of the signature score along with all other clinical variables:
+      If the analysis is performed in multivariate mode, reboot returns all files created in the univariate mode in addition to a multicox.txt file, which contains the survival results of the signature score along with all other clinical variables:
 
-         | variable | reference | univariate.hazard.ratio | univariate.Cox.pvalue |  univariate.prognosis | multivariate.hazard.ratio | multivariate.Cox.pvalue | multivariate.prognosis |
-         | --------------- | ----------- | ------------ | --------------- | ---------------- | ------------------- | ------------------- | --------- |
-         | score | low | 0.3645 (95% CI, 0.2456-0.541) | 0.001 | better | 0.3904 (95% CI, 0.2248-0.6779) | 8e-04 | better |
-         | age | 56+ years | 1.369 (95% CI, 0.9086-2.0625) | 0.1332 | worse | 1.1104 (95% CI, 0.6314-1.9531) | 0.7161 | ---- |
-         | gender | MALE | 0.9474 (95% CI, 0.6381-1.4066) | 0.7886 | ---- | ---- | ---- | ---- |
-         | ... | ... | ... | ... | ... | ... | ... | ... |
+      | variable | reference | univariate.hazard.ratio | univariate.Cox.pvalue |  univariate.prognosis | multivariate.hazard.ratio | multivariate.Cox.pvalue | multivariate.prognosis |
+      | --------------- | ----------- | ------------ | --------------- | ---------------- | ------------------- | ------------------- | --------- |
+      | score | low | 0.3645 (95% CI, 0.2456-0.541) | 0.001 | better | 0.3904 (95% CI, 0.2248-0.6779) | 8e-04 | better |
+      | age | 56+ years | 1.369 (95% CI, 0.9086-2.0625) | 0.1332 | worse | 1.1104 (95% CI, 0.6314-1.9531) | 0.7161 | ---- |
+      | gender | MALE | 0.9474 (95% CI, 0.6381-1.4066) | 0.7886 | ---- | ---- | ---- | ---- |
+      | ... | ... | ... | ... | ... | ... | ... | ... |
 
-         <br>
+      <br>
 
-         Plots returned in this mode include: a forest plot for all clinical variables, a Kaplan Meier plot and a proportional hazard assumptions plot (Schoenfeld tests). If option --ROC is selected, a ROC curve and a plot of co-variable frequencies are also provided.
+      Plots returned in this mode include: a forest plot for all clinical variables, a Kaplan Meier plot and a proportional hazard assumptions plot (Schoenfeld tests). If option --ROC is selected, a ROC curve and a plot of co-variable frequencies are also provided.
 
-##Integrative analysis
+## Integrative analysis
 
    Reboot also provides a subcommand to perform the analyses in an integrative way (**regression** followed by **survival**). To execute the complete analysis, run the following:
 
