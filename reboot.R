@@ -57,7 +57,7 @@ parser_sur$add_argument("-C", "--clinical", type="character", dest = "clin_file"
 
 parser_sur$add_argument("-R", "--roc",
                         dest = "roc_curve", action="store_true", default="FALSE",
-                        help='If continuous variables should be categorized according to a ROC curve instead of median, choose -R')
+                        help='If genetic score should be categorized according to a ROC curve instead of the median, choose -R')
 
 parser_sur$add_argument("-S", "--signature",  metavar = '',
                         type="character", dest = "sig",

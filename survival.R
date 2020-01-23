@@ -20,7 +20,7 @@ make_option(c("-C", "--clinical"), action="store",
 type='character', dest = "clin_file", default = "", help="Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen"),
 
 make_option(c("-R", "--roc"), action="store",
-type='logical', dest = "roc_curve", default = FALSE, help="If continuous variables should be categorized according to a ROC curve instead of median, choose -R"))
+type='logical', dest = "roc_curve", default = FALSE, help="If If genetic score should be categorized according to a ROC curve instead of median, choose -R"))
 
 opo <- OptionParser(option_list=option_list, add_help_option = T)
 in_object <- parse_args(opo)
