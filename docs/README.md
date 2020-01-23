@@ -87,7 +87,7 @@ In summary, 3 subcommands are available:
 
    Reboot produces a genetic signature (significance coefficients) correlated with patient survival based on a multivariate Cox regression of genes and/or transcripts. Dimension is a critical variable for algorithm convergence in regression procedures.
 
-   ### Usage
+### Usage
 
    To generate a genetic signature, run the following: 
 
@@ -111,9 +111,9 @@ In summary, 3 subcommands are available:
    | -V | -\-varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
    | -h | -\-help      | Show this help message and exit |
 
-      <br>	
+   <br>	
 
-   ### Input
+### Input
 		
    To produce a genetic signature, Reboot requires a tsv file containing normalized expression values (TPM or FPKM) for genes/transcripts across multiple samples, in addition to survival data: survival status (e.g., 0=dead or 1=dead) and follow up time:
 
@@ -123,9 +123,9 @@ In summary, 3 subcommands are available:
    | patient_2 | 0 | 466 | 24.78227 | 64.80153 | ... |
    | ... | ... | ... | ... | ... | ... |
 
-      <br>   
+   <br>   
 
-   ### Output
+### Output
 
       As result, Reboot generates one log file, a tsv containing regression coefficients and 2 plots. The tsv file is in the following format:
 	
@@ -149,7 +149,7 @@ In summary, 3 subcommands are available:
 
    Additionally, if the ROC option is chosen along with the multivariate option, the multivariate analysis is done with a bootstrap resampling method once the clinical dataset provided passes the filters: (i) final dataset with at least 70% of the original one (NAs filter) and; (ii) the frequency of the less abundant category for each co-variable is not less than 20% (proportion filter). Otherwise, a multivariate analysis is performed without the bootstrap method. After 100 iterations, the relevance frequency of each co-variable with the event is calculated. Several plots are drawn for variables whose frequencies are at least 25%.
 
-   ###Usage
+###Usage
 
       To validate a gene/transcript signature in survival analysis, run the following:
 
@@ -174,7 +174,7 @@ In summary, 3 subcommands are available:
 
       <br>
  
-   ### Inputs
+### Inputs
 
       Survival analysis may be run in univariate or multivariate mode. Required inputs depend on this choice.
 
@@ -203,7 +203,7 @@ In summary, 3 subcommands are available:
 
          <br>
 
-   ### Outputs
+### Outputs
 
       Depending on whether survival analysis was performed in univariate or multivariate mode, a different set of output files are created.
 
