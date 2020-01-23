@@ -87,41 +87,41 @@ In summary, 3 subcommands are available:
 
    Reboot produces a genetic signature (significance coefficients) correlated with patient survival based on a multivariate Cox regression of genes and/or transcripts. Dimension is a critical variable for algorithm convergence in regression procedures.
 
-   ###Usage
+   ### Usage
 
-      To generate a genetic signature, run the following: 
-
-
-      ```docker run --rm galantelab/reboot regression <options>``` , optionally:
+   To generate a genetic signature, run the following: 
 
 
-      ```reboot.R regression <options>```
+   ```docker run --rm galantelab/reboot regression <options>``` , optionally:
 
 
-      Regression options are: 
+   ```reboot.R regression <options>```
 
 
-      | short option | full option | Description|
-      | -------------------------- | ----------------------------------------- | ----------------------- |
-      | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters |
-      | -O | -\-outprefix | Output file prefix. Default: reboot |	
-      | -B | -\-bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
-      | -G | -\-groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
-      | -P | -\-pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
-      | -V | -\-varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
-      | -h | -\-help      | Show this help message and exit |
+   Regression options are: 
+
+
+   | short option | full option | Description|
+   | -------------------------- | ----------------------------------------- | ----------------------- |
+   | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters |
+   | -O | -\-outprefix | Output file prefix. Default: reboot |	
+   | -B | -\-bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
+   | -G | -\-groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
+   | -P | -\-pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
+   | -V | -\-varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
+   | -h | -\-help      | Show this help message and exit |
 
       <br>	
 
    ### Input
 		
-      To produce a genetic signature, Reboot requires a tsv file containing normalized expression values (TPM or FPKM) for genes/transcripts across multiple samples, in addition to survival data: survival status (e.g., 0=dead or 1=dead) and follow up time:
+   To produce a genetic signature, Reboot requires a tsv file containing normalized expression values (TPM or FPKM) for genes/transcripts across multiple samples, in addition to survival data: survival status (e.g., 0=dead or 1=dead) and follow up time:
 
-      | Sample ID | OS | OS.time | PARPBP | RAD51 | ... |   
-      |---|---|---|---|---|---|
-      | patient_1 | 1 | 448 | 41.81557 | 34.70869 | ... | 
-      | patient_2 | 0 | 466 | 24.78227 | 64.80153 | ... |
-      | ... | ... | ... | ... | ... | ... |
+   | Sample ID | OS | OS.time | PARPBP | RAD51 | ... |   
+   |---|---|---|---|---|---|
+   | patient_1 | 1 | 448 | 41.81557 | 34.70869 | ... | 
+   | patient_2 | 0 | 466 | 24.78227 | 64.80153 | ... |
+   | ... | ... | ... | ... | ... | ... |
 
       <br>   
 
