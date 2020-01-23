@@ -4,9 +4,7 @@
 2. [Installation](#installation)
 3. [Dependencies](#dependencies)
 4. [Usage and options](#usage-and-options)
-5. [Inputs](#inputs)
-6. [Toy example](#toy-example)
-7. [Outputs](#outputs)
+5. [Toy example](#toy-example)
 
 ## Overview
 
@@ -187,8 +185,7 @@ In summary, 3 subcommands are available:
          | Feature2 | coefficient2 |
          | ... | ... |
 
-         <br>
-      
+         <br>      
       
       #### Multivariate mode
 
@@ -213,6 +210,8 @@ In summary, 3 subcommands are available:
          | feature | coefficient | hazard.ratio | log.rank.pvalue | low.high.samples | median.survival.low | median.survival.low | prognosis |
          | --------------- | ----------- | ------------ | --------------- | ---------------- | ------------------- | ------------------- | --------- | 
          | signature_score | coefficient value | hazard.ratio value | log.rank.pvalue value | low.high.samples value | median.survival.low value | median.survival.low value | prognosis value |
+
+         <br>
        
          Plots returned for this mode are proportional hazard assumptions plot, containing a Schoenfeld test and a Kaplan Mayer plot.
 
@@ -227,10 +226,11 @@ In summary, 3 subcommands are available:
          | clin variable 2 | coefficient value | hazard.ratio value | log.rank.pvalue value | low.high.samples value | median.survival.low value | median.survival.low value | prognosis value|
          | ... | ... | ... | ... | ... | ... | ... | ... |
 
-         Plots returned for this mode are: a forest plot for all clinical variables considered, a Kaplan Meier plot and a proportional hazard assumption plot metioned in the univariate mode. If the option --ROC is also selected then the split of the patients in high and low signature score is done based on a ROC curve, also provided.  
-   
+         <br>
 
-4. **complete**
+         Plots returned for this mode are: a forest plot for all clinical variables considered, a Kaplan Meier plot and a proportional hazard assumption plot metioned in the univariate mode. If the option --ROC is also selected then the split of the patients in high and low signature score is done based on a ROC curve, also provided.  
+
+3. **complete**
 
    In order to perform a complete analysis, run the following:
 
@@ -257,7 +257,6 @@ In summary, 3 subcommands are available:
    | -h | -\-help      | Show this help message and exit |
 
    <br>
-
 
 ## Toy example
 
