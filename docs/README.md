@@ -120,7 +120,7 @@ In summary, 3 subcommands are available:
 
    <br>	
 
-   ### Input
+   ### Inputs
 		
       It is required quantitative information of atributes, including status and follow up time which must be in tsv format. This file is required for both regression and survival analysis:
 
@@ -169,7 +169,7 @@ In summary, 3 subcommands are available:
    | -S | -\-signature | Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients |
    | -h | -\-help      | Show this help message and exit |
 
-   <br>
+<br>
 
    ### Inputs
 
@@ -185,7 +185,7 @@ In summary, 3 subcommands are available:
          | Feature2 | coefficient2 |
          | ... | ... |
 
-         <br>      
+<br>      
       
       #### Multivariate mode
 
@@ -197,7 +197,7 @@ In summary, 3 subcommands are available:
          | Sample2 | clin_var1(status) | clin_var2(status) | clin_var3(status) | ... |
          | ... | ... | ... | ... | ... |
 
-         <br>
+<br>
 
    ### Outputs
 
@@ -211,7 +211,7 @@ In summary, 3 subcommands are available:
          | --------------- | ----------- | ------------ | --------------- | ---------------- | ------------------- | ------------------- | --------- | 
          | signature_score | coefficient value | hazard.ratio value | log.rank.pvalue value | low.high.samples value | median.survival.low value | median.survival.low value | prognosis value |
 
-         <br>
+<br>
        
          Plots returned for this mode are proportional hazard assumptions plot, containing a Schoenfeld test and a Kaplan Mayer plot.
 
@@ -225,8 +225,7 @@ In summary, 3 subcommands are available:
          | clin variable 1 | coefficient value | hazard.ratio value | log.rank.pvalue value | low.high.samples value | median.survival.low value | median.survival.low value | prognosis value |
          | clin variable 2 | coefficient value | hazard.ratio value | log.rank.pvalue value | low.high.samples value | median.survival.low value | median.survival.low value | prognosis value|
          | ... | ... | ... | ... | ... | ... | ... | ... |
-
-         <br>
+<br>
 
          Plots returned for this mode are: a forest plot for all clinical variables considered, a Kaplan Meier plot and a proportional hazard assumption plot metioned in the univariate mode. If the option --ROC is also selected then the split of the patients in high and low signature score is done based on a ROC curve, also provided.  
 
