@@ -3,7 +3,7 @@
 1. [Overview](#overview)
 2. [Installation](#installation)
 3. [Dependencies](#dependencies)
-4. [Command and options](#usage-and-options)
+4. [Command and options](#command-and-options)
 5. [Generation of gene/transcript signatures](#generation-of-gene/transcript-signatures)
 6. [Application of gene/transcript signatures in survival](#application-of-gene/transcript-signatures-in-survival)
 7. [Integrative analysis](#integrative-analysis) 
