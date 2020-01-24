@@ -86,7 +86,9 @@ In summary, 3 subcommands are available:
 ## Generation of gene/transcript signatures
 
    Reboot produces a genetic signature (significance coefficients) correlated with patient survival based on a multivariate Cox regression of genes and/or transcripts. This module uses a lasso algorithm combined with a bootstrap approach for dealing with possible dimension vulnerability (especially if attributes/instances ratio is high). 
+
    Filters for minimal variability of the attributes are also implemented. The analysis starts off checking and removing attributes with variance lower than the defined cut-off. Moreover, a spearman correlation filter is applied to every iteration of the bootstrap proccess based on the settable fraction of pairs with correlation coefficient higher than 0.8 and p-value lower than 0.05. 
+
    It is recommended a high attribute coverage for the analysis, considering the number of iterations and the group size of each iteration. Given a total number of attributes (N), group size (G) and number of iterations (B), the attribute coverage (AG) is given by: AG = (B * G) / N 
 
 ### Usage
