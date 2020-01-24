@@ -108,15 +108,15 @@ In summary, 3 subcommands are available:
    Regression options are: 
 
 
-   | short option | full option | Description|
-   | -------------------------- | ----------------------------------------- | ----------------------- |
-   | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters |
-   | -O | -\-outprefix | Output file prefix. Default: reboot |	
-   | -B | -\-bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
-   | -G | -\-groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
-   | -P | -\-pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
-   | -V | -\-varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
-   | -h | -\-help      | Show this help message and exit |
+   | Options | Description|
+   | ------------------------------------------------------------------- | ----------------------- |
+   | -I, -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters |
+   | -O, -\-outprefix | Output file prefix. Default: reboot |	
+   | -B, -\-bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
+   | -G, -\-groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
+   | -P, -\-pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
+   | -V, -\-varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
+   | -h, -\-help      | Show this help message and exit |
 
    <br>	
 
@@ -169,15 +169,15 @@ In summary, 3 subcommands are available:
 
    Survival options are:
 
-   | short option | full option | Description|
-   | ------------------------ | --------------------------------------- | ----------------------- |
-   | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters |
-   | -O | -\-outprefix |  Output file prefix. Default: reboot |
-   | -M | -\-multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
-   | -C | -\-clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
-   | -R | -\-roc | If If genetic score should be categorized according to a ROC curve instead of median, choose -R |
-   | -S | -\-signature | Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients |
-   | -h | -\-help      | Show this help message and exit |
+   | Options | Description|
+   | -------------------------------------------------------------- | ----------------------- |
+   | -I, -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters |
+   | -O, -\-outprefix |  Output file prefix. Default: reboot |
+   | -M, -\-multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
+   | -C, -\-clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
+   | -R, -\-roc | If If genetic score should be categorized according to a ROC curve instead of median, choose -R |
+   | -S, -\-signature | Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients |
+   | -h, -\-help      | Show this help message and exit |
 
    <br>
  
@@ -254,18 +254,18 @@ In summary, 3 subcommands are available:
 
    Complete options are:
 
-   | short option | full option | Description|
+   | Options | Description |
    | ----------------------- | ----------------------------------------- | ----------------------- |
-   | -I | -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
-   | -O | -\-outprefix |  Output file prefix. Default: reboot |
-   | -B | -\-bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
-   | -G | -\-groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
-   | -P | -\-pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
-   | -V | -\-varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
-   | -M | -\-multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
-   | -C | -\-clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
-   | -R | -\-roc | If If genetic score should be categorized according to a ROC curve instead of median, choose -R |
-   | -h | -\-help      | Show this help message and exit |
+   | -I, -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters|
+   | -O, -\-outprefix |  Output file prefix. Default: reboot |
+   | -B, -\-bootstrap | Number of iterations for bootstrap simulation (int). Default: 1 |
+   | -G, -\-groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3 |
+   | -P, -\-pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3 |
+   | -V, -\-varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
+   | -M, -\-multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
+   | -C, -\-clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
+   | -R, -\-roc | If If genetic score should be categorized according to a ROC curve instead of median, choose -R |
+   | -h, -\-help      | Show this help message and exit |
 
    <br>
 
