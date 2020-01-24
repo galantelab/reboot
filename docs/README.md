@@ -4,7 +4,10 @@
 2. [Installation](#installation)
 3. [Dependencies](#dependencies)
 4. [Command and options](#usage-and-options)
-5. [Toy example](#toy-example)
+5. [Generation of gene/transcript signatures](#Generation-of-gene/transcript-signatures)
+6. [Application of gene/transcript signatures in survival](#Application-of-gene/transcript-signatures-in-survival)
+7. [Integrative analysis](#Integrative-analysis) 
+6. [Toy example](#toy-example)
 
 ## Overview
 
@@ -85,7 +88,7 @@ In summary, 3 subcommands are available:
 
 ## Generation of gene/transcript signatures
 
-   Reboot produces a genetic signature (significance coefficients) correlated with patient survival based on a multivariate Cox regression of genes and/or transcripts. This module uses a lasso algorithm combined with a bootstrap approach for dealing with possible dimension vulnerability (especially if attributes/instances ratio is high). 
+   Reboot produces a genetic signature (significance coefficients) correlated with patient survival based on a multivariate Cox regression of genes or transcripts. This module uses a lasso algorithm combined with a bootstrap approach for dealing with possible dimension vulnerability (especially if attributes/instances ratio is high). 
 
    Filters for minimal variability of the attributes are also implemented. The analysis starts off checking and removing attributes with variance lower than the defined cut-off. Moreover, a spearman correlation filter is applied to every iteration of the bootstrap proccess based on the settable fraction of pairs with correlation coefficient higher than 0.8 and p-value lower than 0.05. 
 
@@ -141,7 +144,7 @@ In summary, 3 subcommands are available:
  
    <br>
 
-   The output plots include a histogram with the distribution of the regression coefficients and a lollipop plot with the most relevant coefficients.
+   The plots generated are a histogram with the distribution of the regression coefficients and a lollipop plot with the most relevant coefficients.
 
 ## Application of gene/transcript signatures in survival
 
@@ -172,7 +175,7 @@ In summary, 3 subcommands are available:
    | -O | -\-outprefix |  Output file prefix. Default: reboot |
    | -M | -\-multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
    | -C | -\-clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
-   | -R | -\-roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
+   | -R | -\-roc | If If genetic score should be categorized according to a ROC curve instead of median, choose -R |
    | -S | -\-signature | Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients |
    | -h | -\-help      | Show this help message and exit |
 
@@ -261,14 +264,14 @@ In summary, 3 subcommands are available:
    | -V | -\-varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
    | -M | -\-multivariate | If clinical variables should be included, choose -M. This option is tied with -C option |
    | -C | -\-clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
-   | -R | -\-roc | If continuous variables should be categorized according to a ROC curve instead of median, choose -R |
+   | -R | -\-roc | If If genetic score should be categorized according to a ROC curve instead of median, choose -R |
    | -h | -\-help      | Show this help message and exit |
 
    <br>
 
 ## Toy example
 
-   In order to ilustrate tool usage, a toy script is also provided to download and format gene expression and clinical data of glioblastoma patients from [TCGA](https://www.cancer.gov/about-nci/organization/ccg/research/structural-genomics/tcga){:target="_blank"}.
+   In order to illustrate tool usage, a toy script is also provided to download and format gene expression and clinical data of glioblastoma patients from [TCGA](https://www.cancer.gov/about-nci/organization/ccg/research/structural-genomics/tcga){:target="_blank"}.
    Running the following code in the reboot directory provides both inputs:
 	
    ```docker run --env MYID=$(id -u) --rm -ti -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot toyfordocker.R``` , optionally:
