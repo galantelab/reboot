@@ -4,9 +4,9 @@
 2. [Installation](#installation)
 3. [Dependencies](#dependencies)
 4. [Command and options](#usage-and-options)
-5. [Generation of gene/transcript signatures](#Generation-of-gene/transcript-signatures)
-6. [Application of gene/transcript signatures in survival](#Application-of-gene/transcript-signatures-in-survival)
-7. [Integrative analysis](#Integrative-analysis) 
+5. [Generation of gene/transcript signatures](#generation-of-gene/transcript-signatures)
+6. [Application of gene/transcript signatures in survival](#application-of-gene/transcript-signatures-in-survival)
+7. [Integrative analysis](#integrative-analysis) 
 6. [Toy example](#toy-example)
 
 ## Overview
