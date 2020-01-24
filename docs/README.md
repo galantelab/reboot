@@ -4,8 +4,8 @@
 2. [Installation](#installation)
 3. [Dependencies](#dependencies)
 4. [Commands and options](#commands-and-options)
-5. [Generation of gene/transcript signatures](#generation-of-gene/transcript-signatures)
-6. [Application of gene/transcript signatures in survival](#application-of-gene/transcript-signatures-in-survival)
+5. [Generation of gene or transcript signatures](#generation-of-gene-or-transcript-signatures)
+6. [Application of gene or transcript signatures in survival](#application-of-gene-or-transcript-signatures-in-survival)
 7. [Integrative analysis](#integrative-analysis) 
 6. [Toy example](#toy-example)
 
@@ -86,7 +86,7 @@ In summary, 3 subcommands are available:
 
 <br>
 
-## Generation of gene/transcript signatures
+## Generation of gene or transcript signatures
 
    Reboot produces a genetic signature (significance coefficients) correlated with patient survival based on a multivariate Cox regression of genes or transcripts. This module uses a lasso algorithm combined with a bootstrap approach for dealing with possible dimension vulnerability (especially if attributes/instances ratio is high). 
 
@@ -146,7 +146,7 @@ In summary, 3 subcommands are available:
 
    The plots generated are a histogram with the distribution of the regression coefficients and a lollipop plot with the most relevant coefficients.
 
-## Application of gene/transcript signatures in survival
+## Application of gene or transcript signatures in survival
 
    Reboot produces and applies a score for all samples based on the signature previously obtained from the **regression** module. Note that, at this step, a different sample set may be provided for validation purposes, for example.
 
