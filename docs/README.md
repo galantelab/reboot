@@ -107,6 +107,26 @@ In summary, 3 subcommands are available:
 
    Regression options are: 
 
+   <table width="600" cellspacing="0" cellpadding="0">
+   <tr>
+   <td width="10%">header1</td>
+   <td width="30%">header2</td>
+   <td width="60%">header3</td>
+   </tr>
+   <tr>
+   <td>your stuff1</td>
+   <td>your stuff2</td>
+   <td>your stuff3</td>
+   </tr>
+   <tr>
+   <td>your stuff1</td>
+   <td>your stuff2</td>
+   <td>your stuff3</td>
+   </tr>
+   </table>
+
+   <br>
+   ss
 
    | Options | Description|
    | ------------------------------------------------------------------- | ----------------------- |
