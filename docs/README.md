@@ -143,19 +143,6 @@ In summary, 3 subcommands are available:
    </table>
 
    <br>
-   ss
-
-   | Options | Description|
-   | ------------------------------------------------------------------- | ----------------------- |
-   | -I, -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival parameters |
-   | -O, -\-outprefix | Output file prefix (string). Default: reboot |	
-   | -B, -\-bootstrap | Number of iterations for bootstrap simulation (integer). Default: 1 |
-   | -G, -\-groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (integer). Default: 3 |
-   | -P, -\-pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration (double). Default: 0.3 |
-   | -V, -\-varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
-   | -h, -\-help      | Show this help message and exit |
-
-   <br>	
 
 ### Input
 		
@@ -241,19 +228,6 @@ In summary, 3 subcommands are available:
    </table>
 
    <br>
-   ss
-
-   | Options | Description|
-   | -------------------------------------------------------------- | ----------------------- |
-   | -I, -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival parameters |
-   | -O, -\-outprefix |  Output file prefix (string). Default: reboot |
-   | -M, -\-multivariate | If clinical variables should be included, choose -M. This option is tied with -C option. Default: FALSE |
-   | -C, -\-clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
-   | -R, -\-roc | If genetic score should be categorized according to a ROC curve instead of median, choose -R. Default: FALSE |
-   | -S, -\-signature | Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients |
-   | -h, -\-help      | Show this help message and exit |
-
-   <br>
  
 ### Inputs
 
@@ -316,13 +290,6 @@ In summary, 3 subcommands are available:
       </table>
 
       <br>
-      sss
-
-      | feature | coefficient | hazard.ratio | log.rank.pvalue | low.high.samples | median.survival.low | median.survival.high | prognosis |
-      | --------------- | ----------- | ------------ | --------------- | ---------------- | ------------------- | ------------------- | --------- | 
-      | score | -1.0091 | 0.3645 (95% CI, 0.2456-0.541) | 0.003 | 52/53 | 532 (95% CI, 455-648) | 313 (95% CI, 231-362) | better |
-
-      <br>
        
       Plots returned in this mode include: a proportional hazard assumptions plot (result of Schoenfeld test) and a Kaplan Meier plot.
 
@@ -382,16 +349,6 @@ In summary, 3 subcommands are available:
       <td>...</td>
       </tr>
       </table>
-
-      <br>
-      sss
-
-      | variable | reference | univariate.hazard.ratio | univariate.Cox.pvalue |  univariate.prognosis | multivariate.hazard.ratio | multivariate.Cox.pvalue | multivariate.prognosis |
-      | --------------- | ----------- | ------------ | --------------- | ---------------- | ------------------- | ------------------- | --------- |
-      | score | low | 0.3645 (95% CI, 0.2456-0.541) | 0.001 | better | 0.3904 (95% CI, 0.2248-0.6779) | 8e-04 | better |
-      | age | 56+ years | 1.369 (95% CI, 0.9086-2.0625) | 0.1332 | worse | 1.1104 (95% CI, 0.6314-1.9531) | 0.7161 | ---- |
-      | gender | MALE | 0.9474 (95% CI, 0.6381-1.4066) | 0.7886 | ---- | ---- | ---- | ---- |
-      | ... | ... | ... | ... | ... | ... | ... | ... |
 
       <br>
 
@@ -456,22 +413,6 @@ In summary, 3 subcommands are available:
    <td>Show this help message and exit</td>
    </tr>
    </table>
-
-   <br>
-   ss
-
-   | Options | Description |
-   | ----------------------- | ----------------------------------------- | ----------------------- |
-   | -I, -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival parameters|
-   | -O, -\-outprefix |  Output file prefix (string). Default: reboot |
-   | -B, -\-bootstrap | Number of iterations for bootstrap simulation (integer). Default: 1 |
-   | -G, -\-groupsize | Number of genes/transcripts to be selected in each bootstrap simulation (integer). Default: 3 |
-   | -P, -\-pcentfilter | Percentage of correlated gene/transcript pairs allowed in each iteration (double). Default: 0.3 |
-   | -V, -\-varfilter | Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01 |
-   | -M, -\-multivariate | If clinical variables should be included, choose -M. This option is tied with -C option. Default: FALSE |
-   | -C, -\-clinical | Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |
-   | -R, -\-roc | If genetic score should be categorized according to a ROC curve instead of median, choose -R. Default: FALSE |
-   | -h, -\-help      | Show this help message and exit |
 
    <br>
 
