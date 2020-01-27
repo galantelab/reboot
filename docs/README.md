@@ -109,8 +109,8 @@ In summary, 3 subcommands are available:
 
    <table width="600" cellspacing="0" cellpadding="0">
    <tr>
-   <td width="40%"><b>Options</b></td>
-   <td width="60%"><b>Description</b></td>
+   <td width="30%"><b>Options</b></td>
+   <td width="70%"><b>Description</b></td>
    </tr>
    <tr>
    <td>-I, --filein</td>
@@ -207,8 +207,8 @@ In summary, 3 subcommands are available:
 
    <table width="600" cellspacing="0" cellpadding="0">
    <tr>
-   <td width="40%"><b>Options</b></td>
-   <td width="60%"><b>Description</b></td>
+   <td width="30%"><b>Options</b></td>
+   <td width="70%"><b>Description</b></td>
    </tr>
    <tr>
    <td>-I, --filein</td>
@@ -412,8 +412,8 @@ In summary, 3 subcommands are available:
 
    <table width="600" cellspacing="0" cellpadding="0">
    <tr>
-   <td width="40%"><b>Options</b></td>
-   <td width="60%"><b>Description</b></td>
+   <td width="30%"><b>Options</b></td>
+   <td width="70%"><b>Description</b></td>
    </tr>
    <tr>
    <td>-I, --filein</td>
