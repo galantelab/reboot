@@ -109,16 +109,36 @@ In summary, 3 subcommands are available:
 
    <table width="600" cellspacing="0" cellpadding="0">
    <tr>
-   <td width="40%">Options</td>
-   <td width="60%">Description</td>
+   <td width="40%"><b>Options</b></td>
+   <td width="60%"><b>Description</b></td>
    </tr>
    <tr>
    <td>-I, --filein</td>
    <td>Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival parameters</td>
    </tr>
    <tr>
+   <td>-O, --outprefix</td>
+   <td>Output file prefix (string). Default: reboot</td>
+   </tr>
+   <tr>
+   <td>-B, --bootstrap</td>
+   <td>Number of iterations for bootstrap simulation (integer). Default: 1</td>
+   </tr>
+   <tr>
+   <td>-G, --groupsize</td>
+   <td>Number of genes/transcripts to be selected in each bootstrap simulation (integer). Default: 3</td>
+   </tr>
+   <tr>
    <td>-P, -\-pcentfilter</td>
    <td>Percentage of correlated gene/transcript pairs allowed in each iteration (double). Default: 0.3</td>
+   </tr>
+   <tr>
+   <td>-V, --varfilter</td>
+   <td>Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01</td>
+   </tr>
+   <tr>
+   <td>-h, --help</td>
+   <td>Show this help message and exit</td>
    </tr>
    </table>
 
@@ -185,6 +205,44 @@ In summary, 3 subcommands are available:
 
    Survival options are:
 
+   <table width="600" cellspacing="0" cellpadding="0">
+   <tr>
+   <td width="40%"><b>Options</b></td>
+   <td width="60%"><b>Description</b></td>
+   </tr>
+   <tr>
+   <td>-I, --filein</td>
+   <td>Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival parameters</td>
+   </tr>
+   <tr>
+   <td>-O, --outprefix</td>
+   <td>Output file prefix (string). Default: reboot</td>
+   </tr>
+   <tr>
+   <td>-M, --multivariate</td>
+   <td>If clinical variables should be included, choose -M. This option is tied with -C option. Default: FALSE</td>
+   </tr>
+   <tr>
+   <td>-C, --clinical</td>
+   <td>Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |</td>
+   </tr>
+   <tr>
+   <td>-R, --roc</td>
+   <td>If genetic score should be categorized according to a ROC curve instead of median, choose -R. Default: FALSE</td>
+   </tr>
+   <tr>
+   <td>-S, --signature</td>
+   <td>Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients</td>
+   </tr>
+   <tr>
+   <td>-h, --help</td>
+   <td>Show this help message and exit</td>
+   </tr>
+   </table>
+
+   <br>
+   ss
+
    | Options | Description|
    | -------------------------------------------------------------- | ----------------------- |
    | -I, -\-filein | Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival parameters |
@@ -234,7 +292,33 @@ In summary, 3 subcommands are available:
 
       If the analysis is performed in univariate mode, reboot returns a log and a lograng.txt file, containing the survival results for the signature score:
 
-      | feature | coefficient | hazard.ratio | log.rank.pvalue | low.high.samples | median.survival.low | median.survival.low | prognosis |
+      <table width="600" cellspacing="0" cellpadding="0">
+      <tr>
+      <td width="10%"><b>feature</b></td>
+      <td width="10%"><b>coefficient</b></td>
+      <td width="20%"><b>hazard.ratio</b></td>
+      <td width="10%"><b>log.rank.pvalue</b></td>
+      <td width="10%"><b>low.high.samples</b></td>
+      <td width="15%"><b>median.survival.low</b></td>
+      <td width="15%"><b>median.survival.high</b></td>
+      <td width="10%"><b>prognosis</b></td>
+      </tr>
+      <tr>
+      <td>score</td>
+      <td>-1.0091</td>
+      <td>0.3645 (95% CI, 0.2456-0.541)</td>
+      <td>0.003</td>
+      <td>52/53</td>
+      <td>532 (95% CI, 455-648)</td>
+      <td>313 (95% CI, 231-362)</td>
+      <td>better</td>
+      </tr>
+      </table>
+
+      <br>
+      sss
+
+      | feature | coefficient | hazard.ratio | log.rank.pvalue | low.high.samples | median.survival.low | median.survival.high | prognosis |
       | --------------- | ----------- | ------------ | --------------- | ---------------- | ------------------- | ------------------- | --------- | 
       | score | -1.0091 | 0.3645 (95% CI, 0.2456-0.541) | 0.003 | 52/53 | 532 (95% CI, 455-648) | 313 (95% CI, 231-362) | better |
 
@@ -245,6 +329,62 @@ In summary, 3 subcommands are available:
    2. Multivariate mode
  
       If the analysis is performed in multivariate mode, reboot returns all files created in the univariate mode in addition to a multicox.txt file, which contains the survival results of the signature score along with all other clinical variables:
+
+      <table width="600" cellspacing="0" cellpadding="0">
+      <tr>
+      <td width="10%"><b>variable</b></td>
+      <td width="10%"><b>reference</b></td>
+      <td width="20%"><b>univariate.hazard.ratio</b></td>
+      <td width="10%"><b>univariate.Cox.pvalue</b></td>
+      <td width="10%"><b>univariate.prognosis</b></td>
+      <td width="20%"><b>multivariate.hazard.ratio</b></td>
+      <td width="10%"><b>multivariate.Cox.pvalue</b></td>
+      <td width="10%"><b>multivariate.prognosis</b></td>
+      </tr>
+      <tr>
+      <td>score</td>
+      <td>low</td>
+      <td>0.3645 (95% CI, 0.2456-0.541)</td>
+      <td>0.001</td>
+      <td>better</td>
+      <td>0.3904 (95% CI, 0.2248-0.6779)</td>
+      <td>8e-04</td>
+      <td>better</td>
+      </tr>
+      <tr>
+      <td>age</td>
+      <td>56+ years</td>
+      <td>1.369 (95% CI, 0.9086-2.0625)</td>
+      <td>0.1332</td>
+      <td>worse</td>
+      <td>1.1104 (95% CI, 0.6314-1.9531)</td>
+      <td>0.7161</td>
+      <td>----</td>
+      </tr>
+      <tr>
+      <td>gender</td>
+      <td>MALE</td>
+      <td>0.9474 (95% CI, 0.6381-1.4066)</td>
+      <td>0.7886</td>
+      <td>----</td>
+      <td>----</td>
+      <td>----</td>
+      <td>----</td>
+      </tr>
+      <tr>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      </tr>
+      </table>
+
+      <br>
+      sss
 
       | variable | reference | univariate.hazard.ratio | univariate.Cox.pvalue |  univariate.prognosis | multivariate.hazard.ratio | multivariate.Cox.pvalue | multivariate.prognosis |
       | --------------- | ----------- | ------------ | --------------- | ---------------- | ------------------- | ------------------- | --------- |
@@ -269,6 +409,56 @@ In summary, 3 subcommands are available:
 
 
    Complete options are:
+
+   <table width="600" cellspacing="0" cellpadding="0">
+   <tr>
+   <td width="40%"><b>Options</b></td>
+   <td width="60%"><b>Description</b></td>
+   </tr>
+   <tr>
+   <td>-I, --filein</td>
+   <td>Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival parameters</td>
+   </tr>
+   <tr>
+   <td>-O, --outprefix</td>
+   <td>Output file prefix (string). Default: reboot</td>
+   </tr>
+   <tr>
+   <td>-B, --bootstrap</td>
+   <td>Number of iterations for bootstrap simulation (integer). Default: 1</td>
+   </tr>
+   <tr>
+   <td>-G, --groupsize</td>
+   <td>Number of genes/transcripts to be selected in each bootstrap simulation (integer). Default: 3</td>
+   </tr>
+   <tr>
+   <td>-P, --pcentfilter</td>
+   <td>Percentage of correlated gene/transcript pairs allowed in each iteration (double). Default: 0.3</td>
+   </tr>
+   <tr>
+   <td>-V, --varfilter</td>
+   <td>Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01</td>
+   </tr>
+   <tr>
+   <td>-M, --multivariate</td>
+   <td>If clinical variables should be included, choose -M. This option is tied with -C option. Default: FALSE</td>
+   </tr>
+   <tr>
+   <td>-C, --clinical</td>
+   <td>Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen</td>
+   </tr>
+   <tr>
+   <td>-R, --roc</td>
+   <td>If genetic score should be categorized according to a ROC curve instead of median, choose -R. Default: FALSE</td>
+   </tr>
+   <tr>
+   <td>-h, --help</td>
+   <td>Show this help message and exit</td>
+   </tr>
+   </table>
+
+   <br>
+   ss
 
    | Options | Description |
    | ----------------------- | ----------------------------------------- | ----------------------- |
