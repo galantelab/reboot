@@ -1,3 +1,5 @@
+#!/usr/bin/Rscript
+
 start_time <- Sys.time()
 
 suppressMessages(library("optparse"))
@@ -20,7 +22,7 @@ make_option(c("-C", "--clinical"), action="store",
 type='character', dest = "clin_file", default = "", help="Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen"),
 
 make_option(c("-R", "--roc"), action="store",
-type='logical', dest = "roc_curve", default = FALSE, help="If If genetic score should be categorized according to a ROC curve instead of median, choose -R"))
+type='logical', dest = "roc_curve", default = FALSE, help="If continuous variables should be categorized according to a ROC curve instead of median, choose -R"))
 
 opo <- OptionParser(option_list=option_list, add_help_option = T)
 in_object <- parse_args(opo)
@@ -876,6 +878,7 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
           #Select only frequent (at least 50%) parameters for multivariable cox regression
           tmp_merged_table <- merged_table[merged_table$Frequency >= 25,]
           new_covariates <- as.vector(tmp_merged_table[[1]])
+          new_covariates <- c("score",new_covariates)
           tmp_covariates <- c()
           
           #Match string to get from 'new covariates' the original 'covariates' name
@@ -933,7 +936,7 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
     final[grepl("score",final$variable),]$hazard.ratio.x = as.character(logrank_result$hazard.ratio)
     final[grepl("score",final$variable),]$Cox.pvalue.x = logrank_result$log.rank.pvalue
     final[grepl("score",final$variable),]$prognosis.x = as.character(logrank_result$prognosis)
-
+    
     #Replace all NAs with "----"
     final[is.na(final)] <- "----"
 
@@ -975,15 +978,8 @@ multiCox.model <- function(dat, univ_result, covariates){
   tmp_covariates <- c()
   #Select only relevant clinical parameters for multivariable Cox regression (p<0.2)
   covariates = c("score",covariates)
+  new_covariates = c(univ_result[(univ_result$multivariate.Cox.pvalue != "----"),1])
 
-  if(roc_curve & filters)
-  {
-    new_covariates = c(univ_result[(univ_result$multivariate.prognosis != "----"),1])
-  } else
-  {
-    new_covariates = c(univ_result[(univ_result$multivariate.Cox.pvalue != "----"),1])
-  }
-  
   #Match string to get from 'new covariates' the original 'covariates' name
   for(var in new_covariates)
   {
@@ -1010,7 +1006,7 @@ if(type & clin_file != ""){
   cat("Running multivariate analysis...\n\n")
 
   uni_covariates = colnames(clin)[4:ncol(clin)]
-
+  
   #Run univariate Cox-regression for each provided clinical parameter
   cat("\tSelecting co-variables (multiple univariate analyses)...\n")
   univ_cox = suppressWarnings(univCox.test(clin,uni_covariates))
@@ -1022,9 +1018,25 @@ if(type & clin_file != ""){
   #Write result to file
   write.table(multi_cox, paste(out,"_multiCox.txt",sep=""), row.names=F, col.names=T, quote=F, sep="\t")
   
+  #Makes bar plot if ROC curve option is TRUE
+  #Check if provided files exist
+  if(roc_curve2){
+    cat("\tMaking BarPlot...\n")
+    
+    score_freq <- as.numeric(merged_table[merged_table[[1]] == "score", 2])
+    if (score_freq < 25) {
+      cat(paste("\tWarning: variable 'score' did not appear in at least 25% of bootstrap iterations (", round(x = score_freq, digits = 2),
+                "%). Check plot: '", paste(out, "_frequency_bootstrap.pdf'\n", sep = ""), sep = ""))
+    }
+    
+    barplot_co_variables(plot_df = merged_table, filename = paste(out, "_frequency_bootstrap.pdf", sep = ""), covariates = uni_covariates)
+    cat("\tDone\n\n")
+  }
+  
   #Test proportional hazards assumptions
   cat("\tTesting proportional hazards assumptions (multivariate). Overwriting plot from 'signature score'...\n")
   multi_model = suppressWarnings(multiCox.model(dat = clin, univ_result = multi_cox, covariates = uni_covariates))
+  
   checkPH <- test_ph_assumptions(model_object = multi_model, covariates = uni_covariates, is_multi=T)
   if (checkPH <= .05) {
     cat(paste("\tWarning: Proportional Hazards Assumptions not met (p = ", round(x = checkPH, digits = 4), "). Check plot: ",
@@ -1038,14 +1050,6 @@ if(type & clin_file != ""){
   cat("\tMaking Forest Plot...\n")
   generate_forest_plot(model_object = multi_model, filename = paste(out, "_forest_plot.pdf", sep=""))
   cat("\tDone\n\n")
-  
-  #Makes bar plot if ROC curve option is TRUE
-  #Check if provided files exist
-  if(roc_curve2){
-    cat("\tMaking BarPlot...\n")
-    barplot_co_variables(plot_df = merged_table, filename = paste(out, "_frequency_bootstrap.pdf", sep = ""), covariates = uni_covariates)
-    cat("\tDone\n\n")
-  }
   
   #Print log message
   cat("Done\n")
