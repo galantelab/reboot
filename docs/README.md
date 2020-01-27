@@ -109,19 +109,16 @@ In summary, 3 subcommands are available:
 
    <table width="600" cellspacing="0" cellpadding="0">
    <tr>
-   <td width="10%">header1</td>
-   <td width="30%">header2</td>
-   <td width="60%">header3</td>
+   <td width="40%">Options</td>
+   <td width="60%">Description</td>
    </tr>
    <tr>
-   <td>your stuff1</td>
-   <td>your stuff2</td>
-   <td>your stuff3</td>
+   <td>-I, --filein</td>
+   <td>Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival parameters</td>
    </tr>
    <tr>
-   <td>your stuff1</td>
-   <td>your stuff2</td>
-   <td>your stuff3</td>
+   <td>-P, -\-pcentfilter</td>
+   <td>Percentage of correlated gene/transcript pairs allowed in each iteration (double). Default: 0.3</td>
    </tr>
    </table>
 
