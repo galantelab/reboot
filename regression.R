@@ -280,7 +280,8 @@ regcall <- function(male_data, nel, full_data){
 
 regression <- function(male_data){
 
-	fit1 <- profL1(Surv(OS.time,OS)~., data=male_data, fold=10, maxlambda1=100, plot=F, trace=F)
+	#fit1 <- profL1(Surv(OS.time,OS)~., data=male_data, fold=10, maxlambda1=100, plot=F, trace=F)
+	fit1 <- profL1(Surv(OS.time,OS)~., data=male_data, fold=10, plot=F, trace=F)
 	#fit2 <- profL2(Surv(OS.time,OS)~., data=male_data, fold=fit1$fold, minl = 0.1, maxlambda2 = 10)
 	opt1 <- optL1(Surv(OS.time,OS)~., data=male_data, fold=fit1$fold, maxlambda1=10, trace=F )
 	#opt2 <- optL2(Surv(OS.time,OS)~., data=male_data, fold=fit2$fold)
