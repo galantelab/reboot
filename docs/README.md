@@ -4,33 +4,33 @@
 2. [Installation](#installation)
 3. [Dependencies](#dependencies)
 4. [Commands and options](#commands-and-options)
-5. [Generation of gene or transcript signatures](#generation-of-gene-or-transcript-signatures)
-6. [Application of gene or transcript signatures in survival](#application-of-gene-or-transcript-signatures-in-survival)
+5. [Finding signatures of genes or transcripts](#finding-signatures-of-genes-or-transcripts)
+6. [Applying signatures of genes or transcripts in survival](#applying-signatures-of-genes-or-transcripts-in-survival)
 7. [Integrative analysis](#integrative-analysis) 
 6. [Toy example](#toy-example)
 
 ## Overview
 
-Reboot is a flexible, easy-to-use tool to identify sets of genes or transcripts whose expression values are highly correlated with patient survival. Using a multivariate strategy with penalized Cox regression (Lasso method), reboot presents efficient convergence of the regression coefficients during the creation of a gene/transcript signature. Once a signature is obtained, reboot also provides functionality to produce, apply and validate a score, which is calculated based on the obtained signature, for a given set of samples.
+Reboot is a flexible, easy-to-use algorithm to identify genes or transcripts signatures whose expression are highly correlated with patient survival. Reboot innovates by using a multivariate strategy with penalized Cox regression (Lasso method), and by presenting efficient convergence of the regression coefficients during the creation of a signature. Once it is obtained, reboot also provides functionality to produce, apply and validate a score, which is calculated based on the obtained signature, for a given set of samples.
 
-Reboot is a modular tool developed in R version 3.6. It comprises two main modules: **regression** and **survival**. Module **regression** provides functionality for obtaining gene/transcript signatures correlated with patient survival using multivariate penalized Cox regression. In turn, module **survival** provides functionality for producing, applying and validating a signature score in patient datasets. In this module, a different patient dataset may be provided for validation purposes, for example. Finally, reboot also provides the execution option **complete**, which integratively executes the two aforementioned modules.
+Reboot is a modular tool developed in R version 3.6. It comprises two main modules: **regression** and **survival**. The **regression** module provides functionality for obtaining gene/transcript signatures correlated with patient survival using multivariate penalized Cox regression. In turn, the **survival** module provides functionality for producing, applying and validating a signature score in patient datasets. In this module, a different patient dataset may be provided for validation purposes, for example. Moreover, reboot also has the execution option **complete**, which integratively executes the two aforementioned modules.
 
 ![](Paper_figure.png)
-*Figure 1: Reboot workflow. First module runs a regression analysis to identify a gene/transcript signature. Second module runs survival analysis of a score calculated based on the obtained signature*
+*Figure 1: Reboot workflow. First module (regression) makes a regression analysis to identify a gene or transcript signature. The second module (survival) runs survival analysis of a score calculated based on the obtained signature.*
 
 ## Installation
 
-Reboot can be obtained from github and installed via docker container (recommended) or through direct installation.
+Reboot can be obtained from Github and installed via a Docker container (recommended) or through direct installation.
 
-1. Via docker
+1. Docker container
 	
-	This method works on any distribution or operational systems, as long as [docker](https://docs.docker.com/install){:target="_blank"} is installed.
+	This method works on any distribution or operational systems, as long as [Docker](https://docs.docker.com/install){:target="_blank"} is installed.
 
 	```docker pull galantelab/reboot```
 
-2. Direct
+2. Direct installation
 
-	This method requires previous installation of  [R version >= 3.6](https://cran.r-project.org/doc/manuals/r-devel/R-admin.html){:target="_blank"}:
+	This method requires the previous installation of  [R (version >= 3.6)](https://cran.r-project.org/doc/manuals/r-devel/R-admin.html){:target="_blank"}:
 
 	```git clone https://github.com/galantelab/reboot.git```
 
@@ -65,7 +65,7 @@ In order to work properly, the following packages are necessary (included in the
 
 ## Commands and options 
 
-Reboot works with a command/subcommands structure:
+Reboot works with a command and subcommands structure:
 
 ```reboot.R [subcommand] <options>```
 
@@ -82,22 +82,23 @@ In summary, 3 subcommands are available:
 
 | **regression** | generates signature through multivariate Cox regression |
 | **survival** | applies signature score in survival analysis |
-| **complete** | generates signature and applies signature score in survival analysis| 
+| **complete** | generates a signature and applies its signature score in survival analysis| 
 
 <br>
 
-## Generation of gene or transcript signatures
+## Finding signatures of genes or transcripts
 
-   Reboot produces a genetic signature (significance coefficients) correlated with patient survival based on a multivariate Cox regression of genes or transcripts. This module uses a lasso algorithm combined with a bootstrap approach for dealing with possible dimension vulnerability (especially if attributes/instances ratio is high). 
+   Reboot searches for a genetic signature (significance coefficients) correlated with patient survival based on a multivariate Cox regression of genes or transcripts. This module uses a lasso algorithm combined with a Bootstrap approach for dealing with possible dimension vulnerability (especially whether it has high attributes or instances ratios). 
 
-   Filters for minimal variability of the attributes are also implemented. The analysis starts off checking and removing attributes with variance lower than the defined cut-off. Moreover, a spearman correlation filter is applied to every iteration of the bootstrap proccess based on the settable fraction of pairs with correlation coefficient higher than 0.8 and p-value lower than 0.05. 
+   Filters for minimal variability of the attributes are also implemented. Reboot analysis starts off by checking and removing attributes with variance lower than the defined cut-off. Next, a spearman correlation filter is applied to every iteration of the Bootstrap process based on the settable fraction of pairs with correlation coefficient higher than 0.8 and a p-value lower than 0.05. 
 
-   It is recommended a high attribute coverage for the analysis, considering the number of iterations and the group size of each iteration. Given a total number of attributes (N), group size (G) and number of iterations (B), the attribute coverage (AG) is given by: AG = (B * G) / N 
+   It is recommended a high attribute coverage for the analysis, considering the number of iterations and the group size of each iteration. Given a total number of attributes (N), group size (G) and number of iterations (B), the attribute coverage (AG) is given by AG = (B * G) / N 
 
 ### Usage
 
-   To generate a genetic signature, run the following: 
-
+   ```diff
+   +To search for gene or transcript signature, run the following: 
+   ```
 
    ```docker run --rm galantelab/reboot reboot.R regression <options>``` , optionally:
 
@@ -114,7 +115,7 @@ In summary, 3 subcommands are available:
    </tr>
    <tr>
    <td>-I, --filein</td>
-   <td>Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival parameters</td>
+   <td>Input file name. Tab-separated values (.tsv) file containing genes or transcripts expression and survival parameters</td>
    </tr>
    <tr>
    <td>-O, --outprefix</td>
@@ -126,15 +127,15 @@ In summary, 3 subcommands are available:
    </tr>
    <tr>
    <td>-G, --groupsize</td>
-   <td>Number of genes/transcripts to be selected in each bootstrap simulation (integer). Default: 3</td>
+   <td>Number of genes or transcripts to be selected in each bootstrap simulation (integer). Default: 3</td>
    </tr>
    <tr>
    <td>-P, -\-pcentfilter</td>
-   <td>Percentage of correlated gene/transcript pairs allowed in each iteration (double). Default: 0.3</td>
+   <td>Percentage of correlated gene or transcript pairs allowed in each iteration (double). Default: 0.3</td>
    </tr>
    <tr>
    <td>-V, --varfilter</td>
-   <td>Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01</td>
+   <td>Minimum normalized variance (0-1) required for each gene or transcript among samples (double). Default: 0.01</td>
    </tr>
    <tr>
    <td>-h, --help</td>
@@ -146,7 +147,7 @@ In summary, 3 subcommands are available:
 
 ### Input
 		
-   To produce a genetic signature, reboot requires a tsv file containing normalized expression values (TPM or FPKM) for genes/transcripts across multiple samples, in addition to survival data: survival status (e.g., 0=alive or 1=dead) and follow up time:
+   To produce a genetic signature, reboot requires a .tsv file containing normalized expression values in Transcripts Per Million (TPM) or in Fragments Per Kilobase per Million (FPKM) for genes or transcripts across multiple samples, in addition to survival data: survival status (e.g., 0=alive or 1=dead) and follow up time:
 
    | Sample ID | OS | OS.time | PARPBP | RAD51 | ... |   
    |---|---|---|---|---|---|
@@ -158,7 +159,7 @@ In summary, 3 subcommands are available:
 
 ### Output
 
-   As result, reboot generates one log file, a tsv file containing regression coefficients and 2 plots. The tsv file is in the following format:
+   As result, reboot generates one log file, a .tsv file containing regression coefficients and 2 plots. The .tsv file is in the following format:
 	
    | Feature name | coefficient | 
    | --- | --- |
@@ -170,18 +171,18 @@ In summary, 3 subcommands are available:
 
    The plots generated are a histogram with the distribution of the regression coefficients and a lollipop plot with the most relevant coefficients.
 
-## Application of gene or transcript signatures in survival
+## Applying signatures of genes or transcripts in survival
 
 
-   Reboot produces and applies a score for all samples based on the signature previously obtained from the **regression** module. Besides, reboot also offers the multivariate option, where other clinical variables such as therapy, age, gender, among others can be included in a multivariate survival model. Multiple univariate analysis are performed and only variables with a p-value <= 0.2 are selected for the final multivariate model. Statistical tests are performed in order to evaluate the relevance of the signature score along with co-variables as prognostic factor of a given event (overall / progression-free / recurrence-free survival).
+   Reboot produces and applies a score for all samples based on the signature previously obtained from the **regression** module. Besides, reboot also offers the multivariate option, where further clinical variables (e.g., therapy, age and gender) can be loaded in a multivariate survival model. Multiple univariate analyses are performed and only variables with a p-value <= 0.2 are selected for the final multivariate model. Statistical tests are performed in order to evaluate the relevance of the signature score along with co-variables as prognostic factors of a given event (overall / progression-free / recurrence-free survival).
 
-   By default, both univariate and multivariate survival analyses use the median score value as cutoff to stratify patients in high and low score signatures. Alternatively, the cutoff value may be based on a ROC curve using NNE (Nearest Neighbour Estimate) method and the Youden statistics, where J = [sensitivity + (specificity -1)]. If more than one J coefficient is present, then the first one is chosen.
+   By default, both univariate and multivariate survival analyses use the median score value as a cutoff to stratify patients in high and low score signatures. Alternatively, this cutoff value may be based on a Receiver Operator Characteristic (ROC) curve using Nearest Neighbour Estimate (NNE) method and the Youden statistics, where J = [sensitivity + (specificity -1)]. If more than one J coefficient is available, then the first one is chosen.
 
-   If a multivariate analysis is performed based on a ROC curve, a bootstrap resampling method is applied once the provided clinical dataset passes the filters: (i) final dataset with at least 70% of the original one (NAs filter) and; (ii) the frequency of the less abundant category for each co-variable is not less than 20% (proportion filter). Otherwise, the multivariate analysis is performed without the bootstrap method. After 100 iterations, the relevance frequency of each co-variable with the event is calculated.
+   If a multivariate analysis is performed based on a ROC curve, a bootstrap resampling method is applied once the provided clinical dataset passes the filters: (i) final dataset with at least 70% of the original one (Not Available - NA filter) and; (ii) the frequency of the less abundant category for each co-variable is not less than 20% (proportion filter). Otherwise, the multivariate analysis is performed without the bootstrap method. After 100 iterations, the relevance frequency of each co-variable with the event is calculated.
 
 ### Usage
 
-   To validate a gene/transcript signature in survival analysis, run the following:
+   To validate a signature of genes or transcripts in survival analysis, run the following:
 
 
    ```docker run --rm galantelab/reboot reboot.R survival <options>```, optionally:
@@ -199,7 +200,7 @@ In summary, 3 subcommands are available:
    </tr>
    <tr>
    <td>-I, --filein</td>
-   <td>Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival parameters</td>
+   <td>Input file name. Tab-separated values (.tsv) file containing genes or transcripts expression and survival parameters</td>
    </tr>
    <tr>
    <td>-O, --outprefix</td>
@@ -211,15 +212,15 @@ In summary, 3 subcommands are available:
    </tr>
    <tr>
    <td>-C, --clinical</td>
-   <td>Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen |</td>
+   <td>Tab-separated values (.tsv) file containing binary categorical variables only. Required if -M option is chosen |</td>
    </tr>
    <tr>
    <td>-R, --roc</td>
-   <td>If genetic score should be categorized according to a ROC curve instead of median, choose -R. Default: FALSE</td>
+   <td>To categorize the genetic score according to a ROC curve instead of median value, choose -R. Default: FALSE</td>
    </tr>
    <tr>
    <td>-S, --signature</td>
-   <td>Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients</td>
+   <td>Tab-separated values (.tsv) file containing a set of genes or transcripts and corresponding cox coefficients</td>
    </tr>
    <tr>
    <td>-h, --help</td>
@@ -235,7 +236,7 @@ In summary, 3 subcommands are available:
 
    1. Univariate mode
        
-      This is the simplest mode and requires a single input file. The expected tsv file contains a set of features (genes/transcripts) and their corresponding coefficients provided as output by the **regression** module:
+      This is the simplest mode and requires a single input file. The expected .tsv file contains a set of features (genes/transcripts) and their corresponding coefficients provided as output by the **regression** module:
 
 
       | Feature name | coefficient |
@@ -248,7 +249,7 @@ In summary, 3 subcommands are available:
     
    2. Multivariate mode
 
-      In case multivariate mode is chosen, a tsv file containing clinical information is also necessary. Note that all clinical variables MUST be categorical and present ONLY 2 classes (NA values are allowed):
+      In case multivariate mode is chosen, a .tsv file containing clinical information is also necessary. Note that all clinical variables MUST be categorical and present ONLY 2 classes (NA values are allowed):
 
       | Sample ID | age | gender | therapy | ... |   
       |---|---|---|---|---|
@@ -264,7 +265,7 @@ In summary, 3 subcommands are available:
 
    1. Univariate mode
 
-      If the analysis is performed in univariate mode, reboot returns a log and a lograng.txt file, containing the survival results for the signature score:
+      If the analysis is performed in univariate mode, reboot returns a log and a **lograng.txt** file, containing the survival results for the signature score:
 
       <table width="600" cellspacing="0" cellpadding="0">
       <tr>
@@ -295,7 +296,7 @@ In summary, 3 subcommands are available:
 
    2. Multivariate mode
  
-      If the analysis is performed in multivariate mode, reboot returns all files created in the univariate mode in addition to a multicox.txt file, which contains the survival results of the signature score along with all other clinical variables:
+      If the analysis is performed in multivariate mode, reboot returns all files created in the univariate mode in addition to a **multicox.txt** file, which contains the survival results of the signature score along with all other clinical variables:
 
       <table width="600" cellspacing="0" cellpadding="0">
       <tr>
@@ -352,11 +353,11 @@ In summary, 3 subcommands are available:
 
       <br>
 
-      Plots returned in this mode include: a forest plot for all clinical variables, a Kaplan Meier plot and a proportional hazard assumptions plot (Schoenfeld tests). If option --ROC is selected, only relevant variables (p<=0.05 in at least 25% of iterations) are plotted. A ROC curve and a plot of co-variable frequencies are also provided.
+      Plots returned in this mode include a forest plot for all clinical variables, a Kaplan Meier plot, and a proportional hazard assumptions plot (Schoenfeld tests). If the option --ROC is selected, only relevant variables (p-value <= 0.05 in at least 25% of iterations) are plotted. A ROC curve and a plot of co-variable frequencies are also provided.
 
 ## Integrative analysis
 
-   Reboot also provides a subcommand to perform the analyses in an integrative way (**regression** followed by **survival**). To execute the complete analysis, run the following:
+   Reboot also provides a subcommand to perform the full analyses (**regression** followed by **survival**) in a one-step process. To execute it, run the following:
 
 
    ```docker run --rm  galantelab/reboot reboot.R complete <options>``` , optionally:
@@ -374,7 +375,7 @@ In summary, 3 subcommands are available:
    </tr>
    <tr>
    <td>-I, --filein</td>
-   <td>Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival parameters</td>
+   <td>Input file name. Tab-separated values (.tsv) file containing genes or transcripts expression and survival parameters</td>
    </tr>
    <tr>
    <td>-O, --outprefix</td>
@@ -386,15 +387,15 @@ In summary, 3 subcommands are available:
    </tr>
    <tr>
    <td>-G, --groupsize</td>
-   <td>Number of genes/transcripts to be selected in each bootstrap simulation (integer). Default: 3</td>
+   <td>Number of genes or transcripts to be selected in each bootstrap simulation (integer). Default: 3</td>
    </tr>
    <tr>
    <td>-P, --pcentfilter</td>
-   <td>Percentage of correlated gene/transcript pairs allowed in each iteration (double). Default: 0.3</td>
+   <td>Percentage of correlated gene or transcript pairs allowed in each iteration (double). Default: 0.3</td>
    </tr>
    <tr>
    <td>-V, --varfilter</td>
-   <td>Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01</td>
+   <td>Minimum normalized variance (0-1) required for each gene or transcript among samples (double). Default: 0.01</td>
    </tr>
    <tr>
    <td>-M, --multivariate</td>
@@ -402,11 +403,11 @@ In summary, 3 subcommands are available:
    </tr>
    <tr>
    <td>-C, --clinical</td>
-   <td>Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen</td>
+   <td>Tab-separated values (.tsv) file containing binary categorical variables only. Required if -M option is chosen</td>
    </tr>
    <tr>
    <td>-R, --roc</td>
-   <td>If genetic score should be categorized according to a ROC curve instead of median, choose -R. Default: FALSE</td>
+   <td>To categorize the genetic score according to a ROC curve instead of median value, choose -R. Default: FALSE</td>
    </tr>
    <tr>
    <td>-h, --help</td>
@@ -418,14 +419,15 @@ In summary, 3 subcommands are available:
 
 ## Toy example
 
-   In order to illustrate tool usage, a toy script is also provided to download and format gene expression and clinical data of glioblastoma patients from [TCGA](https://www.cancer.gov/about-nci/organization/ccg/research/structural-genomics/tcga){:target="_blank"}.
-   Running the following code in the reboot directory provides both inputs:
+   In order to illustrate how easy is to use reboot, we produce a framework to get a small dataset (here called toy dataset) from [TCGA](https://www.cancer.gov/about-nci/organization/ccg/research/structural-genomics/tcga){:target="_blank"} and use it into reboot.
+
+   We provide a script to download and format gene expression and clinical data of glioblastoma patients from TCGA. It can be run following this command into the reboot directory:
 	
    ```docker run --env MYID=$(id -u) --rm -ti -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot toyfordocker.R``` , optionally:
 
    ```toyscript.R``` 
 
-   This command returns 2 tsv files, mentioned above, called expression.tsv and clinical.tsv. A MANIFEST.txt file and a set of expression and clinical data are also created, as intermediates of TCGA download process.
+   This command returns 2 .tsv files, mentioned above, called expression.tsv and clinical.tsv. A MANIFEST.txt file and a set of expression and clinical data are also created, as intermediates of TCGA download process.
    The composition of expression dataset comprises clinical variables: OS (survival status) and OS.time (follow up time) and 50 random picked gene expression (FPKM).
 
    Finally, reboot can be run in the complete mode:
