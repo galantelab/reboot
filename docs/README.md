@@ -26,10 +26,7 @@ Reboot can be obtained from Github and installed via a Docker container (recomme
 	
 	This method works on any distribution or operational systems, as long as [Docker](https://docs.docker.com/install){:target="_blank"} is installed.
 
-	```bash
-	# for docker usage
-	docker pull galantelab/reboot
-	```
+	```docker pull galantelab/reboot```
 
 2. Direct installation
 
@@ -37,9 +34,7 @@ Reboot can be obtained from Github and installed via a Docker container (recomme
 
 	```git clone https://github.com/galantelab/reboot.git```
 
-
 	```sudo sh reboot/install.sh```
-
 
 ## Dependencies
 
@@ -75,9 +70,13 @@ Reboot works with a command and subcommands structure:
 
 Subcommands may be invoked by the help menu:
 
-```docker run --rm galantelab/reboot reboot.R -h```  , optionally:
+```bash
+# for docker container
+docker run --rm galantelab/reboot reboot.R -h```  , optionally:
 
-```reboot.R -h```
+```bash
+# for direct installation
+reboot.R -h```
 
 
 In summary, 3 subcommands are available:
@@ -102,9 +101,12 @@ In summary, 3 subcommands are available:
    To search for gene or transcript signature, run the following: 
    
 
-   ```docker run --rm galantelab/reboot reboot.R regression <options>``` , optionally:
+   ```bash 
+   # for docker usage
+   docker run --rm galantelab/reboot reboot.R regression <options>``` , optionally:
 
-
+   ```bash
+   # for direct installation
    ```reboot.R regression <options>```
 
 
@@ -186,11 +188,13 @@ In summary, 3 subcommands are available:
 
    To validate a signature of genes or transcripts in survival analysis, run the following:
 
+   ```bash
+   # for docker usage
+   docker run --rm galantelab/reboot reboot.R survival <options>```, optionally:
 
-   ```docker run --rm galantelab/reboot reboot.R survival <options>```, optionally:
-
-
-   ```reboot.R survival <options>```
+   ```bash
+   # for direct installation
+   reboot.R survival <options>```
 
 
    Survival options are:
@@ -362,9 +366,11 @@ In summary, 3 subcommands are available:
    Reboot also provides a subcommand to perform the full analyses (**regression** followed by **survival**) in a one-step process. To execute it, run the following:
 
 
-   ```docker run --rm  galantelab/reboot reboot.R complete <options>``` , optionally:
+   ```bash
+      # for docker container
+      docker run --rm  galantelab/reboot reboot.R complete <options>``` , optionally:
 
-
+   
    ```reboot.R complete -h```
 
 
@@ -425,15 +431,23 @@ In summary, 3 subcommands are available:
 
    We provide a script to download and format gene expression and clinical data of glioblastoma patients from TCGA. It can be run following this command into the reboot directory:
 	
-   ```docker run --env MYID=$(id -u) --rm -ti -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot toyfordocker.R``` , optionally:
+   ```bash
+      # for docker container
+      docker run --env MYID=$(id -u) --rm -ti -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot toyfordocker.R``` , optionally:
 
-   ```toyscript.R``` 
+   ```bash
+   # for direct usage
+   toyscript.R``` 
 
    This command returns 2 .tsv files, mentioned above, called expression.tsv and clinical.tsv. A MANIFEST.txt file and a set of expression and clinical data are also created, as intermediates of TCGA download process.
    The composition of expression dataset comprises clinical variables: OS (survival status) and OS.time (follow up time) and 50 random picked gene expression (FPKM).
 
    Finally, reboot can be run in the complete mode:
 
-   ```docker run -u $(id -u):$(id -g) --rm -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R``` , optionally:
+   ```bash
+   # for docker container
+   docker run -u $(id -u):$(id -g) --rm -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R``` , optionally:
 
-   ```reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R```    
+   ```bash
+   # for direct usage
+   reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R```    
