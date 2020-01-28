@@ -73,7 +73,10 @@ Subcommands may be invoked by the help menu:
 ```bash
 # for docker container
 docker run --rm galantelab/reboot reboot.R -h
-```  , optionally:
+``` 
+
+Optionally:
+
 
 ```bash
 # for direct installation
@@ -106,7 +109,10 @@ In summary, 3 subcommands are available:
    ```bash 
    # for docker usage
    docker run --rm galantelab/reboot reboot.R regression <options>
-   ``` , optionally:
+   ```
+
+   optionally:
+
 
    ```bash
    # for direct installation
@@ -194,7 +200,10 @@ In summary, 3 subcommands are available:
 
    ```bash
    # for docker usage
-   docker run --rm galantelab/reboot reboot.R survival <options>```, optionally:
+   docker run --rm galantelab/reboot reboot.R survival <options>
+   ```
+
+   Optionally:
 
    ```bash
    # for direct installation
@@ -374,7 +383,10 @@ In summary, 3 subcommands are available:
    ```bash
    # for docker container
    docker run --rm  galantelab/reboot reboot.R complete <options>
-   ``` , optionally:
+   ```
+
+   Optionally:
+
 
    ```bash
    # for direct installation
@@ -442,7 +454,10 @@ In summary, 3 subcommands are available:
    ```bash
    # for docker container
    docker run --env MYID=$(id -u) --rm -ti -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot toyfordocker.R
-   ``` , optionally:
+   ```
+
+   optionally:
+
 
    ```bash
    # for direct usage
@@ -456,7 +471,10 @@ In summary, 3 subcommands are available:
    ```bash
    # for docker container
    docker run -u $(id -u):$(id -g) --rm -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R
-   ``` , optionally:
+   ```
+
+   Optionally:
+
 
    ```bash
    # for direct usage
