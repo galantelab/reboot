@@ -198,7 +198,8 @@ In summary, 3 subcommands are available:
 
    ```bash
    # for direct installation
-   reboot.R survival <options>```
+   reboot.R survival <options>
+   ```
 
 
    Survival options are:
