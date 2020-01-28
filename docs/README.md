@@ -72,11 +72,13 @@ Subcommands may be invoked by the help menu:
 
 ```bash
 # for docker container
-docker run --rm galantelab/reboot reboot.R -h```  , optionally:
+docker run --rm galantelab/reboot reboot.R -h
+```  , optionally:
 
 ```bash
 # for direct installation
-reboot.R -h```
+reboot.R -h
+```
 
 
 In summary, 3 subcommands are available:
@@ -103,11 +105,13 @@ In summary, 3 subcommands are available:
 
    ```bash 
    # for docker usage
-   docker run --rm galantelab/reboot reboot.R regression <options>``` , optionally:
+   docker run --rm galantelab/reboot reboot.R regression <options>
+   ``` , optionally:
 
    ```bash
    # for direct installation
-   ```reboot.R regression <options>```
+   reboot.R regression <options>
+   ```
 
 
    Regression options are: 
@@ -367,10 +371,12 @@ In summary, 3 subcommands are available:
 
 
    ```bash
-      # for docker container
-      docker run --rm  galantelab/reboot reboot.R complete <options>``` , optionally:
+   # for docker container
+   docker run --rm  galantelab/reboot reboot.R complete <options>
+   ``` , optionally:
 
-   
+   ```bash
+   # for direct installation
    ```reboot.R complete -h```
 
 
@@ -432,8 +438,9 @@ In summary, 3 subcommands are available:
    We provide a script to download and format gene expression and clinical data of glioblastoma patients from TCGA. It can be run following this command into the reboot directory:
 	
    ```bash
-      # for docker container
-      docker run --env MYID=$(id -u) --rm -ti -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot toyfordocker.R``` , optionally:
+   # for docker container
+   docker run --env MYID=$(id -u) --rm -ti -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot toyfordocker.R
+   ``` , optionally:
 
    ```bash
    # for direct usage
@@ -446,8 +453,10 @@ In summary, 3 subcommands are available:
 
    ```bash
    # for docker container
-   docker run -u $(id -u):$(id -g) --rm -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R``` , optionally:
+   docker run -u $(id -u):$(id -g) --rm -v $(pwd):$(pwd) -w $(pwd) galantelab/reboot reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R
+   ``` , optionally:
 
    ```bash
    # for direct usage
-   reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R```    
+   reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R
+   ```    
