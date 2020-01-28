@@ -26,8 +26,10 @@ Reboot can be obtained from Github and installed via a Docker container (recomme
 	
 	This method works on any distribution or operational systems, as long as [Docker](https://docs.docker.com/install){:target="_blank"} is installed.
 
-	```# for docker usage```
-	```docker pull galantelab/reboot```
+	```
+	# for docker usage
+	docker pull galantelab/reboot
+	```
 
 2. Direct installation
 
