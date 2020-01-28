@@ -378,7 +378,8 @@ In summary, 3 subcommands are available:
 
    ```bash
    # for direct installation
-   ```reboot.R complete -h```
+   reboot.R complete -h
+   ```
 
 
    Complete options are:
