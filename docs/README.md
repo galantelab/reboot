@@ -107,7 +107,7 @@ In summary, 3 subcommands are available:
    
 
    ```bash 
-   # for docker usage
+   # for docker container
    docker run --rm galantelab/reboot reboot.R regression <options>
    ```
 
@@ -199,7 +199,7 @@ In summary, 3 subcommands are available:
    To validate a signature of genes or transcripts in survival analysis, run the following:
 
    ```bash
-   # for docker usage
+   # for docker container
    docker run --rm galantelab/reboot reboot.R survival <options>
    ```
 
@@ -461,7 +461,8 @@ In summary, 3 subcommands are available:
 
    ```bash
    # for direct usage
-   toyscript.R``` 
+   toyscript.R
+   ``` 
 
    This command returns 2 .tsv files, mentioned above, called expression.tsv and clinical.tsv. A MANIFEST.txt file and a set of expression and clinical data are also created, as intermediates of TCGA download process.
    The composition of expression dataset comprises clinical variables: OS (survival status) and OS.time (follow up time) and 50 random picked gene expression (FPKM).
