@@ -1,5 +1,4 @@
-## Contents
-
+# Contents
 1. [Overview](#overview)
 2. [Installation](#installation)
 3. [Dependencies](#dependencies)
@@ -11,9 +10,11 @@
 
 ## Overview
 
-Reboot is a flexible, easy-to-use algorithm to identify and validate genes or transcripts signatures whose expression are highly correlated with patient survival. This tool innovates by using a multivariate strategy with penalized Cox regression (Lasso method) combined with a bootstrap approach, presenting robust convergence of the regression procedure, and a variety of statistical testing for signature score. Reboot comprises two modules developed in R (version 3.6). The **regression** module provides functionality for obtaining gene/transcript signatures from a given set of samples. In turn, the **survival** module provides functionality for producing, applying and validating a score, which is calculated based on the obtained signature, in patient datasets. In this module, a different set of samples may be provided for validation purposes, and clinical variables may also be taken into account. Moreover, reboot also has the execution option **complete**, which integratively executes the two aforementioned modules.
+Reboot is a flexible, easy-to-use algorithm to identify genes or transcripts signatures whose expression are highly correlated with patient survival. Reboot innovates by using a multivariate strategy with penalized Cox regression (Lasso method), and by presenting efficient convergence of the regression coefficients during the creation of a signature. Once it is obtained, reboot also provides functionality to produce, apply and validate a score, which is calculated based on the obtained signature, for a given set of samples.
 
-![](Figure_workflow.png)
+Reboot is a modular tool developed in R version 3.6. It comprises two main modules: **regression** and **survival**. The **regression** module provides functionality for obtaining gene/transcript signatures correlated with patient survival using multivariate penalized Cox regression. In turn, the **survival** module provides functionality for producing, applying and validating a signature score in patient datasets. In this module, a different patient dataset may be provided for validation purposes, for example. Moreover, reboot also has the execution option **complete**, which integratively executes the two aforementioned modules.
+
+![](Paper_figure.png)
 *Figure 1: Reboot workflow. First module (regression) makes a regression analysis to identify a gene or transcript signature. The second module (survival) runs survival analysis of a score calculated based on the obtained signature.*
 
 ## Installation
@@ -105,7 +106,7 @@ In summary, 3 subcommands are available:
    
 
    ```bash 
-   # for docker container
+   # for docker usage
    docker run --rm galantelab/reboot reboot.R regression <options>
    ```
 
@@ -181,11 +182,10 @@ In summary, 3 subcommands are available:
  
    <br>
 
-   The plots generated are a histogram with the distribution of the regression coefficients and a lollipop plot with the most relevant coefficients (see bellow).
-
-![](plots_part1.png)
+   The plots generated are a histogram with the distribution of the regression coefficients and a lollipop plot with the most relevant coefficients.
 
 ## Applying signatures of genes or transcripts in survival
+
 
    Reboot produces and applies a score for all samples based on the signature previously obtained from the **regression** module. Besides, reboot also offers the multivariate option, where further clinical variables (e.g., therapy, age and gender) can be loaded in a multivariate survival model. Multiple univariate analyses are performed and only variables with a p-value <= 0.2 are selected for the final multivariate model. Statistical tests are performed in order to evaluate the relevance of the signature score along with co-variables as prognostic factors of a given event (overall / progression-free / recurrence-free survival).
 
@@ -198,7 +198,7 @@ In summary, 3 subcommands are available:
    To validate a signature of genes or transcripts in survival analysis, run the following:
 
    ```bash
-   # for docker container
+   # for docker usage
    docker run --rm galantelab/reboot reboot.R survival <options>
    ```
 
@@ -460,8 +460,7 @@ In summary, 3 subcommands are available:
 
    ```bash
    # for direct usage
-   toyscript.R
-   ``` 
+   toyscript.R``` 
 
    This command returns 2 .tsv files, mentioned above, called expression.tsv and clinical.tsv. A MANIFEST.txt file and a set of expression and clinical data are also created, as intermediates of TCGA download process.
    The composition of expression dataset comprises clinical variables: OS (survival status) and OS.time (follow up time) and 50 random picked gene expression (FPKM).
