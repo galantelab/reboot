@@ -184,7 +184,7 @@ In summary, 3 subcommands are available:
    The plots generated are a histogram with the distribution of the regression coefficients and a lollipop plot with the most relevant coefficients (see bellow).
 
    <br>
-   <img src="Fig2_doc.png" width="10000" height="10000"/>
+   ![](Fig2_doc.png)
    <br>
 
 ## Applying signatures of genes or transcripts in survival
