@@ -184,7 +184,7 @@ In summary, 3 subcommands are available:
    The plots generated are a histogram with the distribution of the regression coefficients and a lollipop plot with the most relevant coefficients (see bellow).
 
    <br>
-   <img src="Fig2_doc.png" height="50%">
+   <img src="Fig2_doc.png" style="height:50%; width:50"/>
    <br>
 
 
