@@ -185,7 +185,7 @@ In summary, 3 subcommands are available:
 
    <br>
    <p align="center">
-   ![](Fig2_doc.png)
+   <img src="Fig2_doc.png" />
    </p>
    <br>
 
