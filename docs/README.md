@@ -142,7 +142,7 @@ In summary, 3 subcommands are available:
    <td>Number of genes or transcripts to be selected in each bootstrap simulation (integer). Default: 3</td>
    </tr>
    <tr>
-   <td>-P, -\-pcentfilter</td>
+   <td>-P, --pcentfilter</td>
    <td>Percentage of correlated gene or transcript pairs allowed in each iteration (double). Default: 0.3</td>
    </tr>
    <tr>
