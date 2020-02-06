@@ -2,7 +2,7 @@
 
 suppressMessages(library(optparse))
 #options(lifecycle_disable_verbose_retirement = TRUE)
-options(warn=-1)
+#options(warn=-1)
 
 #Time counter
 start_time <- Sys.time()
@@ -283,7 +283,8 @@ regression <- function(male_data){
 	#fit1 <- profL1(Surv(OS.time,OS)~., data=male_data, fold=10, maxlambda1=100, plot=F, trace=F)
 	fit1 <- profL1(Surv(OS.time,OS)~., data=male_data, fold=10, plot=F, trace=F)
 	#fit2 <- profL2(Surv(OS.time,OS)~., data=male_data, fold=fit1$fold, minl = 0.1, maxlambda2 = 10)
-	opt1 <- optL1(Surv(OS.time,OS)~., data=male_data, fold=fit1$fold, maxlambda1=10, trace=F )
+	#opt1 <- optL1(Surv(OS.time,OS)~., data=male_data, fold=fit1$fold, maxlambda1=10, trace=F )
+	opt1 <- optL1(Surv(OS.time,OS)~., data=male_data, fold=fit1$fold, trace=F )
 	#opt2 <- optL2(Surv(OS.time,OS)~., data=male_data, fold=fit2$fold)
 	fit <- penalized(Surv(OS.time,OS)~., data=male_data, lambda1=opt1$lambda, trace=F)
 	coemale <- coefficients(fit, "all")
