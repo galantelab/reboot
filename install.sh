@@ -1,4 +1,4 @@
-#!usr/bin/bash
+#!usr/local/bin/bash
 
 #Installation script for reboot
 #Requirements:R (version >= 3.6)
