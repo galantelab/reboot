@@ -8,8 +8,8 @@ Rscript -e 'install.packages(c("survival", "survminer", "BiocManager", "optparse
 Rscript -e 'BiocManager::install("survcomp")'
 
 #Packages  for regression analysis 
-Rscript -e 'install.packages(c("survival", "penalized", "tidyverse", "hash", "R.utils", "argparse"))'
-
+Rscript -e 'install.packages(c("penalized", "tidyverse", "hash", "R.utils", "argparse"))'
+#survival package also necessary but installed previously
 
 #Packages for toy sample generation
 Rscript -e 'BiocManager::install("remotes")'
