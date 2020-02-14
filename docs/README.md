@@ -492,9 +492,13 @@ In summary, 3 subcommands are available:
 ## Authors
 
    Felipe Rodolfo Camargo dos Santos*
+
    Gabriela Der Agopian Guardia*
+
    Filipe Ferreira dos Santos	
+
    Pedro Alexandre Favoretto Galante
  
    *These authors contributed equally for the work
+
 [Back to top](#contents)
