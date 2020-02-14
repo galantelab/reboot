@@ -7,6 +7,9 @@ parser = ArgumentParser()
 #parser$add_argument()
 subparsers = parser$add_subparsers(dest="sub_name", metavar = "<subcommand>", help = "choose only one option")
 
+#version
+parser$add_argument('-v', '--version', action='version', version='reboot 1.0.0')
+
 
 #create the parser for the "regression" command
 
