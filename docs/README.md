@@ -8,6 +8,7 @@
 6. [Applying signatures of genes or transcripts in survival](#applying-signatures-of-genes-or-transcripts-in-survival)
 7. [Integrative analysis](#integrative-analysis) 
 6. [Toy example](#toy-example)
+7. [Authors](#authors)
 
 ## Overview
 
@@ -488,4 +489,11 @@ In summary, 3 subcommands are available:
    # for direct usage
    reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R
    ```    
+## Authors
+
+	Felipe Rodolfo Camargo dos Santos
+	Gabriela Der Agopian Guardia
+	Filipe Ferreira dos Santos	
+	Pedro Alexandre Favoretto Galante
+
 [Back to top](#contents)
