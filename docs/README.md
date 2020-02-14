@@ -82,6 +82,21 @@ Optionally:
 reboot.R -h
 ```
 
+Similarlly, version may be invoked by:
+
+```bash
+# for docker container
+docker run --rm galantelab/reboot reboot.R -v
+```
+
+Optionally:
+
+
+```bash
+# for direct installation
+reboot.R -v
+```
+
 
 In summary, 3 subcommands are available:
 
@@ -102,7 +117,7 @@ In summary, 3 subcommands are available:
 
 ### Usage
 
-   To search for gene or transcript signature, run the following: 
+    For gene or transcript signature obtention, run the following: 
    
 
    ```bash 
