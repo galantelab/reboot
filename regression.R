@@ -18,16 +18,16 @@ make_option(c("-O", "--outprefix"), action="store",
 type='character', dest = "out", default = "reboot", help="Output file prefix. Default: reboot"),
 
 make_option(c("-B","--bootstrap"), action = "store",
-type = "integer", dest = "booty", default = "5", help = "Number of iterations for bootstrap simulation (int). Default: 1"),
+type = "integer", dest = "booty", default = "5", help = "Number of iterations for bootstrap simulation (int). Default: 5"),
 
 make_option(c("-G", "--groupsize"), action="store",
-type='integer', dest = "nel", default = "5", help="Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3"),
+type='integer', dest = "nel", default = "10", help="Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 10"),
 
 make_option(c("-P", "--percentagefilter"), action="store",
 type='numeric', dest = "pf", default = "0.3", help="Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3"),
 
 make_option(c("-V", "--variancefilter"), action="store",
-type='numeric', dest = "var", default = "0.03", help="Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01"))
+type='numeric', dest = "var", default = "0.01", help="Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01"))
 
 
 opo <- OptionParser(option_list=option_list, add_help_option = T)
@@ -74,9 +74,27 @@ cat("Chosen parameters: ")
 cat(paste(commandArgs(trailingOnly = T), collapse = " "))
 cat("\n\n")
 
+#####Schoenfeld test######
+
+ph_assumptions <- function(full_data){
+	cat("Performing schoenfeld test\n\n")
+	filt <- vector()
+	attributes <- colnames(full_data[3:dim(full_data)[2]])
+	for (i in attributes){
+		phmodel <- coxph(formula = formula(paste('Surv(OS.time, OS)~', i)) , data = full_data)
+		schoen <- cox.zph(phmodel)
+		pval <- schoen$table[1,3]
+		if (pval > 0.05){
+			filt <- c(filt, i)
+		}
+	} 
+	losers <- setdiff(attributes, filt)
+	cat(length(losers)," columns not allowed by schoenfeld test: ",losers, "\n\n")
+	return(full_data)
+}
+
 
 ######Error check 1#######
-
 numberfilter1 <- function(dataf, g, outname, outplot) {
 	if ((ncol(dataf)-2) < g){
 		cat("The number of columns per group exceeds the number of columns", "\n", "\n")
@@ -88,7 +106,7 @@ numberfilter1 <- function(dataf, g, outname, outplot) {
 			coemale <- cbind(feature,coefficient)
 			#coemale <- gsub("@#!", "-", coemale)   #back to initial names
 			write.table(coemale, outname, sep="\t", row.names=F, quote=F)
-			histogram(outplot,coemale)
+			#histogram(outplot,coemale)
 			cat("Done", "\n")
 		}
 		else {
@@ -161,7 +179,7 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
 	
 	##setting up hash## 
 	
-	cat("Starting bootstrap ", booty, "iterations","\n")
+	cat("Starting bootstrap ", booty, "iterations","\n\n")
 	k <- colnames(full_data[3:length(colnames(full_data))])
 	v <- vector("list", length(k))
 	yield <- hash(k,v)
@@ -204,7 +222,11 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
 
 	tt <- tt %>%
 		filter(coefficient!=0)
-	
+
+	if (any(!complete.cases(tt$coefficient))){
+		cat("NA coefficient found, increase coverage for a proper analysis", "\n")
+	}
+
 	if (any(!(tt==0))){
 		tt$feature <- gsub("__","-",tt$feature)
 		write.table(tt, outname, sep="\t", row.names=F, quote=F)
@@ -222,32 +244,36 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
 ######Variance filter######
 
 varfun <- function(male_data, var, file) {
-  maxes <- matrix(apply(male_data[,3:ncol(male_data)],2,max), nrow=1)
-  if (0 %in% maxes){
-	cat("Columns with only 0s found in ", file, ". Remove such columns and try again.", "\n")
-	q(status=0)
-  }
-  dividendo <- bind_rows(replicate(nrow(male_data), as.data.frame(maxes), simplify=F))
-  divisor <- male_data[,3:ncol(male_data)]
-  normalized <- divisor/dividendo
-  variances <- apply(normalized,2,var)
-  trash <- c()
-  for (i in (1:length(variances))) {
-    variances[i]
-    if (variances[i] < var){
-      trash <- c(trash,names(variances[i]))
-    }
-  }
+	maxes <- matrix(apply(male_data[,3:ncol(male_data)],2,max), nrow=1)
+	if (0 %in% maxes){
+		cat("Columns with only 0s found in ", file, ". Remove such columns and try again.", "\n")
+		q(status=0)
+	}
+	cat("Calculating normalized variances", "\n\n")
+	dividendo <- bind_rows(replicate(nrow(male_data), as.data.frame(maxes), simplify=F))
+	divisor <- male_data[,3:ncol(male_data)]
+	normalized <- divisor/dividendo
+	variances <- apply(normalized,2,var)
+	filtered <- c()
+	losers <- c()
+	for (i in (1:length(variances))) {
+		if (variances[i] > var){
+			filtered <- c(filtered,i)
+		}
+	}
+	if (class(filtered)=="NULL"){
+		cat("All columns rejected by variance filter","\n","\n")
+		q(status=0)
+	} else if(length(filtered) == length(variances)) {
+		cat("No columns rejected by variance filter","\n","\n")	
+	} else {
+		losers <- names(variances[-filtered])
+		filtered <- filtered+2
+		male_data <- male_data[, c(1,2,filtered)]
+		cat (length(losers)," columns with variance lower than: ", var, " was removed from analysis: ",losers, "\n","\n")
 
-  if (class(trash)!="NULL"){
-  male_data <- male_data %>%
-    select(-trash)
-    cat (length(trash)," columns with variance lower than: ", var, " was removed from analysis: ",trash, "\n","\n")
-  }
-  else {
-    cat("No columns rejected by variance filter","\n","\n")	
-  }
-  return(male_data)  
+	}
+	return(male_data)  
 
 }	
 
@@ -335,12 +361,12 @@ histogram <- function(out,tt){
 	cat("building histogram plot\n")
 	fname<-paste(out,"_hist.pdf",sep="")
 	tt<-tt[complete.cases(tt), ]
-	tt <- filter(tt,coefficient!=0)
 	tt$coefficient <- as.numeric(as.character(tt$coefficient))
+	tt <- filter(tt, coefficient != 0)
 	pdf(fname)
-	pl<-ggplot(tt, aes(x=coefficient))+
+	pl<-ggplot(tt, aes(x = coefficient))+
 		geom_histogram(binwidth = 0.005, alpha=1, position="identity") +
-		scale_y_continuous(expand=c(0,0)) +
+		scale_y_continuous(expand = c(0,0)) +
 		xlab("coefficients")+
 		ylab("") +
 		mytheme
@@ -350,13 +376,17 @@ histogram <- function(out,tt){
 
 ####Main####
 
-#check file error#
-
-numberfilter1(full_data, in_object$nel, outname, outplot)
-
 #Perform variance filter#
 
 full_data <- varfun(full_data, in_object$var, in_object$fname)
+
+#Perform schoenfeld tests#
+
+full_data <- ph_assumptions(full_data)
+
+#check file error#
+
+numberfilter1(full_data, in_object$nel, outname, outplot)
 
 #check file error 2#
 

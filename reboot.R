@@ -26,8 +26,8 @@ parser_reg$add_argument("-B","--bootstrap", type = "integer", dest = "booty",  m
                         help = "Number of iterations for bootstrap simulation (int). Default: 1")
 
 parser_reg$add_argument("-G", "--groupsize", type="integer", dest = "nel",  metavar = '',
-                        default="3",
-                        help="Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3")
+                        default="10",
+                        help="Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 10")
 
 parser_reg$add_argument("-P", "--pcentfilter", type="character", dest = "pf",  metavar = '',
                         default = "0.3",
@@ -82,8 +82,8 @@ parser_all$add_argument("-B","--bootstrap", type = "integer", dest = "booty",  m
                         help = "Number of iterations for bootstrap simulation (int). Default: 1")
 
 parser_all$add_argument("-G", "--groupsize", type="integer", dest = "nel",  metavar = '',
-                        default="3",
-                        help="Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 3")
+                        default="10",
+                        help="Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 10")
 
 parser_all$add_argument("-P", "--pcentfilter", type="character", dest = "pf",  metavar = '',
                         default = "0.3",
