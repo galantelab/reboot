@@ -270,7 +270,7 @@ varfun <- function(male_data, var, file) {
 		losers <- names(variances[-filtered])
 		filtered <- filtered+2
 		male_data <- male_data[, c(1,2,filtered)]
-		cat (length(losers)," columns with variance lower than: ", var, " was removed from analysis: ",losers, "\n","\n")
+		cat (length(losers)," columns with variance lower than ", var, " was removed from analysis: ",losers, "\n","\n")
 
 	}
 	return(male_data)  
