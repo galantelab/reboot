@@ -1,4 +1,4 @@
-#!/usr/local/Rscript
+#!/usr/bin/Rscript
 
 library(argparse)
 

@@ -1,4 +1,4 @@
-#!/usr/local/Rscript
+#!/usr/bin/Rscript
 
 suppressMessages(library(optparse))
 #options(lifecycle_disable_verbose_retirement = TRUE)
