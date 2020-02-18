@@ -113,7 +113,20 @@ In summary, 3 subcommands are available:
 
    Filters for minimal variability of the attributes are also implemented. Reboot analysis starts off by checking and removing attributes with variance lower than the defined cut-off. Next, a spearman correlation filter is applied to every iteration of the Bootstrap process based on the settable fraction of pairs with correlation coefficient higher than 0.8 and a p-value lower than 0.05. 
 
-   It is recommended a high attribute coverage for the analysis, considering the number of iterations and the group size of each iteration. Given a total number of attributes (N), group size (G) and number of iterations (B), the attribute coverage (AG) is given by AG = (B * G) / N 
+   Given a total number of attributes (N), group size (G) and number of iterations (B), coverage may be introduced as the number of times an attribute is raffled on average :
+
+   Cv = (B * G) /  N
+
+   For optimal algorithm convergence, we recommend the group size (G) to be between 10 and 15 attributes per iteration. In order to assure a satisfying level of group combinations, our recommendation is to set B = (N/G)², so that each attribute participates in N/G simulations on average, in other words: Cv = N/G, as ilustrated:   
+
+
+   | N | G | B |
+   |----|----|----|
+   |100|10|100|
+   |300|15|400|
+   |500|12|1736|
+
+   <br>
 
 ### Usage
 
