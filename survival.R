@@ -1,4 +1,4 @@
-#!/usr/local/bin/Rscript
+#!/usr/local/Rscript
 
 start_time <- Sys.time()
 
