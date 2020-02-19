@@ -82,12 +82,15 @@ ph_assumptions <- function(full_data){
 	attributes <- colnames(full_data[3:dim(full_data)[2]])
 	for (i in attributes){
 		phmodel <- coxph(formula = formula(paste('Surv(OS.time, OS)~', i)) , data = full_data)
-		schoen <- cox.zph(phmodel)
-		pval <- schoen$table[1,3]
-		if (pval > 0.05){
-			filt <- c(filt, i)
+		if(!is.na(phmodel$coef)){
+			schoen <- cox.zph(phmodel)
+			pval <- schoen$table[1,3]
+			if (pval > 0.05){
+				filt <- c(filt, i)
+			}
 		}
-	} 
+	}
+		 
 	losers <- setdiff(attributes, filt)
 	cat(length(losers)," columns not allowed by schoenfeld test: ",losers, "\n\n")
 	return(full_data)
