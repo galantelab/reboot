@@ -168,7 +168,7 @@ In summary, 3 subcommands are available:
    </tr>
    <tr>
    <td>-G, --groupsize</td>
-   <td>Number of genes or transcripts to be selected in each bootstrap simulation (integer). Default: 3</td>
+   <td>Number of genes or transcripts to be selected in each bootstrap simulation (integer). Default: 10</td>
    </tr>
    <tr>
    <td>-P, --pcentfilter</td>
@@ -451,7 +451,7 @@ In summary, 3 subcommands are available:
    </tr>
    <tr>
    <td>-G, --groupsize</td>
-   <td>Number of genes or transcripts to be selected in each bootstrap simulation (integer). Default: 3</td>
+   <td>Number of genes or transcripts to be selected in each bootstrap simulation (integer). Default: 10</td>
    </tr>
    <tr>
    <td>-P, --pcentfilter</td>
