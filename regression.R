@@ -27,8 +27,10 @@ make_option(c("-P", "--percentagefilter"), action="store",
 type='numeric', dest = "pf", default = "0.3", help="Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3"),
 
 make_option(c("-V", "--variancefilter"), action="store",
-type='numeric', dest = "var", default = "0.01", help="Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01"))
+type='numeric', dest = "var", default = "0.01", help="Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01"),
 
+make_option(c("-F", "--force"), action="store",
+type='logical', dest = "force", default = FALSE, help="To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F"))
 
 opo <- OptionParser(option_list=option_list, add_help_option = T)
 in_object <- parse_args(opo)
@@ -83,6 +85,8 @@ ph_assumptions <- function(full_data){
 	for (i in attributes){
 		phmodel <- coxph(formula = formula(paste('Surv(OS.time, OS)~', i)) , data = full_data)
 		if(!is.na(phmodel$coef)){
+		tryCatch({
+			phmodel <- coxph(formula = formula(paste('Surv(OS.time, OS)~', i)) , data = full_data)
 			schoen <- cox.zph(phmodel)
 			pval <- schoen$table[1,3]
 			if (pval > 0.05){
@@ -91,6 +95,9 @@ ph_assumptions <- function(full_data){
 		}
 	}
 		 
+			} 
+		},warning=function(w){}, error=function(e){})
+	}
 	losers <- setdiff(attributes, filt)
 	cat(length(losers)," columns not allowed by schoenfeld test: ",losers, "\n\n")
 	return(full_data)
@@ -246,7 +253,7 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
 	
 ######Variance filter######
 
-varfun <- function(male_data, var, file) {
+varfun <- function(male_data, var, file, force) {
 	maxes <- matrix(apply(male_data[,3:ncol(male_data)],2,max), nrow=1)
 	if (0 %in% maxes){
 		cat("Columns with only 0s found in ", file, ". Remove such columns and try again.", "\n")
@@ -254,6 +261,7 @@ varfun <- function(male_data, var, file) {
 	}
 	cat("Calculating normalized variances", "\n\n")
 	dividendo <- bind_rows(replicate(nrow(male_data), as.data.frame(maxes), simplify=F))
+	print("teste")
 	divisor <- male_data[,3:ncol(male_data)]
 	normalized <- divisor/dividendo
 	variances <- apply(normalized,2,var)
@@ -275,6 +283,27 @@ varfun <- function(male_data, var, file) {
 		male_data <- male_data[, c(1,2,filtered)]
 		cat (length(losers)," columns with variance lower than ", var, " was removed from analysis: ",losers, "\n","\n")
 
+	}
+
+	#Dealing with SO and SO time
+	if (!force){
+		OSstatus <- male_data[,1]
+		percentage <- sum(OSstatus)/length(OSstatus)
+		if (percentage < 0.2 | percentage > 0.8){
+			cat("Survival status proportion:", percentage, " is probably not enough to the analysis. \nDeath or recidive are alternative options for the analysis", "\n\n")	
+			cat("If you want to continue anyway, choose the flag F. \n\n")
+			q(status=0)
+		}
+		
+		followup <- male_data[,2]
+		uplimit <- max(followup)	
+		normalized <- followup/uplimit
+		fvar <- var(normalized)
+		if (fvar < var){
+			cat("Follow up variance: ", var, " has not passed the variance test. \n\n")
+			cat("If you want to continue anyway, choose the flag F. \n\n")
+			q(status=0)
+		}
 	}
 	return(male_data)  
 
@@ -381,7 +410,7 @@ histogram <- function(out,tt){
 
 #Perform variance filter#
 
-full_data <- varfun(full_data, in_object$var, in_object$fname)
+full_data <- varfun(full_data, in_object$var, in_object$fname, force)
 
 #Perform schoenfeld tests#
 
