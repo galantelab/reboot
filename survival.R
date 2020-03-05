@@ -1,6 +1,6 @@
-#!/usr/local/bin/Rscript
+#!/usr/bin/Rscript
 
-start_time <- Sys.time()
+start_time <- suppressMessages(Sys.time())
 
 suppressMessages(library("optparse"))
 
@@ -22,7 +22,13 @@ make_option(c("-C", "--clinical"), action="store",
 type='character', dest = "clin_file", default = "", help="Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen"),
 
 make_option(c("-R", "--roc"), action="store",
-type='logical', dest = "roc_curve", default = FALSE, help="If continuous variables should be categorized according to a ROC curve instead of median, choose -R"))
+type='logical', dest = "roc_curve", default = FALSE, help="If continuous variables should be categorized according to a ROC curve instead of median, choose -R"),
+
+make_option(c("-V", "--variancefilter"), action="store",
+type='numeric', dest = "var", default = "0.01", help="Minimum normalized variance (0-1) required for follow up time among samples (double). Default: 0.01"),
+
+make_option(c("-F", "--force"), action="store",
+type='logical', dest = "force", default = FALSE, help="To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F"))
 
 opo <- OptionParser(option_list=option_list, add_help_option = T)
 in_object <- parse_args(opo)
@@ -42,6 +48,8 @@ sig_file = in_object$sig_file
 type = in_object$type
 clin_file = in_object$clin_file
 roc_curve = in_object$roc_curve
+var = in_object$var
+force = in_object$force
 
 ####### Log file ##########
 sink(file = paste(out, ".log", sep=''), append=T)
@@ -136,6 +144,27 @@ if(ncol(data) != (nrow(signature)+3)){
   }
 }
 
+#Check OS and OS.time
+if(!force){
+    OSstatus <- data[,2]
+    percentage <- sum(OSstatus)/length(OSstatus)
+    if(percentage < 0.2 | percentage > 0.8){
+        cat("Survival status proportion:", percentage, " is probably not enough to the analysis. \nDeath or recidive are alternative options for the analysis", "\n\n")
+        cat("If you want to continue anyway, choose the flag F. \n\n")
+        q(status=0)
+    }
+
+    followup <- data[,3]
+    uplimit <- max(followup)
+    normalized <- followup/uplimit
+    fvar <- var(normalized)
+    if(fvar < var){
+        cat("Follow up variance: ", var, " has not passed the variance filter. \n\n")
+        cat("If you want to continue anyway, choose the flag F. \n\n")
+        q(status=0)
+    }
+}
+
 #Reorder colnames of data according to signature order
 target = c("sample","OS","OS.time",signature$feature)
 data = data[,match(target, colnames(data))]
@@ -157,7 +186,7 @@ reboot_ggcoxzph <- function(fit, resid = T, se = T, df = 4, nsmo = 40, var, poin
   x <- fit
   if(!methods::is(x, "cox.zph"))
     stop("Can't handle an object of class ", class(x))
-  
+
   xx <- x$x
   yy <- x$y
   d <- nrow(yy)
@@ -238,23 +267,23 @@ reboot_ggcoxzph <- function(fit, resid = T, se = T, df = 4, nsmo = 40, var, poin
                            labels = xaxislab) +
         ylim(yr)-> gplot
     }
-    
+
     if (resid)
       gplot <- gplot + geom_point(aes(x = xx, y =y),
                                   col = point.col, shape = point.shape, size = point.size, alpha = point.alpha)
-    
+
     if (se) {
       gplot <- gplot + geom_line(aes(x=pred.x, y=yup), lty = "dashed") +
         geom_line(aes( x = pred.x, y = ylow), lty = "dashed")
     }
-    
+
     ggpubr::ggpar(gplot, ...)
-    
-    
+
+
   }) -> plots
   names(plots) <- var
   class(plots) <- c("ggcoxzph", "ggsurv", "list")
-  
+
   if("GLOBAL" %in% rownames(x$table)) # case of multivariate Cox
     global_p <- x$table["GLOBAL", 3]
   else global_p <- NULL # Univariate Cox
@@ -267,13 +296,13 @@ reboot_ggcoxzph <- function(fit, resid = T, se = T, df = 4, nsmo = 40, var, poin
 test_ph_assumptions <- function(model_object, covariates, is_multi)
 {
   test.ph <- cox.zph(model_object)
-  
+
   if(is_multi){
 
     tmp_covariates <- c()
     covariates = c("score", covariates)
     new_covariates = colnames(test.ph$y)
-  
+
     #Match string to get from 'new covariates' the original 'covariates' name
     for(var in new_covariates)
     {
@@ -287,25 +316,35 @@ test_ph_assumptions <- function(model_object, covariates, is_multi)
     tmp_covariates <- c("score")
 
   }
-  
+
   rownames(test.ph$table) <- c(tmp_covariates, "GLOBAL")
   colnames(test.ph$y) <- tmp_covariates
-  
+
   if(is_multi) {
     phplot <- reboot_ggcoxzph(fit = test.ph)
   } else {
     phplot <- ggcoxzph(fit = test.ph)
   }
-  
+
   pdf(file = paste(out, "_ph_assumptions_plot.pdf", sep=""))
   for (plot in phplot) {
     print(plot, newpage = T)
   }
   garbage = dev.off()
-  
+
   tmp_df <- as.data.frame(test.ph$table)
-  pvalue <- tmp_df[nrow(tmp_df),3]
-  return(pvalue)
+  global_p <- tmp_df[nrow(tmp_df),3]
+  pvalues <- tmp_df[1:(nrow(tmp_df)-1),3,drop=F]
+  variables = as.character(rownames(pvalues[pvalues[[1]]>0.05,,drop=F]))
+  dropped = as.character(rownames(pvalues[pvalues[[1]]<=0.05,,drop=F]))
+
+  if(length(dropped)>0){
+    cat(paste("\tWarning: Proportional Hazards Assumptions not met (p = ", round(x = global_p, digits = 4), "). The following variables will be disregarded: ", paste(dropped,collapse=", "), ".\n", "\tFor more information, check plot: '",out,"_ph_assumptions_plot.pdf'\n",sep=""))
+  } else{
+    cat(paste("Proportional Hazards Assumptions met (p = ", round(x = global_p, digits = 4), ").\n", sep = ""))
+  }
+
+  return(variables)
 
 }
 
@@ -331,9 +370,9 @@ cutoff_ROC <- function(dataset, auc_val, filename, plot)
                                           #ci.fit = TRUE,
                                           control = control.cutpoints())
   }
-  
+
   var_cutoff <- as.numeric(optimal.cutpoint$Youden$Global$optimal.cutoff$cutoff)
-  
+
   if (length(var_cutoff) >= 2)
   {
     var_cutoff <- var_cutoff[1]
@@ -342,13 +381,13 @@ cutoff_ROC <- function(dataset, auc_val, filename, plot)
   {
     var_cutoff <- var_cutoff
   }
-  
+
   if (plot){
     pdf(filename)
     roc_curve_plot <- plot.optimal.cutpoints(x = optimal.cutpoint, legend = T, which = c(1), col = "blue", bg = "white")
     garbage = dev.off()
   }
-  
+
   return(var_cutoff)
 }
 
@@ -381,7 +420,7 @@ if(type & clin_file != ""){
     #This value can be changed. By default, it uses the median followup time
     cutoff = median(x = clin$OS.time, na.rm = TRUE)
     nobs <- nrow(clin)
-    
+
     roc = survivalROC(Stime = clin$OS.time, status = clin$OS, marker = clin$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
     score_cutoff = cutoff_ROC(dataset = clin, auc_val = as.numeric(roc$AUC), plot = F)
     clin$score = ifelse(clin$score > score_cutoff, "high", "low")
@@ -417,7 +456,7 @@ logrank.test <- function(dat,filename){
     cutoff = median(x = dat$OS.time, na.rm = TRUE)
     nobs <- nrow(dat)
 
-    cat("Generating ROC curve...\n")    
+    cat("Generating ROC curve...\n")
     roc = survivalROC(Stime = dat$OS.time, status = dat$OS, marker = dat$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
     score_cutoff = cutoff_ROC(dataset = dat, auc_val = as.numeric(roc$AUC), filename = paste(out, "_ROC.pdf", sep=""), plot = T)
     dat$score = ifelse(dat$score > score_cutoff, "high", "low")
@@ -430,13 +469,7 @@ logrank.test <- function(dat,filename){
   #Test proportional hazards assumptions
   cat("Testing proportional hazards assumption (signature score)...\n")
   uni_model = coxph(formula = formula(paste('Surv(OS.time, OS) ~ score')) , data = dat)
-  checkPH <- test_ph_assumptions(model_object = uni_model, covariates = "NULL", is_multi = F)
-  if (checkPH <= .05) {
-    cat(paste("Warning: Proportional Hazards Assumptions not met (p = ", round(x = checkPH, digits = 4), "). Check plot: ",
-              paste("'", out, "_ph_assumptions_plot.pdf'\n", sep=""), sep = ""))
-  } else {
-    cat(paste("Proportional Hazards Assumptions met (p = ", round(x = checkPH, digits = 4), ").\n", sep = ""))
-  }
+  test_ph_assumptions(model_object = uni_model, covariates = "NULL", is_multi = F)
   cat("Done\n\n")
 
   cat("Running log-rank test for signature score...\n")
@@ -496,7 +529,7 @@ logrank.plot <- function(dat,filename){
     #This value can be changed. By default, it uses the median followup time
     cutoff = median(x = dat$OS.time, na.rm = TRUE)
     nobs <- nrow(dat)
-    
+
     roc = survivalROC(Stime = dat$OS.time, status = dat$OS, marker = dat$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
     score_cutoff = cutoff_ROC(dataset = dat, auc_val = as.numeric(roc$AUC), plot = F)
     sig_value = round(score_cutoff,2)
@@ -532,7 +565,7 @@ univCox.test <- function(dat, covariates){
 
   univ_formulas = sapply(covariates, function(x) as.formula(paste('Surv(OS.time, OS)~', x)))
   univ_models = lapply( univ_formulas, function(x){coxph(x, data = dat)})
-  univ_results <- lapply(univ_models, function(x){ 
+  univ_results <- lapply(univ_models, function(x){
 
                        coef = as.data.frame(coef(summary(x)))
                        ci = as.data.frame(summary(x)$conf.int)
@@ -558,7 +591,7 @@ my_bootstrap_method <- function(raw_df, boot_df, boot_sample)
   boot_sample <- boot_sample + 1
   boot_vec <- boot_df$strap[[boot_sample]]$id
   bootstrap_df <- as.data.frame(raw_df[boot_vec,])
-  
+
   #Check if all columns have categorical variables with only 2 factors
   for(i in 3:ncol(bootstrap_df))
   {
@@ -576,7 +609,7 @@ my_bootstrap_method <- function(raw_df, boot_df, boot_sample)
       }
     }
   }
-  
+
   return(bootstrap_df)
 }
 
@@ -594,7 +627,7 @@ merge_tables <- function(tables_list, covariates)
 {
   cox_tables <- list()
   iterator <- 0
-    
+
   for (i in 1:length(tables_list))
   {
     #Remove rows (variables) if p-value > .05
@@ -604,17 +637,17 @@ merge_tables <- function(tables_list, covariates)
     tmp_df <- count(table, variable)
     cox_tables[[iterator]] <- tmp_df
   }
-  
+
   tmp_table <- rbindlist(l = cox_tables, use.names = T, fill = T, idcol = "Unique ID")
   colnames(tmp_table) <- c("Unique ID", "Co-Variables", "Frequency")
-  
+
   final_table <- count(tmp_table, `Co-Variables`)
   colnames(final_table) <- c("Co-Variables", "Frequency")
-  
+
   tmp_covariates <- c()
   covariates = c("score", covariates)
   new_covariates = final_table[[1]]
-  
+
   #Match string to get from 'new covariates' the original 'covariates' name
   for(var in new_covariates)
   {
@@ -623,9 +656,9 @@ merge_tables <- function(tables_list, covariates)
       if(grepl(var2, var)){tmp_covariates <- append(tmp_covariates, var2)}
     }
   }
-  
+
   final_table[[1]] = tmp_covariates
-  
+
   return(final_table)
 }
 
@@ -652,9 +685,9 @@ barplot_co_variables <- function(plot_df, filename, covariates)
     geom_bar(stat = "identity", width = 0.5, color = "black", fill = "black") +
     xlab("") + ylab("Frequency (%)") +
     geom_segment(aes(x = .5, y = 25, xend = (nrow(plot_df) + .5), yend = 25), color = "red", linetype = "dashed", size = .5) +
-    theme_bw() + 
-    theme(axis.text.x = element_text(angle = 60, hjust = 1), axis.text = element_text(face = "plain", colour = "black"), 
-    legend.text = element_text(colour = "black", face = "plain"), axis.ticks = element_line(colour = "black"), axis.line = element_line(colour = "black"), 
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 60, hjust = 1), axis.text = element_text(face = "plain", colour = "black"),
+    legend.text = element_text(colour = "black", face = "plain"), axis.ticks = element_line(colour = "black"), axis.line = element_line(colour = "black"),
     panel.grid.major.x = element_blank(), text = element_text(face = "plain", colour = "black")) +
     scale_y_continuous(breaks = seq(0, 100, by = 20))
   print(final_plot, newpage = FALSE)
@@ -663,63 +696,65 @@ barplot_co_variables <- function(plot_df, filename, covariates)
 }
 
 #Create function to run multivariate Cox regression for score + clinical parameters
-multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
-  
+multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_covariates){
+
   roc_curve2 <<- F
   filters <<- T
 
-  #Select only relevant clinical parameters for multivariable Cox regression (p<0.2)
-  covariates = c("score",rownames(univ_result[(!is.na(univ_result$Cox.pvalue) & univ_result$Cox.pvalue<0.2),]))
-  
+  #Select only relevant clinical parameters for multivariable Cox regression (p<0.2) which passed the Schoenfeld test
+  covariates = rownames(univ_result[(!is.na(univ_result$Cox.pvalue) & univ_result$Cox.pvalue<0.2),])
+  covariates = intersect(uni_covariates,covariates)
+  if(!is.element("score",covariates)){covariates=c("score",covariates)}
+
   tryCatch({
 
     if (roc_curve){
-      
+
       #Remove row if "NA" in at least one column (variable)
       counter <- ncol(dat)
-      
+
       tmp_table <- nrow(dat[complete.cases(dat),])
       sample_cutoff <- .7 * nrow(dat)
       temporary_table <- dat
       backup_dat <- dat
-      
+
       # Ensure table without 'NAs' has at least 70% of the samples from the original dataframe
       while (tmp_table < sample_cutoff)
       {
-        
+
         if (counter < 5){
-          cat("\tWarning: Minimum number of co-variables (3) not achieved. Please check variables provided in clinical file. ")
+          cat("\tWarning: Minimum number of covariables (3) not achieved. Please check variables provided in clinical file. ")
           cat("Performing multivariate regression without bootstrap resampling...\n\n")
           break
         } else {
-          
+
           remove_var_vec <- c()
           remove_index <- 0
-          
+
           for (col in names(temporary_table))
           {
             tmp_var_size <- as.vector(is.na(temporary_table[[col]]))
             tmp_var_size2 <- length(tmp_var_size[tmp_var_size == T])
-            
+
             remove_index <- remove_index + 1
             remove_var_vec[remove_index] <- tmp_var_size2
           }
-          
+
           remove_col <- which.max(remove_var_vec)
-          
+
           if (remove_col == length(remove_var_vec))
           {
             temporary_table <- temporary_table[,c(1:(remove_col-1))]
           } else {
             temporary_table <- temporary_table[,c(1:(remove_col-1),(remove_col+1):ncol(temporary_table))]
           }
-          
+
           tmp_table <- nrow(temporary_table[complete.cases(temporary_table),])
           dat <- temporary_table[complete.cases(temporary_table),]
           counter <- counter - 1
         }
       }
-      
+
       n_cols_bef <- ncol(dat)
       tmp_cols <- c()
 
@@ -754,32 +789,32 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
           }
         }
       }
-      
+
       dat <- dat[, tmp_cols]
-      
+
       n_cols_aft <- ncol(dat)
       n_cols_diff <- n_cols_bef - n_cols_aft
-      
+
       counter <- counter - n_cols_diff
       barPlot_counter <- counter
-      
+
       if (counter < 5){
-        
+
         filters <<- F
-        
-        cat("\tWarning: Minimum number of co-variables (3) not achieved. Please check variables provided in clinical file. ")
+        cat("\tWarning: Minimum number of covariables (3) not achieved. Please check variables provided in clinical file. ")
         cat("Performing multivariate regression without bootstrap resampling...\n\n")
+
         dat <- backup_dat
-        
+
         #Run multivariate Cox
         res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
-        
+
         #Extract results
         coef = as.data.frame(coef(summary(res)))
         ci = as.data.frame(summary(res)$conf.int)
         res = merge(coef,ci,by=0)
         res = res[,c(1:3,6,9:10)]
-        
+
         colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
         res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
         res$Cox.pvalue = round(res$Cox.pvalue,4)
@@ -788,7 +823,7 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
         if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
         res = res[,c(1,7,4,8)]
       } else {
-        
+
         # Update covariates
         update_covariates <- c()
         for (col in 3:ncol(dat))
@@ -799,24 +834,23 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
             update_covariates <- append(x = update_covariates, values = tmp_colName)
           }
         }
-        
+
         if (length(update_covariates) < 3){
-          
+
           filters <<- F
-          
-          cat("\tWarning: Minimum number of co-variables (3) not achieved. Please check variables provided in clinical file. ")
+          cat("\tWarning: Minimum number of covariables (3) not achieved. Please check variables provided in clinical file. ")
           cat("Performing multivariate regression without bootstrap resampling...\n\n")
           dat <- backup_dat
-          
+
           #Run multivariate Cox
           res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
-          
+
           #Extract results
           coef = as.data.frame(coef(summary(res)))
           ci = as.data.frame(summary(res)$conf.int)
           res = merge(coef,ci,by=0)
           res = res[,c(1:3,6,9:10)]
-          
+
           colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
           res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
           res$Cox.pvalue = round(res$Cox.pvalue,4)
@@ -825,42 +859,42 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
           if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
           res = res[,c(1,7,4,8)]
         } else {
-          
+
           covariates <- update_covariates
-          
+
           roc_curve2 <<- T
-          
+
           tables_list <- list()
           boot_backup_dat <- dat
-          
+
           boot_tmp <- bootstrap(data = dat, n = 100, size = .6)
           boot_loop <- 0
           boot_control <- 0
           cat("\tBootstrap progress:\n\t")
-          
+
           while(boot_loop < 100)
           {
             boot_loop <- boot_loop + 1
             dat <- my_bootstrap_method(raw_df = boot_backup_dat, boot_df = boot_tmp, boot_sample = boot_control)
-            
+
             if (class(dat) != "data.frame") {
               boot_loop <- boot_loop - 1
               boot_control <- 0
               boot_tmp <- bootstrap(data = boot_backup_dat, n = (100 - boot_loop), size = .6)
             } else {
               boot_control <- boot_control + 1
-              
+
               if (boot_loop == 100) {cat("# 100%\n\n")} else {cat("#")}
-              
+
               #Run multivariate Cox
               res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates, collapse = " + "))) , data = dat)
-              
+
               #Extract results
               coef = as.data.frame(coef(summary(res)))
               ci = as.data.frame(summary(res)$conf.int)
               res = merge(coef,ci,by=0)
               res = res[,c(1:3,6,9:10)]
-              
+
               colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
               res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
               res$Cox.pvalue = round(res$Cox.pvalue,4)
@@ -868,19 +902,19 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
               if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient<0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient<0,]$prognosis <- "better"}
               if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
               res = res[,c(1,7,4,8)]
-              
+
               tables_list[[boot_loop]] <- res
             }
           }
-          
+
           merged_table <<- merge_tables(tables_list = tables_list, covariates = uni_covariates)
-          
+
           #Select only frequent (at least 50%) parameters for multivariable cox regression
           tmp_merged_table <- merged_table[merged_table$Frequency >= 25,]
           new_covariates <- as.vector(tmp_merged_table[[1]])
           new_covariates <- c("score",new_covariates)
           tmp_covariates <- c()
-          
+
           #Match string to get from 'new covariates' the original 'covariates' name
           for(var in new_covariates)
           {
@@ -889,18 +923,18 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
               if(grepl(var2, var)){tmp_covariates <- append(tmp_covariates, var2)}
             }
           }
-          
+
           #Run multivariate Cox
           dat <- boot_backup_dat
           covariates <- tmp_covariates
           res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
-          
+
           #Extract results
           coef = as.data.frame(coef(summary(res)))
           ci = as.data.frame(summary(res)$conf.int)
           res = merge(coef,ci,by=0)
           res = res[,c(1:3,6,9:10)]
-          
+
           colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
           res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
           res$Cox.pvalue = round(res$Cox.pvalue,4)
@@ -914,13 +948,13 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
 
       #Run multivariate Cox
       res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
-      
+
       #Extract results
       coef = as.data.frame(coef(summary(res)))
       ci = as.data.frame(summary(res)$conf.int)
       res = merge(coef,ci,by=0)
       res = res[,c(1:3,6,9:10)]
-      
+
       colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
       res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
       res$Cox.pvalue = round(res$Cox.pvalue,4)
@@ -929,14 +963,14 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
       if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
       res = res[,c(1,7,4,8)]
     }
-    
+
     #Merge univ_result with multi_result
     final = merge(univ_result, res, by = "variable", all = T)
-    
+
     final[grepl("score",final$variable),]$hazard.ratio.x = as.character(logrank_result$hazard.ratio)
     final[grepl("score",final$variable),]$Cox.pvalue.x = logrank_result$log.rank.pvalue
     final[grepl("score",final$variable),]$prognosis.x = as.character(logrank_result$prognosis)
-    
+
     #Replace all NAs with "----"
     final[is.na(final)] <- "----"
 
@@ -946,7 +980,8 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
 
     tmp_covariates2 <- c()
     tmp_covariates3 <- c()
-    covariates2 <- c("score", uni_covariates)
+
+    covariates2 = c('score',all_covariates)
     new_covariates2 <- as.vector(final[[1]])
 
     #Match string to get from 'new covariates' the original 'covariates' name
@@ -965,9 +1000,9 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates){
 
     final$variable <- tmp_covariates2
     final$reference <- tmp_covariates3
-    
+
     final <- final[,c(1,8,2,3,4,5,6,7)]
-    
+
     return(final)
 
   }, warning = function(w){ }, error = function(e){ })
@@ -988,14 +1023,14 @@ multiCox.model <- function(dat, univ_result, covariates){
       if(grepl(var2, var)){tmp_covariates <- append(tmp_covariates, var2)}
     }
   }
-  
+
   tryCatch({
-    
+
     #Run multivariate Cox
     res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(tmp_covariates,collapse=" + "))) , data = dat)
-    
+
     return(res)
-    
+
   }, warning = function(w){ }, error = function(e){ })
 }
 
@@ -1006,61 +1041,77 @@ if(type & clin_file != ""){
   cat("Running multivariate analysis...\n\n")
 
   uni_covariates = colnames(clin)[4:ncol(clin)]
-  
+
   #Run univariate Cox-regression for each provided clinical parameter
-  cat("\tSelecting co-variables (multiple univariate analyses)...\n")
+  cat("\tSelecting covariables (multiple univariate analyses)...\n")
   univ_cox = suppressWarnings(univCox.test(clin,uni_covariates))
-  cat("\tDone\n\n")
 
-  #Run multivariate Cox regression if there is relevant clinical variables
-  multi_cox = suppressWarnings(multiCox.test(clin, univ_cox, res_logrank, uni_covariates))
+  tmp = univ_cox[(!is.na(univ_cox$Cox.pvalue) & univ_cox$Cox.pvalue<0.2),]
+  if(nrow(tmp)==0){
 
-  #Write result to file
-  write.table(multi_cox, paste(out,"_multiCox.txt",sep=""), row.names=F, col.names=T, quote=F, sep="\t")
-  
-  #Makes bar plot if ROC curve option is TRUE
-  #Check if provided files exist
-  if(roc_curve2){
-    cat("\tMaking BarPlot...\n")
-    
-    score_freq <- as.numeric(merged_table[merged_table[[1]] == "score", 2])
-    if (score_freq < 25) {
-      cat(paste("\tWarning: variable 'score' did not appear in at least 25% of bootstrap iterations (", round(x = score_freq, digits = 2),
-                "%). Check plot: '", paste(out, "_frequency_bootstrap.pdf'\n", sep = ""), sep = ""))
-    }
-    
-    barplot_co_variables(plot_df = merged_table, filename = paste(out, "_frequency_bootstrap.pdf", sep = ""), covariates = uni_covariates)
+    cat("\tNo covariables passed the univariate analyses. Multivariate analysis could not be performed. ")
     cat("\tDone\n\n")
-  }
-  
-  #Test proportional hazards assumptions
-  cat("\tTesting proportional hazards assumptions (multivariate). Overwriting plot from 'signature score'...\n")
-  multi_model = suppressWarnings(multiCox.model(dat = clin, univ_result = multi_cox, covariates = uni_covariates))
-  
-  checkPH <- test_ph_assumptions(model_object = multi_model, covariates = uni_covariates, is_multi=T)
-  if (checkPH <= .05) {
-    cat(paste("\tWarning: Proportional Hazards Assumptions not met (p = ", round(x = checkPH, digits = 4), "). Check plot: ",
-              paste("'", out, "_ph_assumptions_plot.pdf'\n", sep=""), sep = ""))
-  } else {
-    cat(paste("\tProportional Hazards Assumptions met (p = ", round(x = checkPH, digits = 4), ").\n", sep = ""))
-  }
-  cat("\tDone\n\n")
 
-  #Makes Forest Plot
-  cat("\tMaking Forest Plot...\n")
-  generate_forest_plot(model_object = multi_model, filename = paste(out, "_forest_plot.pdf", sep=""))
-  cat("\tDone\n\n")
-  
+  }else{
+
+    cat("\tThe following covariables passed the univariate analyses (p<0.2): ", paste(rownames(tmp),collapse=", "),".\n",sep="")
+    cat("\tDone\n\n")
+
+    #Run multivariate Cox regression if there are relevant clinical variables
+    multi_cox = suppressWarnings(multiCox.test(clin, univ_cox, res_logrank, uni_covariates, uni_covariates))
+
+    #Test proportional hazards assumptions
+    cat("\tTesting proportional hazards assumptions (multivariate). Overwriting plot from 'signature score'...\n")
+    multi_model = suppressWarnings(multiCox.model(dat = clin, univ_result = multi_cox, covariates = uni_covariates))
+    selected_covariates <- test_ph_assumptions(model_object = multi_model, covariates = uni_covariates, is_multi=T)
+    cat("\tDone\n\n")
+
+    if (length(selected_covariates)==0 || (length(selected_covariates)==1 && selected_covariates=="score")) {
+
+      cat("\tWarning: No covariables met the Proportional Hazards Assumptions. Multivariate analysis could not be performed.")
+
+    } else {
+
+      multi_cox = suppressWarnings(multiCox.test(clin, univ_cox, res_logrank, selected_covariates, uni_covariates))
+      multi_model = suppressWarnings(multiCox.model(dat = clin, univ_result = multi_cox, covariates = selected_covariates))
+
+      #Write result to file
+      write.table(multi_cox, paste(out,"_multiCox.txt",sep=""), row.names=F, col.names=T, quote=F, sep="\t")
+
+      #Makes bar plot if ROC curve option is TRUE
+      if(roc_curve2){
+        cat("\tMaking BarPlot...\n")
+
+        score_freq <- as.numeric(merged_table[merged_table[[1]] == "score", 2])
+        if (score_freq < 25) {
+          cat(paste("\tWarning: variable 'score' did not appear in at least 25% of bootstrap iterations (", round(x = score_freq, digits = 2),
+                    "%). Check plot: '", paste(out, "_frequency_bootstrap.pdf'\n", sep = ""), sep = ""))
+        }
+
+        barplot_co_variables(plot_df = merged_table, filename = paste(out, "_frequency_bootstrap.pdf", sep = ""), covariates = selected_covariates)
+        cat("\tDone\n\n")
+      }
+
+      #Makes Forest Plot
+      cat("\tMaking Forest Plot...\n")
+      generate_forest_plot(model_object = multi_model, filename = paste(out, "_forest_plot.pdf", sep=""))
+      cat("\tDone\n\n")
+
+    }
+
+  }
+
   #Print log message
   cat("Done\n")
   cat("\n")
+
 }
 
 #Print log message
 cat("Analysis successfully finished\n\n")
 
 #Calculate time elapsed to run script
-end_time <- Sys.time()
+end_time <- suppressMessages(Sys.time())
 elapsed_time <- difftime(time1 = end_time, time2 = start_time, units = "secs")
 
 if (elapsed_time >= 3600) {
@@ -1077,3 +1128,4 @@ if (elapsed_time >= 3600) {
 }
 
 sink()
+
