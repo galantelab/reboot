@@ -1,5 +1,7 @@
 #!/usr/bin/Rscript
 
+#Pay carefully attention to help errors. Argparse apparently bugs depending on help text size
+
 library(argparse)
 
 #create the top-level parser
@@ -8,8 +10,7 @@ parser = ArgumentParser()
 subparsers = parser$add_subparsers(dest="sub_name", metavar = "<subcommand>", help = "choose only one option")
 
 #version
-parser$add_argument('-v', '--version', action='version', version='reboot 1.0.0')
-
+parser$add_argument('-v', '--version', action='version', version='reboot 1.1.0')
 
 #create the parser for the "regression" command
 
@@ -35,12 +36,13 @@ parser_reg$add_argument("-P", "--pcentfilter", type="character", dest = "pf",  m
 
 parser_reg$add_argument("-V", "--varfilter", type="character", dest = "var",  metavar = '',
                         default = "0.01",
-                        help="Minimum normalized variance (0-1) required for each gene/transcript among samples and follow up time (double). Default: 0.01")
+                        help='Minimum normalized variance (0-1) required for each gene/transcript among samples and follow up time (double). Default: 0.01')
 
 parser_reg$add_argument("-F", "--force", 
                         dest = "force", action="store_true",
-                        default = FALSE,
-                        help="To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F")
+                        default = "FALSE",
+                        help="Choose -F to bypass OS and OStime filters")
+
 
 #create the parser for the "survival" command
 
@@ -70,14 +72,14 @@ parser_sur$add_argument("-S", "--signature",  metavar = '',
                         type="character", dest = "sig",
                         help='Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients')
 
-parser_all$add_argument("-V", "--varfilter", type="character", dest = "var",  metavar = '',
+parser_sur$add_argument("-V", "--varfilter", type="character", dest = "var",  metavar = '',
                         default = "0.01",
-                        help="Minimum normalized variance (0-1) required for follow up time (double). Default: 0.01")
+                        help='Minimum normalized variance (0-1) required for follow up time (double). Default: 0.01')
 
 parser_sur$add_argument("-F", "--force", 
-			dest = "force", action="store_true",
-                        default = FALSE,
-                        help="To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F")
+                        dest = "force", action="store_true",
+                        default = "FALSE",
+                        help="Choose -F to bypass OS and OStime filters")
 
 #create the parser for the "complete" command
 
@@ -106,7 +108,7 @@ parser_all$add_argument("-V", "--varfilter", type="character", dest = "var",  me
                         help="Minimum normalized variance (0-1) required for each gene/transcript among samples and follow up time (double). Default: 0.01")
 
 parser_all$add_argument("-M", "--multivariate",
-                        dest = "type", action="store_true", default=FALSE,
+                        dest = "type", action="store_true", default="FALSE",
                         help='If clinical variables should be included, choose -M. This option is tied with -C option')
 
 parser_all$add_argument("-C", "--clinical", type="character", dest = "clin_file",  metavar = '',
@@ -117,17 +119,15 @@ parser_all$add_argument("-R", "--roc",
                         dest = "roc_curve", action="store_true", default=FALSE,
                         help='If continuous variables should be categorized according to a ROC curve instead of median, choose -R')
 
-
 parser_all$add_argument("-F", "--force", 
                         dest = "force", action="store_true",
-                        default = FALSE,
-                        help="To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F")
+                        default = "FALSE",
+                        help="Choose -F to bypass OS and OStime filters")
 
-#parse some argument lists
 args = parser$parse_args()
 
-#return help in case of empty call
 newargs = commandArgs(trailingOnly=TRUE)
+
 if (length(newargs)==0){
 	parser$parse_args('-h')
 }
@@ -135,15 +135,15 @@ if (length(newargs)==0){
 
 if (args$sub_name=="regression"){
 	system(paste(
-#		"Rscript regression.R",
-		"regression.R",
+		"Rscript regression.R",
+#		"regression.R",
 		"-I", args$fname,
 		"-O", args$out,
 		"-B", args$booty,
 		"-G", args$nel,
 		"-P", args$pf,
 		"-V", args$var,
-		"-f", arg$force,
+		"-F", args$force,
 		collapse=" "))
 }
 
@@ -161,27 +161,27 @@ if (args$sub_name=="survival"){
 			q(status=0)
 		}else{		
 			system(paste(
-#			"Rscript survival.R",
-			"survival.R",
+			"Rscript survival.R",
+#			"survival.R",
 			"-I", args$fname,
 			"-O", args$out,
 			"-S", args$sig,
 			"-M", args$type,
 			"-C", args$clin_file,
 			"-R", args$roc_curve,
-			"-f", arg$force,
+			"-F", args$force,
 			collapse=" "))
 		}
 	}else{
 		system(paste(
-#		"Rscript survival.R",
-		"survival.R",		
+		"Rscript survival.R",
+#		"survival.R",		
 		"-I", args$fname,
 		"-O", args$out,
 		"-S", args$sig,
 		"-M", args$type,
 		"-R", args$roc_curve,
-		"-f", arg$force,
+		"-F", args$force,
 		collapse=" "))
 	
 	}
@@ -198,15 +198,15 @@ if (args$sub_name=="complete"){
 	}	
 	
 	system(paste(
-#	"Rscript regression.R",
-	"regression.R",
+	"Rscript regression.R",
+#	"regression.R",
 	"-I", args$fname,
 	"-O", args$out,
 	"-B", args$booty,
 	"-G", args$nel,
 	"-P", args$pf,
 	"-V", args$var,
-	"-f", arg$force,
+	"-F", args$force,
 	collapse=" "),
 	intern=TRUE)
 	
@@ -218,31 +218,28 @@ if (args$sub_name=="complete"){
 			q(status=0)
 		}else{		
 			system(paste(
-#			"Rscript survival.R",
-			"survival.R",
+			"Rscript survival.R",
+#			"survival.R",
 			"-I", args$fname,
 			"-O", args$out,
 			"-S", assinatura,
 			"-M", args$type,
 			"-C", args$clin_file,
 			"-R", args$roc_curve,
-			"-f", arg$force,
+			"-F", args$force,
 			collapse=" "))
 		}
 	}else{
 		system(paste(
-#		"Rscript survival.R",
-		"survival.R",
+		"Rscript survival.R",
+#		"survival.R",
 		"-I", args$fname,
 		"-O", args$out,
 		"-S", assinatura,
 		"-M", args$type,
 		"-R", args$roc_curve,
-		"-f", arg$force,
+		"-F", args$force,
 		collapse=" "))
 	
 	}
 }
-
-
-
