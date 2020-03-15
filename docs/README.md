@@ -120,7 +120,8 @@ In summary, 3 subcommands are available:
    Where (N) is the number of attributes (genes or transcripts) and (G) is the group size, i.e, the number of attributes to be included in each iteration. For optimal algorithm convergence, we recommend the group size (G) to be between 10 and 15 attributes per iteration. In order to assure a satisfying level of group combinations, our recommendation is to run each attribute in N/G simulations on average, in other words: Cv = N/G, which yields:
 
    B = (N / G)²
-
+   
+   For instance, when N is 100 and G is 10, the recommended number of bootstrap iterations would be 100 and, as a consequence, the number of appearances of each attribute would be 10, as exemplified in the following table:  
 
    | N | G | B | Cv |
    |----|----|----|----|
