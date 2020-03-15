@@ -182,6 +182,10 @@ In summary, 3 subcommands are available:
    <td>Minimum normalized variance (0-1) required for each gene or transcript among samples (double). Default: 0.01</td>
    </tr>
    <tr>
+   <td>-F, --force</td>
+   <td>Choose -F to bypass OS and OStime filters</td>
+   </tr>
+   <tr>
    <td>-h, --help</td>
    <td>Show this help message and exit</td>
    </tr>
@@ -276,6 +280,10 @@ In summary, 3 subcommands are available:
    <tr>
    <td>-S, --signature</td>
    <td>Tab-separated values (.tsv) file containing a set of genes or transcripts and corresponding cox coefficients</td>
+   </tr>
+   <tr>
+   <td>-F, --force</td>
+   <td>Choose -F to bypass OS and OStime filters</td>
    </tr>
    <tr>
    <td>-h, --help</td>
@@ -477,6 +485,10 @@ In summary, 3 subcommands are available:
    <td>To categorize the genetic score according to a ROC curve instead of median value, choose -R. Default: FALSE</td>
    </tr>
    <tr>
+   <tr>
+   <td>-F, --force</td>
+   <td>Choose -F to bypass OS and OStime filters</td>
+   </tr>
    <td>-h, --help</td>
    <td>Show this help message and exit</td>
    </tr>
