@@ -111,20 +111,22 @@ In summary, 3 subcommands are available:
 
    Reboot searches for a genetic signature (significance coefficients) correlated with patient survival based on a multivariate Cox regression of genes or transcripts. This module uses a lasso algorithm combined with a Bootstrap approach for dealing with possible dimension vulnerability (especially whether it has high attributes or instances ratios). 
 
-   Filters for minimal variability of the attributes are also implemented. Reboot analysis starts off by checking and removing attributes with variance lower than the defined cut-off. Next, a spearman correlation filter is applied to every iteration of the Bootstrap process based on the settable fraction of pairs with correlation coefficient higher than 0.8 and a p-value lower than 0.05. 
+   Filters for minimal variability of the attributes are also implemented. Reboot analysis starts off by checking and removing attributes with variance lower than the defined cut-off. If a low variance follow up is detected or a OS status proportionality ratio greater than 80% or lower than 20% is found, the analysis is stopped and a warning returned due to possible convergence problems. Before starting the analysis, a schoenfeld filter is applyed in a univariate way. Next, a spearman correlation filter is applied to every iteration of the Bootstrap process based on the settable fraction of pairs with correlation coefficient higher than 0.8 and a p-value lower than 0.05. 
 
-   Given a total number of attributes (N), group size (G) and number of iterations (B), coverage may be introduced as the number of times an attribute is raffled on average :
+   Coverage (Cv) may be introduced as the number of times an attribute is raffled, on average, after B iterations, according to the formula:
 
    Cv = (B * G) /  N
 
-   For optimal algorithm convergence, we recommend the group size (G) to be between 10 and 15 attributes per iteration. In order to assure a satisfying level of group combinations, our recommendation is to set B = (N/G)², so that each attribute participates in N/G simulations on average, in other words: Cv = N/G, as ilustrated:   
+   Where (N) is the number of attributes (genes or transcripts) and (G) is the group size, i.e, the number of attributes to be included in each iteration. For optimal algorithm convergence, we recommend the group size (G) to be between 10 and 15 attributes per iteration. In order to assure a satisfying level of group combinations, our recommendation is to run each attribute in N/G simulations on average, in other words: Cv = N/G, which yields:
+
+   B = (N / G)²
 
 
-   | N | G | B |
-   |----|----|----|
-   |100|10|100|
-   |300|15|400|
-   |500|12|1736|
+   | N | G | B | Cv |
+   |----|----|----|----|
+   |100|10|100|10|
+   |300|15|400|20|
+   |500|12|1736|42|
 
    <br>
 
