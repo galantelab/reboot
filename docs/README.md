@@ -530,7 +530,7 @@ In summary, 3 subcommands are available:
 
    ```bash
    # for direct usage
-   reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -R
+   reboot.R complete -I expression.tsv -O toy -B 100 -G 10 -M -C clinical.tsv -F
    ```    
 ## Authors
 
