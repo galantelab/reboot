@@ -129,10 +129,10 @@ In summary, 3 subcommands are available:
    |300|15|400|20|
    |500|12|1736|42|
 
-   Regression analysis is performed approximately linearly in time in relation to the number of bootstrap iterations, if the analysis shouldn't take more than a period of the day we recomment a max of 10,000 iteractions
-
    <br>
 
+   Regression analysis is performed approximately linearly in time in relation to the number of bootstrap iterations, if the analysis shouldn't take more than a period of the day we recommend a max of 10,000 iteractions
+ 
 ### Usage
 
     For gene or transcript signature obtention, run the following: 
