@@ -110,11 +110,17 @@ In summary, 3 subcommands are available:
 ## Finding signatures of genes or transcripts
 
    Reboot searches for a genetic signature (significance coefficients) correlated with patient survival based on a multivariate Cox regression of genes or transcripts. This module uses a Lasso algorithm combined with a bootstrap approach for dealing with possible dimension vulnerabilities (especially when data has many attributes and few instances).
+
    In addition, a number of filters are implemented. Reboot analysis starts off by checking and removing attributes with variance lower than a user-defined cut-off. If a low variance is detected in the provided follow up times or  the proportion between individuals with diverging survival status (e.g., dead and alive) is greater than 80% or lower than 20%, the analysis halts and returns a warning due to possible convergence problems in the regression process. Prior to starting the analysis, a Schoenfeld's test filter is also applied in a univariate way to exclude variables which do not meet the proportional hazard assumptions of Cox models. Next, a Spearman’s correlation filter is applied for every iteration of the bootstrap process based on the user-defined allowed fraction of pairs with correlation coefficients higher than 0.8 and p-values lower than 0.05.
+
    Coverage (Cv) may be introduced as the number of times an attribute is raffled, on average, after B iterations, according to the formula:
+
    Cv = (B * G) / N
+
    Where (N) is the number of attributes (genes or transcripts) and (G) is the group size, i.e, the number of attributes to be included in each iteration. For optimal algorithm convergence, we recommend the group size (G) to be between 10 and 15 attributes per iteration. In order to assure a satisfying level of group combinations, our suggestion is to run each attribute in N/G simulations on average. In other words: Cv = N/G, which yields:
+
    B = (N / G)²
+
    For instance, when N is 100 and G is 10, the recommended number of bootstrap iterations would be 100 and, as a consequence, the number of appearances of each attribute would be 10, as exemplified in the following table:
 
    | N | G | B | Cv |
