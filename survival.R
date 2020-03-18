@@ -1,4 +1,4 @@
-#!/usr/bin/Rscript
+#!/usr/local/bin/Rscript
 
 start_time <- suppressMessages(Sys.time())
 
@@ -149,7 +149,8 @@ if(!force){
     OSstatus <- data[,2]
     percentage <- sum(OSstatus)/length(OSstatus)
     if(percentage < 0.2 | percentage > 0.8){
-        cat("Survival status proportion:", percentage, " is probably not enough to the analysis. \nDeath or recidive are alternative options for the analysis", "\n\n")
+        cat("Survival status proportion:", percentage,
+            " is probably not enough to the analysis. \nDeath, recidive or progression are alternative options for the analysis", "\n\n")
         cat("If you want to continue anyway, choose the flag F. \n\n")
         q(status=0)
     }
@@ -339,7 +340,17 @@ test_ph_assumptions <- function(model_object, covariates, is_multi)
   dropped = as.character(rownames(pvalues[pvalues[[1]]<=0.05,,drop=F]))
 
   if(length(dropped)>0){
-    cat(paste("\tWarning: Proportional Hazards Assumptions not met (p = ", round(x = global_p, digits = 4), "). The following variables will be disregarded: ", paste(dropped,collapse=", "), ".\n", "\tFor more information, check plot: '",out,"_ph_assumptions_plot.pdf'\n",sep=""))
+    if("score" %in% dropped)
+    {
+      cat(paste("\tWarning: Proportional Hazards Assumptions not met (p = ", round(x = global_p, digits = 4),
+                "). The following variables will be disregarded: ", paste(dropped,collapse=", "), ".\n",
+                "\tResult for 'score' will be ignored. For more information, check plot: '", out,
+                "_ph_assumptions_plot.pdf'\n", sep=""))
+    } else {
+      cat(paste("\tWarning: Proportional Hazards Assumptions not met (p = ", round(x = global_p, digits = 4),
+                "). The following variables will be disregarded: ", paste(dropped,collapse=", "), ".\n",
+                "\tFor more information, check plot: '",out,"_ph_assumptions_plot.pdf'\n",sep=""))
+    }
   } else{
     cat(paste("Proportional Hazards Assumptions met (p = ", round(x = global_p, digits = 4), ").\n", sep = ""))
   }
@@ -1049,7 +1060,7 @@ if(type & clin_file != ""){
   tmp = univ_cox[(!is.na(univ_cox$Cox.pvalue) & univ_cox$Cox.pvalue<0.2),]
   if(nrow(tmp)==0){
 
-    cat("\tNo covariables passed the univariate analyses. Multivariate analysis could not be performed. ")
+    cat("\tNo covariables passed the univariate analyses. Multivariate analysis could not be performed.\n")
     cat("\tDone\n\n")
 
   }else{
@@ -1068,7 +1079,7 @@ if(type & clin_file != ""){
 
     if (length(selected_covariates)==0 || (length(selected_covariates)==1 && selected_covariates=="score")) {
 
-      cat("\tWarning: No covariables met the Proportional Hazards Assumptions. Multivariate analysis could not be performed.")
+      cat("\tWarning: No covariables met the Proportional Hazards Assumptions. Multivariate analysis could not be performed.\n")
 
     } else {
 
@@ -1102,7 +1113,7 @@ if(type & clin_file != ""){
   }
 
   #Print log message
-  cat("Done\n")
+  cat("\nDone\n")
   cat("\n")
 
 }

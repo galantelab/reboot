@@ -1,4 +1,4 @@
-#!/usr/bin/Rscript
+#!/usr/local/bin/Rscript
 
 suppressMessages(library(optparse))
 #options(lifecycle_disable_verbose_retirement = TRUE)
@@ -432,12 +432,12 @@ end_time <- Sys.time()
 elapsed_time <- difftime(time1 = end_time, time2 = start_time, units = "secs")
 
 if (elapsed_time >= 3600) {
-  cat(paste("Time to run ", scriptname, ": ", round(x = (elapsed_time[[1]] / 3600), digits = 2), " hours\n", sep = ""))
+  cat(paste("\nTime to run ", scriptname, ": ", round(x = (elapsed_time[[1]] / 3600), digits = 2), " hours\n", sep = ""))
 } else {
   if (elapsed_time >= 60) {
-    cat(paste("Time to run ", scriptname, ": ", round(x = (elapsed_time[[1]] / 60), digits = 2), " minutes\n", sep = ""))
+    cat(paste("\nTime to run ", scriptname, ": ", round(x = (elapsed_time[[1]] / 60), digits = 2), " minutes\n", sep = ""))
   } else {
-    cat(paste("Time to run ", scriptname, ": ", round(x = elapsed_time[[1]], digits = 2), " seconds\n", sep = ""))
+    cat(paste("\nTime to run ", scriptname, ": ", round(x = elapsed_time[[1]], digits = 2), " seconds\n", sep = ""))
   }
 }
 

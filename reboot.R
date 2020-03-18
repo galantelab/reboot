@@ -1,4 +1,4 @@
-#!/usr/bin/Rscript
+#!/usr/local/bin/Rscript
 
 #Pay carefully attention to help errors. Argparse apparently bugs depending on help text size
 
