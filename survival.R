@@ -1,4 +1,4 @@
-#!/usr/local/bin/Rscript
+#!/usr/bin/env Rscript
 
 start_time <- suppressMessages(Sys.time())
 
@@ -79,15 +79,24 @@ cat("Checking provided files...\n")
 
 #Check if provided files exist
 if(!file.exists(exp_file)){
+  ####### Error file ##########
+  sink(file = paste(out, ".err", sep=''), append=T)
   cat(paste("Error: File ", exp_file, " does not exist. Please provide a valid file.\n",sep=""))
+  sink()
   quit(save="no")
 }
 if(!file.exists(sig_file)){
+  ####### Error file ##########
+  sink(file = paste(out, ".err", sep=''), append=T)
   cat(paste("Error: File ", sig_file, " does not exist. Please provide a valid file.\n",sep=""))
+  sink()
   quit(save="no")
 }
 if(type & clin_file!="" & !file.exists(clin_file)){
+  ####### Error file ##########
+  sink(file = paste(out, ".err", sep=''), append=T)
   cat(paste("Error: File ", clin_file, " does not exist. Please provide a valid file.\n",sep=""))
+  sink()
   quit(save="no")
 }
 
@@ -101,19 +110,28 @@ if(type & clin_file!=""){
 
 #Check number of columns in signature file
 if(ncol(signature)!=2){
+  ####### Error file ##########
+  sink(file = paste(out, ".err", sep=''), append=T)
   cat(paste("Error: ", sig_file, " should have 2 columns. Please check the manual for more information.\n",sep=""))
+  sink()
   quit(save="no")
 }
 
 #Check signature file format
 if(!is.character(signature[,1])){
+  ####### Error file ##########
+  sink(file = paste(out, ".err", sep=''), append=T)
   cat(paste("Error: Invalid format for column 1 of file ", sig_file, ". It should be a list of features (characters).\n",sep=""))
+  sink()
   quit(save="no")
 }
 
 #Check signature format
 if(!is.numeric(signature[,2])){
+  ####### Error file ##########
+  sink(file = paste(out, ".err", sep=''), append=T)
   cat(paste("Error: Invalid format for column 2 of file ", sig_file, ". It should be a list of Cox coefficients (numeric values).\n",sep=""))
+  sink()
   quit(save="no")
 }
 
@@ -127,7 +145,10 @@ colnames(data) = gsub("-","_",colnames(data))
 #Check if there is at least one valid feature in signature
 signature = signature[!is.na(signature$coefficient) & signature$coefficient!=0,]
 if(nrow(signature)==0){
+  ####### Error file ##########
+  sink(file = paste(out, ".err", sep=''), append=T)
   cat(paste("Error: No valid features to be tested in the signature.\n",sep=""))
+  sink()
   quit(save="no")
 }
 
@@ -135,11 +156,17 @@ if(nrow(signature)==0){
 data = data[,grep(paste("^sample$","^OS$","^OS.time$",paste("^",signature$feature,"$",collapse="|",sep=""),sep="|"),colnames(data))]
 if(ncol(data) != (nrow(signature)+3)){
   if(ncol(data) > (nrow(signature)+3)){
+    ####### Error file ##########
+    sink(file = paste(out, ".err", sep=''), append=T)
     cat(paste("Error: Duplicated features are not allowed. Please check the provided files.\n",sep=""))
+    sink()
     quit(save="no")
   }
   if(ncol(data) < (nrow(signature)+3)){
+    ####### Error file ##########
+    sink(file = paste(out, ".err", sep=''), append=T)
     cat(paste("Error: Not all features are present in both files. Please check the provided files.\n",sep=""))
+    sink()
     quit(save="no")
   }
 }
@@ -149,8 +176,7 @@ if(!force){
     OSstatus <- data[,2]
     percentage <- sum(OSstatus)/length(OSstatus)
     if(percentage < 0.2 | percentage > 0.8){
-        cat("Survival status proportion:", percentage,
-            " is probably not enough to the analysis. \nDeath, recidive or progression are alternative options for the analysis", "\n\n")
+        cat("Survival status proportion:", percentage, " is probably not enough to the analysis. \nDeath or recidive are alternative options for the analysis", "\n\n")
         cat("If you want to continue anyway, choose the flag F. \n\n")
         q(status=0)
     }
@@ -340,17 +366,7 @@ test_ph_assumptions <- function(model_object, covariates, is_multi)
   dropped = as.character(rownames(pvalues[pvalues[[1]]<=0.05,,drop=F]))
 
   if(length(dropped)>0){
-    if("score" %in% dropped)
-    {
-      cat(paste("\tWarning: Proportional Hazards Assumptions not met (p = ", round(x = global_p, digits = 4),
-                "). The following variables will be disregarded: ", paste(dropped,collapse=", "), ".\n",
-                "\tResult for 'score' will be ignored. For more information, check plot: '", out,
-                "_ph_assumptions_plot.pdf'\n", sep=""))
-    } else {
-      cat(paste("\tWarning: Proportional Hazards Assumptions not met (p = ", round(x = global_p, digits = 4),
-                "). The following variables will be disregarded: ", paste(dropped,collapse=", "), ".\n",
-                "\tFor more information, check plot: '",out,"_ph_assumptions_plot.pdf'\n",sep=""))
-    }
+    cat(paste("\tWarning: Proportional Hazards Assumptions not met (p = ", round(x = global_p, digits = 4), "). The following variables will be disregarded: ", paste(dropped,collapse=", "), ".\n", "\tFor more information, check plot: '",out,"_ph_assumptions_plot.pdf'\n",sep=""))
   } else{
     cat(paste("Proportional Hazards Assumptions met (p = ", round(x = global_p, digits = 4), ").\n", sep = ""))
   }
@@ -409,11 +425,17 @@ if(type & clin_file != ""){
   clin = merge(data,clin,by=0)
   if(nrow(data) != nrow(clin)){
     if(nrow(data) > nrow(clin)){
+      ####### Error file ##########
+      sink(file = paste(out, ".err", sep=''), append=T)
       cat(paste("Error: Not all samples from file ", exp_file," are provided in file ", clin_file,". Please check the provided files.\n",sep=""))
+      sink()
       quit(save="no")
     }
     if(nrow(data) < nrow(clin)){
+      ####### Error file ##########
+      sink(file = paste(out, ".err", sep=''), append=T)
       cat(paste("Error: Not all samples from file ", clin_file," are provided in file ", exp_file,". Please check the provided files.\n",sep=""))
+      sink()
       quit(save="no")
     }
   }
@@ -443,7 +465,10 @@ if(type & clin_file != ""){
   for(i in 3:ncol(clin)){
 
     if(nlevels(as.factor(clin[,i])) != 2){
+      ####### Error file ##########
+      sink(file = paste(out, ".err", sep=''), append=T)
       cat(paste("Error: Variable \"", colnames(clin)[i], "\" in file ", clin_file," does not have 2 categories. Please check the provided file.\n",sep=""))
+      sink()
       quit(save="no")
     }
   }
@@ -1060,7 +1085,7 @@ if(type & clin_file != ""){
   tmp = univ_cox[(!is.na(univ_cox$Cox.pvalue) & univ_cox$Cox.pvalue<0.2),]
   if(nrow(tmp)==0){
 
-    cat("\tNo covariables passed the univariate analyses. Multivariate analysis could not be performed.\n")
+    cat("\tNo covariables passed the univariate analyses. Multivariate analysis could not be performed. ")
     cat("\tDone\n\n")
 
   }else{
@@ -1079,7 +1104,7 @@ if(type & clin_file != ""){
 
     if (length(selected_covariates)==0 || (length(selected_covariates)==1 && selected_covariates=="score")) {
 
-      cat("\tWarning: No covariables met the Proportional Hazards Assumptions. Multivariate analysis could not be performed.\n")
+      cat("\tWarning: No covariables met the Proportional Hazards Assumptions. Multivariate analysis could not be performed.")
 
     } else {
 
@@ -1113,7 +1138,7 @@ if(type & clin_file != ""){
   }
 
   #Print log message
-  cat("\nDone\n")
+  cat("Done\n")
   cat("\n")
 
 }

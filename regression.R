@@ -1,4 +1,4 @@
-#!/usr/local/bin/Rscript
+#!/usr/bin/env Rscript
 
 suppressMessages(library(optparse))
 #options(lifecycle_disable_verbose_retirement = TRUE)
@@ -77,6 +77,24 @@ cat("Chosen parameters: ")
 cat(paste(commandArgs(trailingOnly = T), collapse = " "))
 cat("\n\n")
 
+
+#####Checking data#########
+
+nlines <- function(full_data, gs){
+	if (nrow(full_data)<=5){
+		sink(file = paste(logname, ".error", sep=''))
+		cat("Error. There are less than 5 instances. Please, increase the number of lines for a proper analysis. \n")
+		sink()
+		q(status=0)
+	}
+	if (ncol(full_data) > 10) {
+		if ((nrow(full_data) < 30) & (gs > 10)){
+			cat("The proportion of instances per attributes might be low. You may consider to lower group size for a better analysis. \n\n")
+		}
+
+	}
+}
+
 #####Schoenfeld test######
 
 ph_assumptions <- function(full_data){
@@ -98,7 +116,8 @@ ph_assumptions <- function(full_data){
 	}
 	losers <- setdiff(attributes, filt)
 	cat(length(losers)," columns not allowed by schoenfeld test: ",losers, "\n\n")
-	return(full_data)
+	return(full_data[,c(colnames(full_data)[1:3],filt)])
+	
 }
 
 
@@ -119,6 +138,7 @@ numberfilter1 <- function(dataf, g, outname, outplot) {
 		}
 		else {
 			cat("No signature found, all coefficients are equal 0", "\n")
+			sink()
 		}
 		q(status=0)
 	}
@@ -129,7 +149,9 @@ numberfilter1 <- function(dataf, g, outname, outplot) {
 numberfilter2 <- function(dataf, g, outname, outplot) {
 
 	if (ncol(dataf) <= 2) {
+		sink(file = paste(out, ".err", sep=''), append=T)
 		cat("No column was left after variance filter", "\n","\n")
+		sink()
 		q(status=0)
 	}
 
@@ -286,8 +308,10 @@ varfun <- function(male_data, var, file, fierce) {
 		OSstatus <- male_data[,1]
 		percentage <- sum(OSstatus)/length(OSstatus)
 		if (percentage < 0.2 | percentage > 0.8){
+			sink(file = paste(out, ".err", sep=''), append=T)
 			cat("Survival status proportion:", percentage, " is probably not enough to the analysis. \nDeath or recidive are alternative options for the analysis", "\n\n")	
 			cat("If you want to continue anyway, choose the flag F. \n\n")
+			sink()
 			q(status=0)
 		}
 		
@@ -296,8 +320,10 @@ varfun <- function(male_data, var, file, fierce) {
 		normalized <- followup/uplimit
 		fvar <- var(normalized)
 		if (fvar < var){
+			sink(file = paste(out, ".err", sep=''), append=T)
 			cat("Follow up variance: ", var, " has not passed the variance test. \n\n")
-			cat("If you want to continue anyway, choose the flag F. \n\n")
+			cat("If you want to continue anyway, choose the flag F, or lower variance filter. \n\n")
+			sink()
 			q(status=0)
 		}
 		
@@ -404,6 +430,10 @@ histogram <- function(out,tt){
 }
 
 ####Main####
+
+#check number of lines#
+
+#nlines(full_data, in_object$nel)
 
 #Perform variance filter#
 
