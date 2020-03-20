@@ -140,7 +140,7 @@ In summary, 3 subcommands are available:
 
    ```bash 
    # for docker container
-   docker run --rm galantelab/reboot reboot.R regression <options>
+   docker run --rm -v $(pwd):$(pwd) galantelab/reboot reboot.R regression <options>
    ```
 
    optionally:
@@ -241,7 +241,7 @@ In summary, 3 subcommands are available:
 
    ```bash
    # for docker container
-   docker run --rm galantelab/reboot reboot.R survival <options>
+   docker run --rm -v $(pwd):$(pwd) galantelab/reboot reboot.R survival <options>
    ```
 
    Optionally:
@@ -431,7 +431,7 @@ In summary, 3 subcommands are available:
 
    ```bash
    # for docker container
-   docker run --rm  galantelab/reboot reboot.R complete <options>
+   docker run --rm -v $(pwd):$(pwd) galantelab/reboot reboot.R complete <options>
    ```
 
    Optionally:
