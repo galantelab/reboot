@@ -116,7 +116,7 @@ ph_assumptions <- function(full_data){
 	}
 	losers <- setdiff(attributes, filt)
 	cat(length(losers)," columns not allowed by schoenfeld test: ",losers, "\n\n")
-	return(full_data[,c(colnames(full_data)[1:3],filt)])
+	return(full_data[,c(colnames(full_data)[1:2],filt)])
 	
 }
 
