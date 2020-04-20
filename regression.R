@@ -1,4 +1,4 @@
-#!/usr/local/bin/Rscript
+#!/usr/bin/env Rscript
 
 suppressMessages(library(optparse))
 #options(lifecycle_disable_verbose_retirement = TRUE)
@@ -30,14 +30,15 @@ make_option(c("-V", "--variancefilter"), action="store",
 type='numeric', dest = "var", default = "0.01", help="Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01"),
 
 make_option(c("-F", "--force"), action="store",
-type='logical', dest = "force", default = FALSE, help="To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F"))
+type='logical', dest = "fierce", default = FALSE, help="To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F"))
 
 opo <- OptionParser(option_list=option_list, add_help_option = T)
 in_object <- parse_args(opo)
 logname <- in_object$out
 outname <- paste(in_object$out, "_signature.txt", sep="")
 outplot <- in_object$out
-
+fierce <-in_object$fierce
+ 
 #####Importing libraries####
 
 suppressMessages(library("penalized"))
@@ -76,6 +77,24 @@ cat("Chosen parameters: ")
 cat(paste(commandArgs(trailingOnly = T), collapse = " "))
 cat("\n\n")
 
+
+#####Checking data#########
+
+nlines <- function(full_data, gs){
+	if (nrow(full_data)<=5){
+		sink(file = paste(logname, ".error", sep=''))
+		cat("Error. There are less than 5 instances. Please, increase the number of lines for a proper analysis. \n")
+		sink()
+		q(status=0)
+	}
+	if (ncol(full_data) > 10) {
+		if ((nrow(full_data) < 30) & (gs > 10)){
+			cat("The proportion of instances per attributes might be low. You may consider to lower group size for a better analysis. \n\n")
+		}
+
+	}
+}
+
 #####Schoenfeld test######
 
 ph_assumptions <- function(full_data){
@@ -83,18 +102,22 @@ ph_assumptions <- function(full_data){
 	filt <- vector()
 	attributes <- colnames(full_data[3:dim(full_data)[2]])
 	for (i in attributes){
-		tryCatch({
-			phmodel <- coxph(formula = formula(paste('Surv(OS.time, OS)~', i)) , data = full_data)
-			schoen <- cox.zph(phmodel)
-			pval <- schoen$table[1,3]
-			if (pval > 0.05){
-				filt <- c(filt, i)
-			} 
-		},warning=function(w){}, error=function(e){})
+		phmodel <- coxph(formula = formula(paste('Surv(OS.time, OS)~', i)) , data = full_data)
+		if(!is.na(phmodel$coef)){
+			tryCatch({
+				phmodel <- coxph(formula = formula(paste('Surv(OS.time, OS)~', i)) , data = full_data)
+				schoen <- cox.zph(phmodel)
+				pval <- schoen$table[1,3]
+				if (pval > 0.05){
+					filt <- c(filt, i)
+				}
+			},warning=function(w){}, error=function(e){})
+		}
 	}
 	losers <- setdiff(attributes, filt)
 	cat(length(losers)," columns not allowed by schoenfeld test: ",losers, "\n\n")
-	return(full_data)
+	return(full_data[,c(colnames(full_data)[1:2],filt)])
+	
 }
 
 
@@ -115,6 +138,7 @@ numberfilter1 <- function(dataf, g, outname, outplot) {
 		}
 		else {
 			cat("No signature found, all coefficients are equal 0", "\n")
+			sink()
 		}
 		q(status=0)
 	}
@@ -125,7 +149,9 @@ numberfilter1 <- function(dataf, g, outname, outplot) {
 numberfilter2 <- function(dataf, g, outname, outplot) {
 
 	if (ncol(dataf) <= 2) {
+		sink(file = paste(out, ".err", sep=''), append=T)
 		cat("No column was left after variance filter", "\n","\n")
+		sink()
 		q(status=0)
 	}
 
@@ -247,7 +273,7 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
 	
 ######Variance filter######
 
-varfun <- function(male_data, var, file, force) {
+varfun <- function(male_data, var, file, fierce) {
 	maxes <- matrix(apply(male_data[,3:ncol(male_data)],2,max), nrow=1)
 	if (0 %in% maxes){
 		cat("Columns with only 0s found in ", file, ". Remove such columns and try again.", "\n")
@@ -255,7 +281,6 @@ varfun <- function(male_data, var, file, force) {
 	}
 	cat("Calculating normalized variances", "\n\n")
 	dividendo <- bind_rows(replicate(nrow(male_data), as.data.frame(maxes), simplify=F))
-	print("teste")
 	divisor <- male_data[,3:ncol(male_data)]
 	normalized <- divisor/dividendo
 	variances <- apply(normalized,2,var)
@@ -275,17 +300,18 @@ varfun <- function(male_data, var, file, force) {
 		losers <- names(variances[-filtered])
 		filtered <- filtered+2
 		male_data <- male_data[, c(1,2,filtered)]
-		cat (length(losers)," columns with variance lower than: ", var, " was removed from analysis: ",losers, "\n","\n")
+		cat (length(losers)," columns with variance lower than ", var, " was removed from analysis: ",losers, "\n","\n")
 
 	}
-
 	#Dealing with SO and SO time
-	if (!force){
+	if (!fierce){
 		OSstatus <- male_data[,1]
 		percentage <- sum(OSstatus)/length(OSstatus)
 		if (percentage < 0.2 | percentage > 0.8){
+			sink(file = paste(out, ".err", sep=''), append=T)
 			cat("Survival status proportion:", percentage, " is probably not enough to the analysis. \nDeath or recidive are alternative options for the analysis", "\n\n")	
 			cat("If you want to continue anyway, choose the flag F. \n\n")
+			sink()
 			q(status=0)
 		}
 		
@@ -294,10 +320,13 @@ varfun <- function(male_data, var, file, force) {
 		normalized <- followup/uplimit
 		fvar <- var(normalized)
 		if (fvar < var){
+			sink(file = paste(out, ".err", sep=''), append=T)
 			cat("Follow up variance: ", var, " has not passed the variance test. \n\n")
-			cat("If you want to continue anyway, choose the flag F. \n\n")
+			cat("If you want to continue anyway, choose the flag F, or lower variance filter. \n\n")
+			sink()
 			q(status=0)
 		}
+		
 	}
 	return(male_data)  
 
@@ -402,9 +431,13 @@ histogram <- function(out,tt){
 
 ####Main####
 
+#check number of lines#
+
+#nlines(full_data, in_object$nel)
+
 #Perform variance filter#
 
-full_data <- varfun(full_data, in_object$var, in_object$fname, force)
+full_data <- varfun(full_data, in_object$var, in_object$fname, fierce)
 
 #Perform schoenfeld tests#
 
@@ -429,12 +462,12 @@ end_time <- Sys.time()
 elapsed_time <- difftime(time1 = end_time, time2 = start_time, units = "secs")
 
 if (elapsed_time >= 3600) {
-  cat(paste("Time to run ", scriptname, ": ", round(x = (elapsed_time[[1]] / 3600), digits = 2), " hours\n", sep = ""))
+  cat(paste("\nTime to run ", scriptname, ": ", round(x = (elapsed_time[[1]] / 3600), digits = 2), " hours\n", sep = ""))
 } else {
   if (elapsed_time >= 60) {
-    cat(paste("Time to run ", scriptname, ": ", round(x = (elapsed_time[[1]] / 60), digits = 2), " minutes\n", sep = ""))
+    cat(paste("\nTime to run ", scriptname, ": ", round(x = (elapsed_time[[1]] / 60), digits = 2), " minutes\n", sep = ""))
   } else {
-    cat(paste("Time to run ", scriptname, ": ", round(x = elapsed_time[[1]], digits = 2), " seconds\n", sep = ""))
+    cat(paste("\nTime to run ", scriptname, ": ", round(x = elapsed_time[[1]], digits = 2), " seconds\n", sep = ""))
   }
 }
 
