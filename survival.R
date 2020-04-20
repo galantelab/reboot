@@ -1097,7 +1097,7 @@ if(type & clin_file != ""){
     multi_cox = suppressWarnings(multiCox.test(clin, univ_cox, res_logrank, uni_covariates, uni_covariates))
 
     #Test proportional hazards assumptions
-    cat("\tTesting proportional hazards assumptions (multivariate). Overwriting plot from 'signature score'...\n")
+    cat("\tTesting proportional hazards assumptions (multivariate). Overwriting plot from 'signature score'...\n\t")
     multi_model = suppressWarnings(multiCox.model(dat = clin, univ_result = multi_cox, covariates = uni_covariates))
     selected_covariates <- test_ph_assumptions(model_object = multi_model, covariates = uni_covariates, is_multi=T)
     cat("\tDone\n\n")
