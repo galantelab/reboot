@@ -217,28 +217,30 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
 	##looping##		
 	i=1
 	while (i<=booty){
-	cat("processing iteration: ",i, "\n","\n")
-	male_data <- subsample(full_data, nel)
+		cat("processing iteration: ",i, "\n","\n")
+		male_data <- subsample(full_data, nel)
 	
-	#checking correlation#
-	if (corfun(male_data, pf)==1){
-		next
+		#checking correlation#
+		if (corfun(male_data, pf)==1){
+			next
+		}
+
+		#running regression#
+		
+		coemale <- regcall(male_data, nel, full_data) 
+		
+		##saving coeficients##	
+	
+		if (!is.null(coemale)){
+			i=i+1
+			for (j in 1:length(coemale)){
+				name = names(coemale[j])
+				val = coemale[j][[1]]
+				eval(parse(text=paste("yield$", name, "<- c(yield$", name, "," , val, ")", sep="")))
+			}
+		}
 	}
-	
-	i=i+1
-
-	#running regression#
-	
-	coemale <- regcall(male_data, nel, full_data) 
-	
-	##saving coeficients##	
-
-	for (j in 1:length(coemale)){
-	name = names(coemale[j])
-	val = coemale[j][[1]]
-	eval(parse(text=paste("yield$", name, "<- c(yield$", name, "," , val, ")", sep="")))
-	} 
-	}  
+  
 	#Processing result
 	aux=c(NULL,NULL)
 	
@@ -352,6 +354,10 @@ regcall <- function(male_data, nel, full_data){
 			cat("Regression time exceeded, you may consider changing variance and/or correlation filters. Trying again \n");
 			male_data <- subsample(full_data,nel);
 			regcall(male_data, nel, full_data)	
+		},
+		error=function(e){
+		    coemale <- NULL
+		    return(coemale)
 		}
 	)
 }	
@@ -362,6 +368,8 @@ regcall <- function(male_data, nel, full_data){
 regression <- function(male_data){
 
 	#fit1 <- profL1(Surv(OS.time,OS)~., data=male_data, fold=10, maxlambda1=100, plot=F, trace=F)
+	options(show.error.messages = F)
+        try(fit1 <- profL1(Surv(OS.time,OS)~., data=male_data, fold=10, plot=F, trace=F))
 	fit1 <- profL1(Surv(OS.time,OS)~., data=male_data, fold=10, plot=F, trace=F)
 	#fit2 <- profL2(Surv(OS.time,OS)~., data=male_data, fold=fit1$fold, minl = 0.1, maxlambda2 = 10)
 	#opt1 <- optL1(Surv(OS.time,OS)~., data=male_data, fold=fit1$fold, maxlambda1=10, trace=F )
