@@ -150,7 +150,7 @@ duprev<-duplicated(input1$sample, fromLast=T)
 dup <- dupfor + duprev
 barfinalclin <- !(dup)
 uniqindex <- which(barfinalclin)
-input1 <- select(input1, uniqindex]
+input1 <- select(input1, uniqindex)
 
 #Get patients from clinical data only if there is corresponding expression data
 exp_patients <- as.vector(unique(as.character(input1$sample)))
