@@ -217,7 +217,7 @@ In summary, 3 subcommands are available:
    | CXCR6 | 0.22173 |
    | ... | ... |
    
-   Coefficients may be interpreted according to absolute value and signal. Significance is as higher as the absolute value that the coefficient gets. Positive signals contribute to the accountability of bad prognosis, while negative signals contribute the accountability of good prognosis.
+   Coefficients may be interpreted according to absolute value and signal. Significance is as high as the absolute value that the coefficient gets. Positive signals contribute to the accountability of bad prognosis, while negative signals contribute to the accountability of good prognosis.
 
    <br>
 
