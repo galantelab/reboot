@@ -216,10 +216,10 @@ In summary, 3 subcommands are available:
    | PARPBP | 0.17014 | 
    | CXCR6 | 0.22173 |
    | ... | ... |
- 
-   <br>
    
-   Coefficients may be interpreted according to absolute value and signal. Significance is as higher as the absolute value the number gets. Positive signals contribute to the accountability of bad prognosis, while negative signals contribute the accountability of good prognosis.
+   Coefficients may be interpreted according to absolute value and signal. Significance is as higher as the absolute value that the coefficient gets. Positive signals contribute to the accountability of bad prognosis, while negative signals contribute the accountability of good prognosis.
+
+   <br>
 
    The plots generated are a histogram with the distribution of the regression coefficients and a lollipop plot with the most relevant coefficients (see bellow).
 
