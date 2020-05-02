@@ -218,6 +218,8 @@ In summary, 3 subcommands are available:
    | ... | ... |
  
    <br>
+   
+   Coefficients may be interpreted according to absolute value and signal. Significance is as higher as the absolute value the number gets. Positive signals contribute to the accountability of bad prognosis, while negative signals contribute the accountability of good prognosis.
 
    The plots generated are a histogram with the distribution of the regression coefficients and a lollipop plot with the most relevant coefficients (see bellow).
 
