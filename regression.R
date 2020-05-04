@@ -275,7 +275,7 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
 	
 ######Variance filter######
 
-varfun <- function(male_data, var, file, fierce) {
+varfun <- function(male_data, var, file, fierce, out) {
 	maxes <- matrix(apply(male_data[,3:ncol(male_data)],2,max), nrow=1)
 	if (0 %in% maxes){
 		cat("Columns with only 0s found in ", file, ". Remove such columns and try again.", "\n")
@@ -445,7 +445,7 @@ histogram <- function(out,tt){
 
 #Perform variance filter#
 
-full_data <- varfun(full_data, in_object$var, in_object$fname, fierce)
+full_data <- varfun(full_data, in_object$var, in_object$fname, fierce, logname)
 
 #Perform schoenfeld tests#
 
