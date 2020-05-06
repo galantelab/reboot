@@ -1,5 +1,8 @@
 #!/usr/bin/env Rscript
 
+#Suppress all warning messages
+options(warn=-1)
+
 start_time <- suppressMessages(Sys.time())
 
 suppressMessages(library("optparse"))
@@ -73,6 +76,10 @@ cat("============================================================\n\n")
 cat("Chosen parameters: ")
 cat(paste(commandArgs(trailingOnly = T), collapse = " "))
 cat("\n\n")
+
+if(force){
+  cat("You have chosen the --force option which may lead to Cox model convergence issues. In this case, please consider using another survival endpoint.\n\n")
+}
 
 #Print log message
 cat("Checking provided files...\n")
@@ -322,6 +329,21 @@ reboot_ggcoxzph <- function(fit, resid = T, se = T, df = 4, nsmo = 40, var, poin
 #Function to test Cox Proportional Assumptions (Schoenfeld Test)
 test_ph_assumptions <- function(model_object, covariates, is_multi)
 {
+
+  if(!is_multi & is.null(model_object)){
+    ####### Error file ##########
+    sink(file = paste(out, ".err", sep=''), append=T)
+    cat(paste("Error: Cox model could not be fitted to score due to convergence issues. Please consider using another survival endpoint.\n",sep=""))
+    sink()
+    quit(save="no")
+  } else if(is_multi & is.null(model_object)){
+    ####### Error file ##########
+    sink(file = paste(out, ".err", sep=''), append=T)
+    cat(paste("Error: Multivariate Cox model could not be fitted due to convergence issues. Please check the provided clinical variables or consider using another survival endpoint.\n",sep=""))
+    sink()
+    quit(save="no")
+  }
+
   test.ph <- cox.zph(model_object)
 
   if(is_multi){
@@ -552,6 +574,15 @@ logrank.test <- function(dat,filename){
 
 #Run log-rank test for score signatures
 res_logrank = logrank.test(data, paste(out, "_logrank.txt",sep=""))
+
+#Check if logrank model is not null
+if(is.null(res_logrank)){
+  ####### Error file ##########
+  sink(file = paste(out, ".err", sep=''), append=T)
+  cat(paste("Error: Cox model could not be fitted to score due to convergence issues. Please consider using another survival endpoint.\n",sep=""))
+  sink()
+  quit(save="no")
+}
 
 #Print log messages
 cat("Done\n\n")
@@ -1097,9 +1128,11 @@ if(type & clin_file != ""){
     multi_cox = suppressWarnings(multiCox.test(clin, univ_cox, res_logrank, uni_covariates, uni_covariates))
 
     #Test proportional hazards assumptions
-    cat("\tTesting proportional hazards assumptions (multivariate). Overwriting plot from 'signature score'...\n\t")
+    cat("\tTesting proportional hazards assumptions (multivariate)...\n\t")
     multi_model = suppressWarnings(multiCox.model(dat = clin, univ_result = multi_cox, covariates = uni_covariates))
+    cat("\tDone\n\n")
     selected_covariates <- test_ph_assumptions(model_object = multi_model, covariates = uni_covariates, is_multi=T)
+    cat("\tOverwriting plot from 'signature score'...\n\t")
     cat("\tDone\n\n")
 
     if (length(selected_covariates)==0 || (length(selected_covariates)==1 && selected_covariates=="score")) {
