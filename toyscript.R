@@ -49,7 +49,7 @@ include_cols <- c()
 for (col in 2:(ncol(pre_inp)-2))
 {
   max_value <- max(pre_inp[[col]])
-  if (max_value != 0)
+  if (max_value >= 0.001)
   {
     include_cols <- append(x = include_cols, values = col)
   }
@@ -57,7 +57,7 @@ for (col in 2:(ncol(pre_inp)-2))
 
 tmp_pre_inp <- pre_inp[,c(1,include_cols,(ncol(pre_inp)-1),ncol(pre_inp))]
 len <- length(colnames(tmp_pre_inp))
-set.seed(17)
+set.seed(50)
 random <- sample.int((len-2),50)        #Modify the number of genes as you wish (50).
 aux2 <- tmp_pre_inp[,random]
 input1 <- cbind(aux1,aux2)

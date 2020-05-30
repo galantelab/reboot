@@ -49,7 +49,7 @@ include_cols <- c()
 for (col in 2:(ncol(pre_inp)-2))
 {
   max_value <- max(pre_inp[[col]])
-  if (max_value != 0)
+  if (max_value >= 0.001)
   {
     include_cols <- append(x = include_cols, values = col)
   }
