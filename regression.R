@@ -78,23 +78,6 @@ cat(paste(commandArgs(trailingOnly = T), collapse = " "))
 cat("\n\n")
 
 
-#####Checking data#########
-
-nlines <- function(full_data, gs){
-	if (nrow(full_data)<=5){
-		sink(file = paste(logname, ".error", sep=''))
-		cat("Error. There are less than 5 instances. Please, increase the number of lines for a proper analysis. \n")
-		sink()
-		q(status=0)
-	}
-	if (ncol(full_data) > 10) {
-		if ((nrow(full_data) < 30) & (gs > 10)){
-			cat("The proportion of instances per attributes might be low. You may consider to lower group size for a better analysis. \n\n")
-		}
-
-	}
-}
-
 #####Schoenfeld test######
 
 ph_assumptions <- function(full_data){
@@ -276,6 +259,8 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
 ######Variance filter######
 
 varfun <- function(male_data, var, file, fierce) {
+	colnames(male_data)[1:2] <- c("OS","OS.time")
+
 	maxes <- matrix(apply(male_data[,3:ncol(male_data)],2,max), nrow=1)
 	if (0 %in% maxes){
 		cat("Columns with only 0s found in ", file, ". Remove such columns and try again.", "\n")
@@ -439,11 +424,7 @@ histogram <- function(out,tt){
 
 ####Main####
 
-#check number of lines#
-
-#nlines(full_data, in_object$nel)
-
-#Perform variance filter#
+#Perform data check and variance filter#
 
 full_data <- varfun(full_data, in_object$var, in_object$fname, fierce)
 
