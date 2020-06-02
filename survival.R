@@ -36,14 +36,6 @@ type='logical', dest = "force", default = FALSE, help="To force overcome follow 
 opo <- OptionParser(option_list=option_list, add_help_option = T)
 in_object <- parse_args(opo)
 
-#Check if clinical data is provided in case type == TRUE
-if(in_object$type){
-  if(in_object$clin_file == ""){
-    cat("Insert clinical variables file\n")
-    q(status=0)
-  }
-}
-
 #Change variables
 exp_file = in_object$exp_file
 out = in_object$out
@@ -53,6 +45,14 @@ clin_file = in_object$clin_file
 roc_curve = in_object$roc_curve
 var = in_object$var
 force = in_object$force
+
+#Check if clinical data is provided in case type == TRUE
+if(type){
+  if(clin_file == ""){
+    cat("Insert clinical variables file\n")
+    q(status=0)
+  }
+}
 
 ####### Log file ##########
 sink(file = paste(out, ".log", sep=''), append=T)
@@ -113,6 +113,24 @@ data = read.table(exp_file, header=T, check.names=F, stringsAsFactors=F)
 
 if(type & clin_file!=""){
   clin = read.delim(clin_file, header=T, row.names=1)
+}
+
+#Check OS
+if(class(data[,2])!="integer" | levels(as.factor(data[,2]))[1] != "0" | levels(as.factor(data[,2]))[2] != "1"){
+  ####### Error file ##########
+  sink(file = paste(out, ".err", sep=''), append=T)
+  cat(paste("Error: The second column of file ", exp_file, " does not contain endpoint status. Please check the manual for more information.\n",sep=""))
+  sink()
+  quit(save="no")
+}
+
+#Check OS.time
+if(class(data[,3])!="integer" | min(data[,3])<0){
+  ####### Error file ##########
+  sink(file = paste(out, ".err", sep=''), append=T)
+  cat(paste("Error: The third column of file ", exp_file, " does not contain endpoint times. Please check the manual for more information.\n",sep=""))
+  sink()
+  quit(save="no")
 }
 
 #Check number of columns in signature file
