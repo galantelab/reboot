@@ -276,6 +276,8 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
 ######Variance filter######
 
 varfun <- function(male_data, var, file, fierce, out) {
+	colnames(male_data)[1:2] <- c("OS","OS.time")	
+
 	maxes <- matrix(apply(male_data[,3:ncol(male_data)],2,max), nrow=1)
 	if (0 %in% maxes){
 		cat("Columns with only 0s found in ", file, ". Remove such columns and try again.", "\n")
