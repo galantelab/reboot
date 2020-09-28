@@ -35,6 +35,9 @@ RUN Rscript -e 'install.packages(c("argparse","extrafont"))'
 RUN Rscript -e 'BiocManager::install("remotes")'
 Run Rscript -e 'BiocManager::install("BioinformaticsFMRP/TCGAbiolinks")'
 
+#NAs dealing
+RUN Rscript -e 'install.packages("mice")
+
 #Tool insertion#
 
 COPY *.R /usr/local/bin/

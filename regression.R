@@ -29,6 +29,9 @@ type='numeric', dest = "pf", default = "0.3", help="Percentage of correlated gen
 make_option(c("-V", "--variancefilter"), action="store",
 type='numeric', dest = "var", default = "0.01", help="Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01"),
 
+make_option(c("-T", "--type"), action="store",
+type='character', dest = "ty", default = "gene", help="Declare which type of transcriptome data to be analyzed: gene or transcript. Default: gene"),
+
 make_option(c("-F", "--force"), action="store",
 type='logical', dest = "fierce", default = FALSE, help="To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F"))
 
@@ -38,9 +41,11 @@ logname <- in_object$out
 outname <- paste(in_object$out, "_signature.txt", sep="")
 outplot <- in_object$out
 fierce <-in_object$fierce
+ty <- in_object$ty
  
-#####Importing libraries####
+####Importing libraries####
 
+suppressMessages(library("mice"))
 suppressMessages(library("penalized"))
 suppressMessages(library("tidyverse"))
 suppressMessages(library("hash"))
@@ -50,8 +55,14 @@ suppressMessages(library("R.utils"))
 
 full_data = read.table(in_object$fname, header=T, row.names=1, check.names=F)
 colnames(full_data) <- gsub("-","__",colnames(full_data))
-
-
+if (ty=="gene") {
+	bar = 0.0035
+} else if(ty=="transcript") {
+	bar = 0.011
+} else {
+	cat("Type has to be either gene or transcript\n")
+	q(status=0)
+} 
 ####Setting plot theme#####
 
 mytheme <- theme_bw() + 
@@ -60,8 +71,6 @@ mytheme <- theme_bw() +
         legend.text = element_text(colour = "black", face = "plain"),
         legend.title = element_text(colour = "black", face = "bold"),
         axis.ticks = element_line(colour = "black"), axis.line = element_line(colour = "black"))
-
-
 
 #######Log file##########
 
@@ -76,7 +85,6 @@ scriptname <- "Regression analysis"
 cat("Chosen parameters: ")
 cat(paste(commandArgs(trailingOnly = T), collapse = " "))
 cat("\n\n")
-
 
 #####Checking data#########
 
@@ -122,6 +130,7 @@ ph_assumptions <- function(full_data){
 
 
 ######Error check 1#######
+
 numberfilter1 <- function(dataf, g, outname, outplot) {
 	if ((ncol(dataf)-2) < g){
 		cat("The number of columns per group exceeds the number of columns", "\n", "\n")
@@ -155,7 +164,7 @@ numberfilter2 <- function(dataf, g, outname, outplot) {
 		q(status=0)
 	}
 
-	if ((ncol(dataf)-2) < g) {
+	if ((ncol(dataf) - 2) < g) {
 		    cat("The number of columns is lower than group size due to variance filter","\n","\n")
 		    cat("Performing single multivariate regression","\n","\n")
 		    coemale <- regression(dataf)
@@ -181,16 +190,16 @@ corfun <- function(male_data, pf){
 	indexes = c()
 	pval = c()
 	names= c()
-	ngenes = 3:(ncol(male_data)-1)
+	ngenes = 3:(ncol(male_data) - 1)
 	for (t in ngenes){
-		for (u in ((t+1): (ncol(male_data)))){
+		for (u in ((t + 1): (ncol(male_data)))){
 			aux <- suppressWarnings(cor.test(x=male_data[,t], y=male_data[,u], method = 'spearman'))
 			indexes <- c(indexes, round(aux$estimate,3))
 		        pval <- c(pval, round(aux$p.value,3))
 			names <- c(names, paste(colnames(male_data)[t],colnames(male_data)[u],sep="_"))
 		}
 	}
-	if (((sum((indexes>0.80) & (pval<0.05)))/length(pf))>=pf){ 
+	if (((sum((indexes > 0.80) & (pval < 0.05))) / length(pf)) >= pf){ 
 		switch=1
 		cat("This iteration was avoided due to correlation among columns. Sperman correlation values and p-values are respectively:", "\n")
 		cat(paste(names,indexes,pval,sep=":"),"\n","\n")
@@ -205,7 +214,7 @@ corfun <- function(male_data, pf){
 
 ######Bootfunction######
 
-bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
+bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 	
 	##setting up hash## 
 	
@@ -221,7 +230,7 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
 		male_data <- subsample(full_data, nel)
 	
 		#checking correlation#
-		if (corfun(male_data, pf)==1){
+		if (corfun(male_data, pf) == 1){
 			next
 		}
 
@@ -232,7 +241,7 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
 		##saving coeficients##	
 	
 		if (!is.null(coemale)){
-			i=i+1
+			i = i + 1
 			for (j in 1:length(coemale)){
 				name = names(coemale[j])
 				val = coemale[j][[1]]
@@ -253,20 +262,21 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
 	tt <- as.data.frame(aux)
 
 	tt <- tt %>%
-		filter(coefficient!=0)
+		filter(abs(as.numeric(as.character(coefficient))) >= bar)
 
 	if (any(!complete.cases(tt$coefficient))){
 		cat("NA coefficient found, increase coverage for a proper analysis", "\n")
 	}
 
-	if (any(!(tt==0))){
+	
+	if (any(!(tt$coefficient == 0)) & dim(tt)[1]!=0){
 		tt$feature <- gsub("__","-",tt$feature)
 		write.table(tt, outname, sep="\t", row.names=F, quote=F)
 		histogram(outplot,tt)
 		lolli(outplot,tt)
 	}
 	else {
-		cat("No signature found, all coefficients are equal 0", "\n")
+		cat("No signature found, all coefficients are not significant", "\n")
 	}
 	cat("Done\n")
 
@@ -276,8 +286,10 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf){
 ######Variance filter######
 
 varfun <- function(male_data, var, file, fierce, out) {
+	cat("Cheking NAs\n")
+	impu <- mice(male_data, print=F)
+	male_data <-  complete(impu)	
 	colnames(male_data)[1:2] <- c("OS","OS.time")	
-
 	maxes <- matrix(apply(male_data[,3:ncol(male_data)],2,max), nrow=1)
 	if (0 %in% maxes){
 		cat("Columns with only 0s found in ", file, ". Remove such columns and try again.", "\n")
@@ -358,9 +370,9 @@ regcall <- function(male_data, nel, full_data){
 			regcall(male_data, nel, full_data)	
 		},
 		error=function(e){
-		    coemale <- NULL
-		    return(coemale)
-		}
+			#coemale <- NULL
+			#return(coemale)
+		    }
 	)
 }	
 
@@ -370,7 +382,7 @@ regcall <- function(male_data, nel, full_data){
 regression <- function(male_data){
 
 	#fit1 <- profL1(Surv(OS.time,OS)~., data=male_data, fold=10, maxlambda1=100, plot=F, trace=F)
-	options(show.error.messages = F)
+	#options(show.error.messages = F)
         try(fit1 <- profL1(Surv(OS.time,OS)~., data=male_data, fold=10, plot=F, trace=F))
 	fit1 <- profL1(Surv(OS.time,OS)~., data=male_data, fold=10, plot=F, trace=F)
 	#fit2 <- profL2(Surv(OS.time,OS)~., data=male_data, fold=fit1$fold, minl = 0.1, maxlambda2 = 10)
@@ -463,7 +475,7 @@ numberfilter2(full_data, in_object$nel, outname, outplot)
 
 #Perform Regression#
 
-bootstrapfun(full_data, in_object$booty, in_object$nel, outname, outplot, in_object$pf)
+bootstrapfun(full_data, in_object$booty, in_object$nel, outname, outplot, in_object$pf, bar)
 
 
 ####Time feedback####
