@@ -1,1 +1,1 @@
-## Reboot documentation: https://galantelab.github.io/reboot
+## Reboot documentation: https://galantelab.github.io/Reboot
