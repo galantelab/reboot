@@ -186,17 +186,17 @@ numberfilter2 <- function(dataf, g, outname, outplot) {
 			
 ######Correlation filter######
 
-corfun <- function(male_data, pf){
+corfun <- function(cmatrix, pf){
 	indexes = c()
 	pval = c()
 	names= c()
-	ngenes = 3:(ncol(male_data) - 1)
+	ngenes = 3:(ncol(cmatrix) - 1)
 	for (t in ngenes){
-		for (u in ((t + 1): (ncol(male_data)))){
-			aux <- suppressWarnings(cor.test(x=male_data[,t], y=male_data[,u], method = 'spearman'))
+		for (u in ((t + 1): (ncol(cmatrix)))){
+			aux <- suppressWarnings(cor.test(x=cmatrix[,t], y=cmatrix[,u], method = 'spearman'))
 			indexes <- c(indexes, round(aux$estimate,3))
 		        pval <- c(pval, round(aux$p.value,3))
-			names <- c(names, paste(colnames(male_data)[t],colnames(male_data)[u],sep="_"))
+			names <- c(names, paste(colnames(cmatrix)[t],colnames(cmatrix)[u],sep="_"))
 		}
 	}
 	if (((sum((indexes > 0.80) & (pval < 0.05))) / length(pf)) >= pf){ 
@@ -227,16 +227,16 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 	i=1
 	while (i<=booty){
 		cat("processing iteration: ",i, "\n","\n")
-		male_data <- subsample(full_data, nel)
+		cmatrix <- subsample(full_data, nel)
 	
 		#checking correlation#
-		if (corfun(male_data, pf) == 1){
+		if (corfun(cmatrix, pf) == 1){
 			next
 		}
 
 		#running regression#
 		
-		coemale <- regcall(male_data, nel, full_data) 
+		coemale <- regcall(cmatrix, nel, full_data) 
 		
 		##saving coeficients##	
 	
@@ -285,19 +285,19 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 	
 ######Variance filter######
 
-varfun <- function(male_data, var, file, fierce, out) {
+varfun <- function(cmatrix, var, file, fierce, out) {
 	cat("Cheking NAs\n")
-	impu <- mice(male_data, print=F)
-	male_data <-  complete(impu)	
-	colnames(male_data)[1:2] <- c("OS","OS.time")	
-	maxes <- matrix(apply(male_data[,3:ncol(male_data)],2,max), nrow=1)
+	impu <- mice(cmatrix, print=F)
+	cmatrix <-  complete(impu)	
+	colnames(cmatrix)[1:2] <- c("OS","OS.time")	
+	maxes <- matrix(apply(cmatrix[,3:ncol(cmatrix)],2,max), nrow=1)
 	if (0 %in% maxes){
 		cat("Columns with only 0s found in ", file, ". Remove such columns and try again.", "\n")
 		q(status=0)
 	}
 	cat("Calculating normalized variances", "\n\n")
-	dividendo <- bind_rows(replicate(nrow(male_data), as.data.frame(maxes), simplify=F))
-	divisor <- male_data[,3:ncol(male_data)]
+	dividendo <- bind_rows(replicate(nrow(cmatrix), as.data.frame(maxes), simplify=F))
+	divisor <- cmatrix[,3:ncol(cmatrix)]
 	normalized <- divisor/dividendo
 	variances <- apply(normalized,2,var)
 	filtered <- c()
@@ -315,13 +315,13 @@ varfun <- function(male_data, var, file, fierce, out) {
 	} else {
 		losers <- names(variances[-filtered])
 		filtered <- filtered+2
-		male_data <- male_data[, c(1,2,filtered)]
+		cmatrix <- cmatrix[, c(1,2,filtered)]
 		cat (length(losers)," columns with variance lower than ", var, " was removed from analysis: ",losers, "\n","\n")
 
 	}
 	#Dealing with SO and SO time
 	if (!fierce){
-		OSstatus <- male_data[,1]
+		OSstatus <- cmatrix[,1]
 		percentage <- sum(OSstatus)/length(OSstatus)
 		if (percentage < 0.2 | percentage > 0.8){
 			sink(file = paste(out, ".err", sep=''), append=T)
@@ -331,7 +331,7 @@ varfun <- function(male_data, var, file, fierce, out) {
 			q(status=0)
 		}
 		
-		followup <- male_data[,2]
+		followup <- cmatrix[,2]
 		uplimit <- max(followup)	
 		normalized <- followup/uplimit
 		fvar <- var(normalized)
@@ -344,7 +344,7 @@ varfun <- function(male_data, var, file, fierce, out) {
 		}
 		
 	}
-	return(male_data)  
+	return(cmatrix)  
 
 }	
 
@@ -355,19 +355,19 @@ subsample <- function(full_data, nel){
 
 	shuffle <- sample(colnames(full_data[,3:ncol(full_data)]), size=nel, replace=F)
 	cat("Picked columns: ",shuffle,"\n","\n")
-	male_data <- cbind(full_data[,1:2],subset(full_data,select=shuffle))
+	cmatrix <- cbind(full_data[,1:2],subset(full_data,select=shuffle))
 		
 }
 
 
 ######Regression time keeper#######
 
-regcall <- function(male_data, nel, full_data){
-	tryCatch(withTimeout(coemale <- regression(male_data), timeout=60, onTimeout= "warning"),
+regcall <- function(cmatrix, nel, full_data){
+	tryCatch(withTimeout(coemale <- regression(cmatrix), timeout=60, onTimeout= "warning"),
 		warning=function(warning_condition){
 			cat("Regression time exceeded, you may consider changing variance and/or correlation filters. Trying again \n");
-			male_data <- subsample(full_data,nel);
-			regcall(male_data, nel, full_data)	
+			cmatrix <- subsample(full_data,nel);
+			regcall(cmatrix, nel, full_data)	
 		},
 		error=function(e){
 			#coemale <- NULL
@@ -379,17 +379,17 @@ regcall <- function(male_data, nel, full_data){
 
 ######Regression procedure############
 
-regression <- function(male_data){
+regression <- function(cmatrix){
 
-	#fit1 <- profL1(Surv(OS.time,OS)~., data=male_data, fold=10, maxlambda1=100, plot=F, trace=F)
+	#fit1 <- profL1(Surv(OS.time,OS)~., data=cmatrix, fold=10, maxlambda1=100, plot=F, trace=F)
 	#options(show.error.messages = F)
-        try(fit1 <- profL1(Surv(OS.time,OS)~., data=male_data, fold=10, plot=F, trace=F))
-	fit1 <- profL1(Surv(OS.time,OS)~., data=male_data, fold=10, plot=F, trace=F)
-	#fit2 <- profL2(Surv(OS.time,OS)~., data=male_data, fold=fit1$fold, minl = 0.1, maxlambda2 = 10)
-	#opt1 <- optL1(Surv(OS.time,OS)~., data=male_data, fold=fit1$fold, maxlambda1=10, trace=F )
-	opt1 <- optL1(Surv(OS.time,OS)~., data=male_data, fold=fit1$fold, trace=F )
-	#opt2 <- optL2(Surv(OS.time,OS)~., data=male_data, fold=fit2$fold)
-	fit <- penalized(Surv(OS.time,OS)~., data=male_data, lambda1=opt1$lambda, trace=F)
+        try(fit1 <- profL1(Surv(OS.time,OS)~., data=cmatrix, fold=10, plot=F, trace=F))
+	fit1 <- profL1(Surv(OS.time,OS)~., data=cmatrix, fold=10, plot=F, trace=F)
+	#fit2 <- profL2(Surv(OS.time,OS)~., data=cmatrix, fold=fit1$fold, minl = 0.1, maxlambda2 = 10)
+	#opt1 <- optL1(Surv(OS.time,OS)~., data=cmatrix, fold=fit1$fold, maxlambda1=10, trace=F )
+	opt1 <- optL1(Surv(OS.time,OS)~., data=cmatrix, fold=fit1$fold, trace=F )
+	#opt2 <- optL2(Surv(OS.time,OS)~., data=cmatrix, fold=fit2$fold)
+	fit <- penalized(Surv(OS.time,OS)~., data=cmatrix, lambda1=opt1$lambda, trace=F)
 	coemale <- coefficients(fit, "all")
 	return(coemale)
 	
