@@ -286,9 +286,11 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 ######Variance filter######
 
 varfun <- function(cmatrix, var, file, fierce, out) {
-	cat("Cheking NAs\n")
-	impu <- mice(cmatrix, print=F)
-	cmatrix <-  complete(impu)	
+	if (any(apply(oo, 2, function(x) any(is.na(x))))){
+		cat("Cheking NAs\n")
+		impu <- mice(cmatrix, print=F)
+		cmatrix <-  complete(impu)	
+	}
 	colnames(cmatrix)[1:2] <- c("OS","OS.time")	
 	maxes <- matrix(apply(cmatrix[,3:ncol(cmatrix)],2,max), nrow=1)
 	if (0 %in% maxes){
