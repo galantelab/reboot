@@ -286,7 +286,7 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 ######Variance filter######
 
 varfun <- function(cmatrix, var, file, fierce, out) {
-	if (any(apply(oo, 2, function(x) any(is.na(x))))){
+	if (any(apply(cmatrix, 2, function(x) any(is.na(x))))){
 		cat("Cheking NAs\n")
 		impu <- mice(cmatrix, print=F)
 		cmatrix <-  complete(impu)	
