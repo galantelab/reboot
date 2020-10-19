@@ -36,7 +36,7 @@ RUN Rscript -e 'BiocManager::install("remotes")'
 Run Rscript -e 'BiocManager::install("BioinformaticsFMRP/TCGAbiolinks")'
 
 #NAs dealing
-RUN Rscript -e 'install.packages("mice")
+RUN Rscript -e 'install.packages("mice")'
 
 #Tool insertion#
 
