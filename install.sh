@@ -1,7 +1,7 @@
 #!usr/local/bin/bash
 
 #Installation script for reboot
-#Requirements:R (version >= 3.6)
+#Requirements:R (version >= 4.0.4)
 
 #Packages for survival analysis
 Rscript -e 'install.packages(c("survival", "survminer", "BiocManager", "optparse", "OptimalCutpoints", "survivalROC", "forestmodel", "sjlabelled", "sjstats", "sjmisc", "data.table"))'
