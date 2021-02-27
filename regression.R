@@ -227,13 +227,15 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 	i=1
 	while (i<=booty){
 		cat("processing iteration: ",i, "\n","\n")
-		cmatrix <- subsample(full_data, nel)
-	
-		#checking correlation#
-		if (corfun(cmatrix, pf) == 1){
-			next
+		if(ncol(full_data) == 3) {
+			cmatrix = full_data
+		} else {
+			cmatrix <- subsample(full_data, nel)
+			#checking correlation#
+			if (corfun(cmatrix, pf) == 1){
+				next
+			}
 		}
-
 		#running regression#
 		
 		coemale <- regcall(cmatrix, nel, full_data) 
@@ -292,6 +294,18 @@ varfun <- function(cmatrix, var, file, fierce, out) {
 		cmatrix <-  complete(impu)	
 	}
 	colnames(cmatrix)[1:2] <- c("OS","OS.time")	
+
+	if (ncol(cmatrix) == 3) {
+		divisor = max(cmatrix[3])
+		dividendo = cmatrix[3]
+		normalized = divisor/dividendo
+		variance = var(normalized)
+		if (variance < var) {
+			cat("All columns rejected by variance filter","\n","\n")
+	                q(status=0)
+		}
+		cat("No columns rejected by variance filter","\n","\n")
+	} else {
 	maxes <- matrix(apply(cmatrix[,3:ncol(cmatrix)],2,max), nrow=1)
 	if (0 %in% maxes){
 		cat("Columns with only 0s found in ", file, ". Remove such columns and try again.", "\n")
@@ -345,6 +359,7 @@ varfun <- function(cmatrix, var, file, fierce, out) {
 			q(status=0)
 		}
 		
+	}
 	}
 	return(cmatrix)  
 
@@ -496,3 +511,4 @@ if (elapsed_time >= 3600) {
 }
 
 sink()
+

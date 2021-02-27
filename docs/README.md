@@ -12,7 +12,7 @@
 
 ## Overview
 
-Reboot is a flexible, easy-to-use algorithm to identify and validate genes or transcripts signatures whose expression are highly correlated with patient survival. This tool innovates by using a multivariate strategy with penalized Cox regression (Lasso method) combined with a bootstrap approach, presenting robust convergence of the regression procedure, and a variety of statistical tests for signature score. Reboot comprises two modules developed in R (version 3.6). The **regression** module provides functionality for obtaining gene/transcript signatures from a given set of samples. In turn, the **survival** module provides functionality for producing, applying and validating a score, which is calculated based on the obtained signature, in patient datasets. In this module, a different set of samples may be provided for validation purposes, and clinical variables may also be taken into account. Moreover, Reboot also has the execution option **complete**, which integratively executes the two aforementioned modules.
+Reboot is a flexible, easy-to-use algorithm to identify and validate genes or transcripts signatures whose expression are highly correlated with patient survival. This tool innovates by using a multivariate strategy with penalized Cox regression (Lasso method) combined with a bootstrap approach, presenting robust convergence of the regression procedure, and a variety of statistical tests for signature score. Reboot comprises two modules developed in R (version 4.0.4). The **regression** module provides functionality for obtaining gene/transcript signatures from a given set of samples. In turn, the **survival** module provides functionality for producing, applying and validating a score, which is calculated based on the obtained signature, in patient datasets. In this module, a different set of samples may be provided for validation purposes, and clinical variables may also be taken into account. Moreover, Reboot also has the execution option **complete**, which integratively executes the two aforementioned modules.
 
 ![](Figure_workflow.png)
 *Reboot workflow: First module (regression) makes a regression analysis to identify a gene or transcript signature. The second module (survival) runs survival analysis of a score calculated based on the obtained signature.*
@@ -29,7 +29,7 @@ Reboot can be obtained from Github and installed via a Docker container (recomme
 
 2. Direct installation
 
-	This method requires the previous installation of  [R (version >= 3.6)](https://cran.r-project.org/doc/manuals/r-devel/R-admin.html){:target="_blank"}:
+	This method requires the previous installation of  [R (version >= 4.0.4)](https://cran.r-project.org/doc/manuals/r-devel/R-admin.html){:target="_blank"}:
 
 	```git clone https://github.com/galantelab/reboot.git```
 
