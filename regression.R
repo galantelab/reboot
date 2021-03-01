@@ -89,9 +89,9 @@ cat("\n\n")
 #####Checking data#########
 
 nlines <- function(full_data, gs){
-	if (nrow(full_data)<=5){
+	if (nrow(full_data)<=10){
 		sink(file = paste(logname, ".error", sep=''))
-		cat("Error. There are less than 5 instances. Please, increase the number of lines for a proper analysis. \n")
+		cat("Error. There are less than 10 instances. Please, increase the number of lines for a proper analysis. \n")
 		sink()
 		q(status=0)
 	}
@@ -232,8 +232,10 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 		} else {
 			cmatrix <- subsample(full_data, nel)
 			#checking correlation#
-			if (corfun(cmatrix, pf) == 1){
-				next
+			if (nel > 1){   #1 element avoided
+				if (corfun(cmatrix, pf) == 1){
+					next
+				}
 			}
 		}
 		#running regression#
