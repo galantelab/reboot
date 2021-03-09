@@ -59,6 +59,7 @@ In order to work properly, the following packages are necessary (included in the
 * [survivalROC](https://cran.r-project.org/web/packages/survivalROC/index.html){:target="_blank"}
 * [survminer](https://cran.r-project.org/web/packages/survminer/index.html){:target="_blank"}
 * [tidyverse](https://cran.r-project.org/web/packages/tidyverse/index.html){:target="_blank"}
+* [mice](https://cran.r-project.org/web/packages/mice/index.html){:target="_blank"}
 
 ## Commands and options 
 

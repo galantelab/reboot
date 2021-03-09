@@ -15,4 +15,6 @@ Rscript -e 'install.packages(c("penalized", "tidyverse", "hash", "R.utils", "arg
 Rscript -e 'BiocManager::install("remotes")'
 Rscript -e 'BiocManager::install("BioinformaticsFMRP/TCGAbiolinks")'
 
+Rscript -e 'install.packages("mice")'
+
 cp *.R /usr/local/bin
