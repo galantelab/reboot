@@ -545,6 +545,8 @@ In summary, 3 subcommands are available:
 
    Filipe Ferreira dos Santos*	
 
+   Daniel Takatori Ohara
+
    Pedro Alexandre Favoretto Galante
  
    *These authors contributed equally for the work
