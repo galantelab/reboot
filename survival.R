@@ -628,9 +628,10 @@ logrank.plot <- function(dat,filename){
   if(nlevels(as.factor(dat$score))>1){
 
     pdf(filename)
-    pp = ggsurvplot(survfit(Surv(OS.time, OS) ~ score, data=dat), risk.table=TRUE, tables.theme = theme_cleantable(), tables.y.text = F, tables.height=0.2, pval=paste("p =",format(res_logrank[,4],scientific=T),sep=" "),
-                    font.legend=16, font.x=22, font.y=22, font.tickslab=8, pval.size=6, pval.coord=c(0,0.05), title= "", legend = c(0.7, 0.9), legend.title="", break.time.by=200,
-                    censor=T, legend.labs = c(paste("score>",sig_value, sep=""), paste("score<=",sig_value, sep="")), data=dat) + xlab("Survival time (days)")
+    pp = ggsurvplot(survfit(Surv(OS.time, OS) ~ score, data=dat), risk.table=TRUE, tables.theme = theme_cleantable(), tables.y.text = F, 
+                    tables.height=0.2, pval=paste("p =",format(res_logrank[,4],scientific=T),sep=" "), font.legend=16, font.x=22, font.y=22, 
+                    font.tickslab=8, pval.size=6, pval.coord=c(0,0.05), title= "", legend = c(0.7, 0.9), legend.title="", censor=T, 
+                    legend.labs = c(paste("score>",sig_value, sep=""), paste("score<=",sig_value, sep="")), data=dat) + xlab("Survival time")
     print(pp, newpage = FALSE)
     garbage = dev.off()
 
