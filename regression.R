@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-suppressMessages(library(optparse))
+#suppressMessages(library(optparse))
 #options(lifecycle_disable_verbose_retirement = TRUE)
 #options(warn=-1)
 
@@ -11,32 +11,32 @@ start_time <- Sys.time()
 
 option_list <- list(
 
-make_option(c("-I", "--filein"), action="store",
+optparse::make_option(c("-I", "--filein"), action="store",
 type='character', dest = "fname", help="Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters"),
 
-make_option(c("-O", "--outprefix"), action="store",
+optparse::make_option(c("-O", "--outprefix"), action="store",
 type='character', dest = "out", default = "reboot", help="Output file prefix. Default: reboot"),
 
-make_option(c("-B","--bootstrap"), action = "store",
+optparse::make_option(c("-B","--bootstrap"), action = "store",
 type = "integer", dest = "booty", default = "5", help = "Number of iterations for bootstrap simulation (int). Default: 5"),
 
-make_option(c("-G", "--groupsize"), action="store",
+optparse::make_option(c("-G", "--groupsize"), action="store",
 type='integer', dest = "nel", default = "10", help="Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 10"),
 
-make_option(c("-P", "--percentagefilter"), action="store",
+optparse::make_option(c("-P", "--percentagefilter"), action="store",
 type='numeric', dest = "pf", default = "0.3", help="Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3"),
 
-make_option(c("-V", "--variancefilter"), action="store",
+optparse::make_option(c("-V", "--variancefilter"), action="store",
 type='numeric', dest = "var", default = "0.01", help="Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01"),
 
-make_option(c("-T", "--type"), action="store",
+optparse::make_option(c("-T", "--type"), action="store",
 type='character', dest = "ty", default = "gene", help="Declare which type of transcriptome data to be analyzed: gene or transcript. Default: gene"),
 
-make_option(c("-F", "--force"), action="store",
+optparse::make_option(c("-F", "--force"), action="store",
 type='logical', dest = "fierce", default = FALSE, help="To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F"))
 
-opo <- OptionParser(option_list=option_list, add_help_option = T)
-in_object <- parse_args(opo)
+opo <- optparse::OptionParser(option_list=option_list, add_help_option = T)
+in_object <- optparse::parse_args(opo)
 logname <- in_object$out
 outname <- paste(in_object$out, "_signature.txt", sep="")
 outplot <- in_object$out
@@ -45,11 +45,11 @@ ty <- in_object$ty
  
 ####Importing libraries####
 
-suppressMessages(library("mice"))
-suppressMessages(library("penalized"))
-suppressMessages(library("tidyverse"))
-suppressMessages(library("hash"))
-suppressMessages(library("R.utils"))
+#suppressMessages(library("mice"))
+#suppressMessages(library("penalized"))
+#suppressMessages(library("tidyverse"))
+#suppressMessages(library("hash"))
+#suppressMessages(library("R.utils"))
 
 ######read input file######
 
@@ -65,12 +65,12 @@ if (ty=="gene") {
 } 
 ####Setting plot theme#####
 
-mytheme <- theme_bw() + 
-  theme(panel.grid.major.x = element_blank(), text = element_text(face = "plain", colour = "black"),
-        axis.text = element_text(face = "bold", colour = "black"),
-        legend.text = element_text(colour = "black", face = "plain"),
-        legend.title = element_text(colour = "black", face = "bold"),
-        axis.ticks = element_line(colour = "black"), axis.line = element_line(colour = "black"))
+mytheme <- ggplot2::theme_bw() + 
+  ggplot2::theme(panel.grid.major.x = ggplot2::element_blank(), text = ggplot2::element_text(face = "plain", colour = "black"),
+        axis.text = ggplot2::element_text(face = "bold", colour = "black"),
+        legend.text = ggplot2::element_text(colour = "black", face = "plain"),
+        legend.title = ggplot2::element_text(colour = "black", face = "bold"),
+        axis.ticks = ggplot2::element_line(colour = "black"), axis.line = ggplot2::element_line(colour = "black"))
 
 #######Log file##########
 
@@ -110,11 +110,11 @@ ph_assumptions <- function(full_data){
 	filt <- vector()
 	attributes <- colnames(full_data[3:dim(full_data)[2]])
 	for (i in attributes){
-		phmodel <- coxph(formula = formula(paste('Surv(OS.time, OS)~', i)) , data = full_data)
+		phmodel <- survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', i)) , data = full_data)
 		if(!is.na(phmodel$coef)){
 			tryCatch({
-				phmodel <- coxph(formula = formula(paste('Surv(OS.time, OS)~', i)) , data = full_data)
-				schoen <- cox.zph(phmodel)
+				phmodel <- survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', i)) , data = full_data)
+				schoen <- survival::cox.zph(phmodel)
 				pval <- schoen$table[1,3]
 				if (pval > 0.05){
 					filt <- c(filt, i)
@@ -221,7 +221,7 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 	cat("Starting bootstrap ", booty, "iterations","\n\n")
 	k <- colnames(full_data[3:length(colnames(full_data))])
 	v <- vector("list", length(k))
-	yield <- hash(k,v)
+	yield <- hash::hash(k,v)
 	
 	##looping##		
 	i=1
@@ -239,9 +239,9 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 			}
 		}
 		#running regression#
-		
+
 		coemale <- regcall(cmatrix, nel, full_data) 
-		
+		cat("coemale")		
 		##saving coeficients##	
 	
 		if (!is.null(coemale)){
@@ -259,14 +259,13 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 	
 	##calculating mean##
 
-	for (feature in keys(yield)){
+	for (feature in hash::keys(yield)){
 	coefficient <- suppressWarnings(eval(parse(text=paste("mean(yield$", feature, ")", sep=""))))
 	aux <- rbind(aux, cbind(feature, coefficient))
 	}	
 	tt <- as.data.frame(aux)
 
-	tt <- tt %>%
-		filter(abs(as.numeric(as.character(coefficient))) >= bar)
+	tt <- filter(tt, abs(as.numeric(as.character(coefficient))) >= bar)
 
 	if (any(!complete.cases(tt$coefficient))){
 		cat("NA coefficient found, increase coverage for a proper analysis", "\n")
@@ -281,7 +280,7 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 	}
 	else {
 		cat("No signature found, all coefficients are not significant", "\n")
-	}
+}
 	cat("Done\n")
 
 }
@@ -293,7 +292,7 @@ varfun <- function(cmatrix, var, file, fierce, out) {
 	if (any(apply(cmatrix, 2, function(x) any(is.na(x))))){
 		cat("Cheking NAs\n")
 		impu <- mice(cmatrix, print=F)
-		cmatrix <-  complete(impu)	
+		cmatrix <-  mice::complete(impu)	
 	}
 	colnames(cmatrix)[1:2] <- c("OS","OS.time")	
 
@@ -314,7 +313,7 @@ varfun <- function(cmatrix, var, file, fierce, out) {
 		q(status=0)
 	}
 	cat("Calculating normalized variances", "\n\n")
-	dividendo <- bind_rows(replicate(nrow(cmatrix), as.data.frame(maxes), simplify=F))
+	dividendo <- dplyr::bind_rows(replicate(nrow(cmatrix), as.data.frame(maxes), simplify=F))
 	divisor <- cmatrix[,3:ncol(cmatrix)]
 	normalized <- divisor/dividendo
 	variances <- apply(normalized,2,var)
@@ -382,7 +381,7 @@ subsample <- function(full_data, nel){
 ######Regression time keeper#######
 
 regcall <- function(cmatrix, nel, full_data){
-	tryCatch(withTimeout(coemale <- regression(cmatrix), timeout=60, onTimeout= "warning"),
+	tryCatch(R.utils::withTimeout(coemale <- regression(cmatrix), timeout=60, onTimeout= "warning"),
 		warning=function(warning_condition){
 			cat("Regression time exceeded, you may consider changing variance and/or correlation filters. Trying again \n");
 			cmatrix <- subsample(full_data,nel);
@@ -400,16 +399,17 @@ regcall <- function(cmatrix, nel, full_data){
 
 regression <- function(cmatrix){
 
-	#fit1 <- profL1(Surv(OS.time,OS)~., data=cmatrix, fold=10, maxlambda1=100, plot=F, trace=F)
+	#fit1 <- penalized::profL1(survival::Surv(OS.time,OS)~., data=cmatrix, fold=10, maxlambda1=100, plot=F, trace=F)
 	#options(show.error.messages = F)
-        try(fit1 <- profL1(Surv(OS.time,OS)~., data=cmatrix, fold=10, plot=F, trace=F))
-	fit1 <- profL1(Surv(OS.time,OS)~., data=cmatrix, fold=10, plot=F, trace=F)
-	#fit2 <- profL2(Surv(OS.time,OS)~., data=cmatrix, fold=fit1$fold, minl = 0.1, maxlambda2 = 10)
-	#opt1 <- optL1(Surv(OS.time,OS)~., data=cmatrix, fold=fit1$fold, maxlambda1=10, trace=F )
-	opt1 <- optL1(Surv(OS.time,OS)~., data=cmatrix, fold=fit1$fold, trace=F )
-	#opt2 <- optL2(Surv(OS.time,OS)~., data=cmatrix, fold=fit2$fold)
-	fit <- penalized(Surv(OS.time,OS)~., data=cmatrix, lambda1=opt1$lambda, trace=F)
-	coemale <- coefficients(fit, "all")
+	cat("teste")
+        try(fit1 <- penalized::profL1(survival::Surv(OS.time,OS)~., data=cmatrix, fold=10, plot=F, trace=F))
+	fit1 <- penalized::profL1(survival::Surv(OS.time,OS)~., data=cmatrix, fold=10, plot=F, trace=F)
+	#fit2 <- penalized::profL2(survival::Surv(OS.time,OS)~., data=cmatrix, fold=fit1$fold, minl = 0.1, maxlambda2 = 10)
+	#opt1 <- penalized::optL1(survival::Surv(OS.time,OS)~., data=cmatrix, fold=fit1$fold, maxlambda1=10, trace=F )
+	opt1 <- penalized::optL1(survival::Surv(OS.time,OS)~., data=cmatrix, fold=fit1$fold, trace=F )
+	#opt2 <- penalized::optL2(survival::Surv(OS.time,OS)~., data=cmatrix, fold=fit2$fold)
+	fit <- penalized::penalized(survival::Surv(OS.time,OS)~., data=cmatrix, lambda1=opt1$lambda, trace=F)
+	coemale <- penalized::coefficients(fit, "all")
 	return(coemale)
 	
 }
@@ -423,27 +423,27 @@ lolli <- function(out,tt){
 	fname <- paste(out,"_lollipop.pdf",sep="")
 	tt<-tt[complete.cases(tt), ]
 	tt$coefficient <- as.numeric(as.character(tt$coefficient))
-	tt <- filter(tt,coefficient!=0)
+	tt <- dplyr::filter(tt,coefficient!=0)
 	tt$feature = factor(tt$feature, levels=tt[order(tt$coefficient),"feature"])
 	filter <- as.character(top_n(tt, 10, abs(coefficient))$feature)
-	tt <- filter(tt, feature %in% filter)
+	tt <- dplyr::filter(tt, feature %in% filter)
 	tt <- mutate(tt, name = fct_reorder(feature, coefficient))
 
 	pdf(fname)					
-		ll <- ggplot(tt, aes(x=reorder(feature, coefficient), y=coefficient)) +
-		geom_segment(aes(x=feature, xend=feature, y=0, yend=coefficient), size=2, color="grey") +
-		geom_point(size=4, colour="#1c9099") +
-		#theme_light(base_family = "Helvetica") +
+		ll <- ggplot2d::plot(tt, ggplot2::aes(x=reorder(feature, coefficient), y=coefficient)) +
+		ggplot2::geom_segment(ggplot2::aes(x=feature, xend=feature, y=0, yend=coefficient), size=2, color="grey") +
+		ggplot2::geom_point(size=4, colour="#1c9099") +
+		#ggplot2::theme_light(base_family = "Helvetica") +
 		mytheme +
-		theme(panel.grid.major.x = element_blank(),
-			axis.ticks.x = element_blank(),
-			axis.title.y = element_blank(),
-			axis.title.x = element_blank(),
-			panel.border = element_blank(),
-			#axis.text.y = element_text(angle=90),
-			#axis.text.x = element_text(face="bold",angle=45, size=12, hjust=0),
-			axis.text.x = element_text(angle=60, hjust=1))
-			#axis.text.y= element_text(face="bold")) 
+		ggplot2::theme(panel.grid.major.x = ggplot2::element_blank(),
+			axis.ticks.x = ggplot2::element_blank(),
+			axis.title.y = ggplot2::element_blank(),
+			axis.title.x = ggplot2::element_blank(),
+			panel.border = ggplot2::element_blank(),
+			#axis.text.y = ggplot2::element_text(angle=90),
+			#axis.text.x = ggplot2::element_text(face="bold",angle=45, size=12, hjust=0),
+			axis.text.x = ggplot2::element_text(angle=60, hjust=1))
+			#axis.text.y= ggplot2::element_text(face="bold")) 
 	#scale_y_continuous(breaks = round(seq(min(tt$coefficient), max(tt$coefficient), by = 0.005),3)) 
 	print (ll, newpage=F)
 	dev.off()
@@ -458,10 +458,10 @@ histogram <- function(out,tt){
 	fname<-paste(out,"_hist.pdf",sep="")
 	tt<-tt[complete.cases(tt), ]
 	tt$coefficient <- as.numeric(as.character(tt$coefficient))
-	tt <- filter(tt, coefficient != 0)
+	tt <- dplyr::filter(tt, coefficient != 0)
 	pdf(fname)
-	pl<-ggplot(tt, aes(x = coefficient))+
-		geom_histogram(binwidth = 0.005, alpha=1, position="identity") +
+	pl<-ggplot2::plot(tt, ggplot2::aes(x = coefficient))+
+		ggplot2::geom_histogram(binwidth = 0.005, alpha=1, position="identity") +
 		scale_y_continuous(expand = c(0,0)) +
 		xlab("coefficients")+
 		ylab("") +
@@ -514,3 +514,4 @@ if (elapsed_time >= 3600) {
 
 sink()
 
+                  
