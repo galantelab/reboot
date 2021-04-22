@@ -5,36 +5,36 @@ options(warn=-1)
 
 start_time <- suppressMessages(Sys.time())
 
-suppressMessages(library("optparse"))
+#suppressMessages(library("optparse"))
 
 option_list <- list(
 
-make_option(c("-I", "--filein"), action="store",
+optparse::make_option(c("-I", "--filein"), action="store",
 type='character', dest = "exp_file", help="Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters"),
 
-make_option(c("-O", "--outprefix"), action="store",
+optparse::make_option(c("-O", "--outprefix"), action="store",
 type='character', dest = "out", default = "reboot", help="Output file prefix. Default: reboot"),
 
-make_option(c("-S", "--signature"), action="store",
+optparse::make_option(c("-S", "--signature"), action="store",
 type='character', dest = "sig_file", help="Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients"),
 
-make_option(c("-M", "--multivariate"), action="store",
+optparse::make_option(c("-M", "--multivariate"), action="store",
 type='logical', dest = "type", default = FALSE, help="If clinical variables should be included, choose -M. This option is tied with -C option"),
 
-make_option(c("-C", "--clinical"), action="store",
+optparse::make_option(c("-C", "--clinical"), action="store",
 type='character', dest = "clin_file", default = "", help="Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen"),
 
-make_option(c("-R", "--roc"), action="store",
+optparse::make_option(c("-R", "--roc"), action="store",
 type='logical', dest = "roc_curve", default = FALSE, help="If continuous variables should be categorized according to a ROC curve instead of median, choose -R"),
 
-make_option(c("-V", "--variancefilter"), action="store",
+optparse::make_option(c("-V", "--variancefilter"), action="store",
 type='numeric', dest = "var", default = "0.01", help="Minimum normalized variance (0-1) required for follow up time among samples (double). Default: 0.01"),
 
-make_option(c("-F", "--force"), action="store",
+optparse::make_option(c("-F", "--force"), action="store",
 type='logical', dest = "force", default = FALSE, help="To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F"))
 
-opo <- OptionParser(option_list=option_list, add_help_option = T)
-in_object <- parse_args(opo)
+opo <- optparse::OptionParser(option_list=option_list, add_help_option = T)
+in_object <- optparse::parse_args(opo)
 
 #Change variables
 exp_file = in_object$exp_file
@@ -58,16 +58,16 @@ if(type){
 sink(file = paste(out, ".log", sep=''), append=T)
 
 #Load libraries
-suppressMessages(library("survcomp"))
-suppressMessages(library("survival"))
-suppressMessages(library("survminer"))
-suppressMessages(library("OptimalCutpoints"))
-suppressMessages(library("survivalROC"))
-suppressMessages(library("forestmodel"))
-suppressMessages(library("sjstats"))
-suppressMessages(library("data.table"))
-suppressMessages(library("plyr"))
-suppressMessages(library("dplyr"))
+# suppressMessages(library("survcomp"))
+# suppressMessages(library("survival"))
+# suppressMessages(library("survminer"))
+# suppressMessages(library("OptimalCutpoints"))
+# suppressMessages(library("survivalROC"))
+# suppressMessages(library("forestmodel"))
+# suppressMessages(library("sjstats"))
+# suppressMessages(library("data.table"))
+# suppressMessages(library("plyr"))
+# suppressMessages(library("dplyr"))
 
 cat("\n\n============================================================")
 cat(" Apply Signature ")
@@ -234,7 +234,7 @@ data = cbind(data[,1:2],tmp)
 
 #Edited "ggcoxzph" function to add the global Schoenfeld Test p-value
 reboot_ggcoxzph <- function(fit, resid = T, se = T, df = 4, nsmo = 40, var, point.col = "red", point.size = 1,
-                            point.shape = 19, point.alpha = 1, caption = NULL, ggtheme = theme_survminer(), ...){
+                            point.shape = 19, point.alpha = 1, caption = NULL, ggtheme = survminer::theme_survminer(), ...){
   x <- fit
   if(!methods::is(x, "cox.zph"))
     stop("Can't handle an object of class ", class(x))
@@ -274,10 +274,10 @@ reboot_ggcoxzph <- function(fit, resid = T, se = T, df = 4, nsmo = 40, var, poin
   else if (x$transform != "identity") {
     xtime <- as.numeric(dimnames(yy)[[1]])
     indx <- !duplicated(xx)
-    apr1 <- approx(xx[indx], xtime[indx], seq(min(xx), max(xx),
+    apr1 <- stats::approx(xx[indx], xtime[indx], seq(min(xx), max(xx),
                                               length = 17)[2 * (1:8)])
     temp <- signif(apr1$y, 2)
-    apr2 <- approx(xtime[indx], xx[indx], temp)
+    apr2 <- stats::approx(xtime[indx], xx[indx], temp)
     xaxisval <- apr2$y
     xaxislab <- rep("", 8)
     for (i in 1:8) xaxislab[i] <- format(temp[i])
@@ -286,10 +286,10 @@ reboot_ggcoxzph <- function(fit, resid = T, se = T, df = 4, nsmo = 40, var, poin
   lapply(var, function(i) {
     invisible(round(x$table[i, 3],4) -> pval)
     invisible(round(x$table[nrow(x$table), 3],4) -> global)
-    ggplot() + labs(title = paste0('Global Schoenfeld Test p: ', global),
+    ggplot2::ggplot() + ggplot2::labs(title = paste0('Global Schoenfeld Test p: ', global),
                     subtitle = paste0('Individual Schoenfeld Test p: ', pval)) +
-      ggtheme + theme(plot.title = element_text(hjust = .5, vjust = .5, face = "bold", margin = margin(0, 0, 10, 0)),
-                      plot.subtitle = element_text(hjust = 0, vjust = .5, face = "plain", margin = margin(10, 0, 10, 0))) -> gplot
+      ggtheme + ggplot2::theme(plot.title = ggplot2::element_text(hjust = .5, vjust = .5, face = "bold", margin = ggplot2::margin(0, 0, 10, 0)),
+                      plot.subtitle = ggplot2::element_text(hjust = 0, vjust = .5, face = "plain", margin = ggplot2::margin(10, 0, 10, 0))) -> gplot
     y <- yy[, i]
     yhat <- as.vector(pmat %*% qr.coef(qmat, y))
     if (resid)
@@ -302,31 +302,31 @@ reboot_ggcoxzph <- function(fit, resid = T, se = T, df = 4, nsmo = 40, var, poin
       yr <- range(yr, yup, ylow)
     }
     if (x$transform == "identity") {
-      gplot + geom_line(aes(x=pred.x, y=yhat)) +
-        xlab("Time") +
-        ylab(ylab[i]) +
-        ylim(yr) -> gplot
+      gplot + ggplot2::geom_line(ggplot2::aes(x=pred.x, y=yhat)) +
+        ggplot2::xlab("Time") +
+        ggplot2::ylab(ylab[i]) +
+        ggplot2::ylim(yr) -> gplot
     } else if (x$transform == "log") {
-      gplot + geom_line(aes(x=log(pred.x), y=yhat)) +
-        xlab("Time") +
-        ylab(ylab[i]) +
-        ylim(yr)  -> gplot
+      gplot + ggplot2::geom_line(ggplot2::aes(x=log(pred.x), y=yhat)) +
+        ggplot2::xlab("Time") +
+        ggplot2::ylab(ylab[i]) +
+        ggplot2::ylim(yr)  -> gplot
     } else {
-      gplot + geom_line(aes(x=pred.x, y=yhat)) +
-        xlab("Time") +
-        ylab(ylab[i]) +
-        scale_x_continuous(breaks = xaxisval,
+      gplot + ggplot2::geom_line(ggplot2::aes(x=pred.x, y=yhat)) +
+        ggplot2::xlab("Time") +
+        ggplot2::ylab(ylab[i]) +
+        ggplot2::scale_x_continuous(breaks = xaxisval,
                            labels = xaxislab) +
-        ylim(yr)-> gplot
+        ggplot2::ylim(yr)-> gplot
     }
 
     if (resid)
-      gplot <- gplot + geom_point(aes(x = xx, y =y),
+      gplot <- gplot + ggplot2::geom_point(ggplot2::aes(x = xx, y =y),
                                   col = point.col, shape = point.shape, size = point.size, alpha = point.alpha)
 
     if (se) {
-      gplot <- gplot + geom_line(aes(x=pred.x, y=yup), lty = "dashed") +
-        geom_line(aes( x = pred.x, y = ylow), lty = "dashed")
+      gplot <- gplot + ggplot2::geom_line(ggplot2::aes(x=pred.x, y=yup), lty = "dashed") +
+        ggplot2::geom_line(ggplot2::aes( x = pred.x, y = ylow), lty = "dashed")
     }
 
     ggpubr::ggpar(gplot, ...)
@@ -362,7 +362,7 @@ test_ph_assumptions <- function(model_object, covariates, is_multi)
     quit(save="no")
   }
 
-  test.ph <- cox.zph(model_object)
+  test.ph <- survival::cox.zph(model_object)
 
   if(is_multi){
 
@@ -390,7 +390,7 @@ test_ph_assumptions <- function(model_object, covariates, is_multi)
   if(is_multi) {
     phplot <- reboot_ggcoxzph(fit = test.ph)
   } else {
-    phplot <- ggcoxzph(fit = test.ph)
+    phplot <- survminer::ggcoxzph(fit = test.ph)
   }
 
   pdf(file = paste(out, "_ph_assumptions_plot.pdf", sep=""))
@@ -406,9 +406,9 @@ test_ph_assumptions <- function(model_object, covariates, is_multi)
   dropped = as.character(rownames(pvalues[pvalues[[1]]<=0.05,,drop=F]))
 
   if(length(dropped)>0){
-    cat(paste("\tWarning: Proportional Hazards Assumptions not met (p = ", round(x = global_p, digits = 4), "). The following variables will be disregarded: ", paste(dropped,collapse=", "), ".\n", "\tFor more information, check plot: '",out,"_ph_assumptions_plot.pdf'\n",sep=""))
+    cat(paste("\tWarning: Proportional Hazards Assumptions not met (Global p = ", round(x = global_p, digits = 4), "). The following variables will be disregarded: ", paste(dropped,collapse=", "), ".\n", "\tFor more information, check plot: '",out,"_ph_assumptions_plot.pdf'\n",sep=""))
   } else{
-    cat(paste("Proportional Hazards Assumptions met (p = ", round(x = global_p, digits = 4), ").\n", sep = ""))
+    cat(paste("Proportional Hazards Assumptions met (Global p = ", round(x = global_p, digits = 4), ").\n", sep = ""))
   }
 
   return(variables)
@@ -420,22 +420,22 @@ cutoff_ROC <- function(dataset, auc_val, filename, plot)
 {
   if (auc_val < .5)
   {
-    optimal.cutpoint <- optimal.cutpoints(X = "score",
+    optimal.cutpoint <- OptimalCutpoints::optimal.cutpoints(X = "score",
                                           status = "OS",
                                           tag.healthy = 0, methods = "Youden",
                                           data = dataset,
-                                          control = control.cutpoints(),
+                                          control = OptimalCutpoints::control.cutpoints(),
                                           #ci.fit = TRUE,
                                           direction = ">")
   }
   else
   {
-    optimal.cutpoint <- optimal.cutpoints(X = "score",
+    optimal.cutpoint <- OptimalCutpoints::optimal.cutpoints(X = "score",
                                           status = "OS",
                                           tag.healthy = 0, methods = "Youden",
                                           data = dataset,
                                           #ci.fit = TRUE,
-                                          control = control.cutpoints())
+                                          control = OptimalCutpoints::control.cutpoints())
   }
 
   var_cutoff <- as.numeric(optimal.cutpoint$Youden$Global$optimal.cutoff$cutoff)
@@ -451,7 +451,7 @@ cutoff_ROC <- function(dataset, auc_val, filename, plot)
 
   if (plot){
     pdf(filename)
-    roc_curve_plot <- plot.optimal.cutpoints(x = optimal.cutpoint, legend = T, which = c(1), col = "blue", bg = "white")
+    roc_curve_plot <- OptimalCutpoints::plot.optimal.cutpoints(x = optimal.cutpoint, legend = T, which = c(1), col = "blue", bg = "white")
     garbage = dev.off()
   }
 
@@ -494,7 +494,7 @@ if(type & clin_file != ""){
     cutoff = median(x = clin$OS.time, na.rm = TRUE)
     nobs <- nrow(clin)
 
-    roc = survivalROC(Stime = clin$OS.time, status = clin$OS, marker = clin$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
+    roc = survivalROC::survivalROC(Stime = clin$OS.time, status = clin$OS, marker = clin$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
     score_cutoff = cutoff_ROC(dataset = clin, auc_val = as.numeric(roc$AUC), plot = F)
     clin$score = ifelse(clin$score > score_cutoff, "high", "low")
   } else {
@@ -523,6 +523,85 @@ if(type & clin_file != ""){
 cat("Creating signature score...\n")
 cat("Done\n\n")
 
+# Modify hazard.ratio (survcomp) to avoid "strata" function not found error
+my_hazard.ratio <- function(x, surv.time, surv.event, weights, strat, alpha = 0.05, 
+                            method.test = c("logrank", "likelihood.ratio", "wald"), na.rm = FALSE, 
+                            ...)
+{
+  method.test <- match.arg(method.test)
+  if (!missing(weights)) {
+    if (length(weights) != length(x)) {
+      stop("bad length for parameter weights!")
+    }
+  }
+  else {
+    weights <- rep(1, length(x))
+  }
+  if (!missing(strat)) {
+    if (length(strat) != length(x)) {
+      stop("bad length for parameter strat!")
+    }
+    iix <- weights <= 0
+    if (any(iix)) {
+      warning("samples with weight<=0 are discarded")
+    }
+    weights[iix] <- NA
+  }
+  else {
+    strat <- rep(1, length(x))
+  }
+  cc.ix <- complete.cases(x, surv.time, surv.event, weights, 
+                          strat)
+  if (sum(cc.ix) < 3) {
+    data <- list(x = x, z = rep(NA, length(x)), surv.time = surv.time, 
+                 surv.event = surv.event, weights = weights, strat = strat)
+    return(list(hazard.ratio = NA, coef = NA, se = NA, lower = NA, 
+                upper = NA, p.value = NA, n = sum(cc.ix), coxm = NA, 
+                data = data))
+  }
+  if (any(!cc.ix) & !na.rm) {
+    stop("NA values are present!")
+  }
+  sx <- x[cc.ix]
+  oo <- order(sx, decreasing = FALSE)
+  sx <- sx[oo]
+  stime <- surv.time[cc.ix][oo]
+  sevent <- surv.event[cc.ix][oo]
+  sweights <- weights[cc.ix][oo]
+  sstrat <- strat[cc.ix][oo]
+  data <- list(x = x, surv.time = surv.time, surv.event = surv.event)
+  options(warn = 2)
+  # Removes "strata(sstrat)" when calling coxph due to contrasts bug...
+  rr <- try(survival::coxph(survival::Surv(stime, sevent) ~ sx, weights = sweights, ...))
+  #rr <- try(survival::coxph(survival::Surv(stime, sevent) ~ survival::strata(sstrat) + sx, 
+  #                          weights = sweights, ...))
+  options(warn = 0)
+  if (class(rr) == "try-error") {
+    res <- list(hazard.ratio = NA, coef = NA, se = NA, lower = NA, 
+                upper = NA, p.value = NA, n = sum(cc.ix), coxm = NA, 
+                data = data)
+  }
+  else {
+    hrcoef <- rr$coefficients
+    hrse <- sqrt(drop(rr$var))
+    names(hrcoef) <- names(hrse) <- NULL
+    mystat <- NA
+    switch(method.test, logrank = {
+      mystat <- rr$score
+    }, likelihood.ratio = {
+      mystat <- 2 * (rr$loglik[2] - rr$loglik[1])
+    }, wald = {
+      mystat <- rr$wald.test
+    })
+    mypp <- pchisq(mystat, df = 1, lower.tail = FALSE)
+    res <- list(hazard.ratio = exp(hrcoef), coef = hrcoef, 
+                se = hrse, lower = exp(hrcoef - qnorm(alpha/2, lower.tail = FALSE) * 
+                                         hrse), upper = exp(hrcoef + qnorm(alpha/2, lower.tail = FALSE) * 
+                                                              hrse), p.value = mypp, n = rr$n, coxm = rr, data = data)
+  }
+  return(res)
+}
+
 #Create function to run log-rank test for score signatures
 logrank.test <- function(dat,filename){
 
@@ -533,7 +612,7 @@ logrank.test <- function(dat,filename){
     nobs <- nrow(dat)
 
     cat("Generating ROC curve...\n")
-    roc = survivalROC(Stime = dat$OS.time, status = dat$OS, marker = dat$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
+    roc = survivalROC::survivalROC(Stime = dat$OS.time, status = dat$OS, marker = dat$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
     score_cutoff = cutoff_ROC(dataset = dat, auc_val = as.numeric(roc$AUC), filename = paste(out, "_ROC.pdf", sep=""), plot = T)
     dat$score = ifelse(dat$score > score_cutoff, "high", "low")
     cat("Done\n\n")
@@ -544,7 +623,7 @@ logrank.test <- function(dat,filename){
 
   #Test proportional hazards assumptions
   cat("Testing proportional hazards assumption (signature score)...\n")
-  uni_model = coxph(formula = formula(paste('Surv(OS.time, OS) ~ score')) , data = dat)
+  uni_model = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS) ~ score')) , data = dat)
   test_ph_assumptions(model_object = uni_model, covariates = "NULL", is_multi = F)
   cat("Done\n\n")
 
@@ -553,7 +632,8 @@ logrank.test <- function(dat,filename){
   tryCatch({
 
     #Run log rank test
-    hr_model = hazard.ratio(x = dat$score, surv.time = dat$OS.time, surv.event = dat$OS, alpha = .05, method.test = "logrank", na.rm = T)
+    hr_model = my_hazard.ratio(x = dat$score, surv.time = dat$OS.time, surv.event = dat$OS,
+                               alpha = .05, method.test = "logrank", na.rm = T)
 
     #Extract result fields: p-value, hazard ratio(95% confidence interval) and coefficient
     hazard.ratio = paste(round(hr_model$hazard.ratio,4), " (95% CI, ", round(hr_model$lower,4), " - ", round(hr_model$upper,4), ")", sep="")
@@ -564,7 +644,7 @@ logrank.test <- function(dat,filename){
     low.high.samples = paste(nrow(dat[dat$score=="low",]),nrow(dat[dat$score=="high",]),sep="/")
 
     #Run survfit to get median survival of groups and 95% confidence interval
-    fit = survfit(Surv(OS.time, OS) ~ score, data=dat)
+    fit = survival::survfit(survival::Surv(OS.time, OS) ~ score, data=dat)
     median.survival.low = paste(summary(fit)$table[2,7], " (95% CI, ", summary(fit)$table[2,8]," - ", summary(fit)$table[2,9], ")" ,sep="")
     median.survival.high = paste(summary(fit)$table[1,7], " (95% CI, ", summary(fit)$table[1,8]," - ", summary(fit)$table[1,9], ")" ,sep="")
 
@@ -615,7 +695,7 @@ logrank.plot <- function(dat,filename){
     cutoff = median(x = dat$OS.time, na.rm = TRUE)
     nobs <- nrow(dat)
 
-    roc = survivalROC(Stime = dat$OS.time, status = dat$OS, marker = dat$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
+    roc = survivalROC::survivalROC(Stime = dat$OS.time, status = dat$OS, marker = dat$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
     score_cutoff = cutoff_ROC(dataset = dat, auc_val = as.numeric(roc$AUC), plot = F)
     sig_value = round(score_cutoff,2)
     dat$score = ifelse(dat$score > score_cutoff, "high", "low")
@@ -628,10 +708,15 @@ logrank.plot <- function(dat,filename){
   if(nlevels(as.factor(dat$score))>1){
 
     pdf(filename)
-    pp = ggsurvplot(survfit(Surv(OS.time, OS) ~ score, data=dat), risk.table=TRUE, tables.theme = theme_cleantable(), tables.y.text = F, 
-                    tables.height=0.2, pval=paste("p =",format(res_logrank[,4],scientific=T),sep=" "), font.legend=16, font.x=22, font.y=22, 
-                    font.tickslab=8, pval.size=6, pval.coord=c(0,0.05), title= "", legend = c(0.7, 0.9), legend.title="", censor=T, 
-                    legend.labs = c(paste("score>",sig_value, sep=""), paste("score<=",sig_value, sep="")), data=dat) + xlab("Survival time")
+    # Perhaps remove legend.labs...
+    pp = survminer::ggsurvplot(survival::survfit(survival::Surv(OS.time, OS) ~ score, data=dat),
+                               risk.table=TRUE, tables.theme = survminer::theme_cleantable(), tables.y.text = F,
+                               tables.height=0.2, pval=paste("p =",format(res_logrank[,4],scientific=T),sep=" "),
+                               font.legend=16, font.x=22, font.y=22, font.tickslab=8, pval.size=6, pval.coord=c(0,0.05),
+                               title= "", legend = c(0.7, 0.9), legend.title="", censor=T,
+                               legend.labs = survival::strata(c(paste("score>",sig_value, sep=""),
+                                                                paste("score<=",sig_value, sep=""))), data=dat) +
+      ggplot2::xlab("Survival time")
     print(pp, newpage = FALSE)
     garbage = dev.off()
 
@@ -649,11 +734,11 @@ cat("Done\n\n")
 #Create function to run univariate Cox-regression for each provided clinical parameter
 univCox.test <- function(dat, covariates){
 
-  univ_formulas = sapply(covariates, function(x) as.formula(paste('Surv(OS.time, OS)~', x)))
-  univ_models = lapply( univ_formulas, function(x){coxph(x, data = dat)})
+  univ_formulas = sapply(covariates, function(x) as.formula(paste('survival::Surv(OS.time, OS)~', x)))
+  univ_models = lapply( univ_formulas, function(x){survival::coxph(x, data = dat)})
   univ_results <- lapply(univ_models, function(x){
 
-                       coef = as.data.frame(coef(summary(x)))
+                       coef = as.data.frame(stats::coef(summary(x)))
                        ci = as.data.frame(summary(x)$conf.int)
                        res = merge(coef,ci,by=0)
                        res = res[,c(1:3,6,9:10)]
@@ -703,7 +788,7 @@ my_bootstrap_method <- function(raw_df, boot_df, boot_sample)
 generate_forest_plot <- function(model_object, filename)
 {
   pdf(filename)
-  forest_plot <- suppressWarnings(forest_model(model = model_object, exponentiate = T, factor_separate_line = F, recalculate_width = T, recalculate_height = T))
+  forest_plot <- suppressWarnings(forestmodel::forest_model(model = model_object, exponentiate = T, factor_separate_line = F, recalculate_width = T, recalculate_height = T))
   suppressWarnings(print(forest_plot, newpage = FALSE))
   garbage = dev.off()
 }
@@ -720,14 +805,14 @@ merge_tables <- function(tables_list, covariates)
     table <- tables_list[[i]]
     table <- table[!is.na(table$prognosis),]
     iterator <- iterator + 1
-    tmp_df <- count(table, variable)
+    tmp_df <- dplyr::count(table, variable)
     cox_tables[[iterator]] <- tmp_df
   }
 
-  tmp_table <- rbindlist(l = cox_tables, use.names = T, fill = T, idcol = "Unique ID")
+  tmp_table <- data.table::rbindlist(l = cox_tables, use.names = T, fill = T, idcol = "Unique ID")
   colnames(tmp_table) <- c("Unique ID", "Co-Variables", "Frequency")
 
-  final_table <- count(tmp_table, `Co-Variables`)
+  final_table <- dplyr::count(tmp_table, `Co-Variables`)
   colnames(final_table) <- c("Co-Variables", "Frequency")
 
   tmp_covariates <- c()
@@ -767,15 +852,15 @@ barplot_co_variables <- function(plot_df, filename, covariates)
   plot_df$var = tmp_covariates
 
   pdf(filename)
-  final_plot <- ggplot(data = plot_df, aes(x = reorder(plot_df[[3]], -plot_df[[2]]), y = plot_df[[2]])) +
-    geom_bar(stat = "identity", width = 0.5, color = "black", fill = "black") +
-    xlab("") + ylab("Frequency (%)") +
-    geom_segment(aes(x = .5, y = 25, xend = (nrow(plot_df) + .5), yend = 25), color = "red", linetype = "dashed", size = .5) +
-    theme_bw() +
-    theme(axis.text.x = element_text(angle = 60, hjust = 1), axis.text = element_text(face = "plain", colour = "black"),
-    legend.text = element_text(colour = "black", face = "plain"), axis.ticks = element_line(colour = "black"), axis.line = element_line(colour = "black"),
-    panel.grid.major.x = element_blank(), text = element_text(face = "plain", colour = "black")) +
-    scale_y_continuous(breaks = seq(0, 100, by = 20))
+  final_plot <- ggplot2::ggplot(data = plot_df, ggplot2::aes(x = stats::reorder(plot_df[[3]], -plot_df[[2]]), y = plot_df[[2]])) +
+    ggplot2::geom_bar(stat = "identity", width = 0.5, color = "black", fill = "black") +
+    ggplot2::xlab("") + ggplot2::ylab("Frequency (%)") +
+    ggplot2::geom_segment(ggplot2::aes(x = .5, y = 25, xend = (nrow(plot_df) + .5), yend = 25), color = "red", linetype = "dashed", size = .5) +
+    ggplot2::theme_bw() +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 60, hjust = 1), axis.text = ggplot2::element_text(face = "plain", colour = "black"),
+    legend.text = ggplot2::element_text(colour = "black", face = "plain"), axis.ticks = element_line(colour = "black"), axis.line = element_line(colour = "black"),
+    panel.grid.major.x = element_blank(), text = ggplot2::element_text(face = "plain", colour = "black")) +
+    ggplot2::scale_y_continuous(breaks = seq(0, 100, by = 20))
   print(final_plot, newpage = FALSE)
   garbage = dev.off()
 
@@ -799,7 +884,7 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
       #Remove row if "NA" in at least one column (variable)
       counter <- ncol(dat)
 
-      tmp_table <- nrow(dat[complete.cases(dat),])
+      tmp_table <- nrow(dat[stats::complete.cases(dat),])
       sample_cutoff <- .7 * nrow(dat)
       temporary_table <- dat
       backup_dat <- dat
@@ -835,8 +920,8 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
             temporary_table <- temporary_table[,c(1:(remove_col-1),(remove_col+1):ncol(temporary_table))]
           }
 
-          tmp_table <- nrow(temporary_table[complete.cases(temporary_table),])
-          dat <- temporary_table[complete.cases(temporary_table),]
+          tmp_table <- nrow(temporary_table[stats::complete.cases(temporary_table),])
+          dat <- temporary_table[stats::complete.cases(temporary_table),]
           counter <- counter - 1
         }
       }
@@ -893,10 +978,10 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
         dat <- backup_dat
 
         #Run multivariate Cox
-        res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
+        res = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
 
         #Extract results
-        coef = as.data.frame(coef(summary(res)))
+        coef = as.data.frame(stats::coef(summary(res)))
         ci = as.data.frame(summary(res)$conf.int)
         res = merge(coef,ci,by=0)
         res = res[,c(1:3,6,9:10)]
@@ -929,10 +1014,10 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
           dat <- backup_dat
 
           #Run multivariate Cox
-          res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
+          res = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
 
           #Extract results
-          coef = as.data.frame(coef(summary(res)))
+          coef = as.data.frame(stats::coef(summary(res)))
           ci = as.data.frame(summary(res)$conf.int)
           res = merge(coef,ci,by=0)
           res = res[,c(1:3,6,9:10)]
@@ -953,7 +1038,7 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
           tables_list <- list()
           boot_backup_dat <- dat
 
-          boot_tmp <- bootstrap(data = dat, n = 100, size = .6)
+          boot_tmp <- sjstats::bootstrap(data = dat, n = 100, size = .6)
           boot_loop <- 0
           boot_control <- 0
           cat("\tBootstrap progress:\n\t")
@@ -966,17 +1051,17 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
             if (class(dat) != "data.frame") {
               boot_loop <- boot_loop - 1
               boot_control <- 0
-              boot_tmp <- bootstrap(data = boot_backup_dat, n = (100 - boot_loop), size = .6)
+              boot_tmp <- sjstats::bootstrap(data = boot_backup_dat, n = (100 - boot_loop), size = .6)
             } else {
               boot_control <- boot_control + 1
 
               if (boot_loop == 100) {cat("# 100%\n\n")} else {cat("#")}
 
               #Run multivariate Cox
-              res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates, collapse = " + "))) , data = dat)
+              res = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', paste(covariates, collapse = " + "))) , data = dat)
 
               #Extract results
-              coef = as.data.frame(coef(summary(res)))
+              coef = as.data.frame(stats::coef(summary(res)))
               ci = as.data.frame(summary(res)$conf.int)
               res = merge(coef,ci,by=0)
               res = res[,c(1:3,6,9:10)]
@@ -1013,10 +1098,10 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
           #Run multivariate Cox
           dat <- boot_backup_dat
           covariates <- tmp_covariates
-          res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
+          res = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
 
           #Extract results
-          coef = as.data.frame(coef(summary(res)))
+          coef = as.data.frame(stats::coef(summary(res)))
           ci = as.data.frame(summary(res)$conf.int)
           res = merge(coef,ci,by=0)
           res = res[,c(1:3,6,9:10)]
@@ -1033,10 +1118,10 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
     } else {
 
       #Run multivariate Cox
-      res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
+      res = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
 
       #Extract results
-      coef = as.data.frame(coef(summary(res)))
+      coef = as.data.frame(stats::coef(summary(res)))
       ci = as.data.frame(summary(res)$conf.int)
       res = merge(coef,ci,by=0)
       res = res[,c(1:3,6,9:10)]
@@ -1113,7 +1198,7 @@ multiCox.model <- function(dat, univ_result, covariates){
   tryCatch({
 
     #Run multivariate Cox
-    res = coxph(formula = formula(paste('Surv(OS.time, OS)~', paste(tmp_covariates,collapse=" + "))) , data = dat)
+    res = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', paste(tmp_covariates,collapse=" + "))) , data = dat)
 
     return(res)
 
@@ -1147,11 +1232,11 @@ if(type & clin_file != ""){
     multi_cox = suppressWarnings(multiCox.test(clin, univ_cox, res_logrank, uni_covariates, uni_covariates))
 
     #Test proportional hazards assumptions
-    cat("\tTesting proportional hazards assumptions (multivariate)...\n\t")
+    cat("\tTesting proportional hazards assumptions (multivariate)...\n")
     multi_model = suppressWarnings(multiCox.model(dat = clin, univ_result = multi_cox, covariates = uni_covariates))
     cat("\tDone\n\n")
     selected_covariates <- test_ph_assumptions(model_object = multi_model, covariates = uni_covariates, is_multi=T)
-    cat("\tOverwriting plot from 'signature score'...\n\t")
+    cat("\tOverwriting plot from 'signature score'...\n")
     cat("\tDone\n\n")
 
     if (length(selected_covariates)==0 || (length(selected_covariates)==1 && selected_covariates=="score")) {
@@ -1216,4 +1301,3 @@ if (elapsed_time >= 3600) {
 }
 
 sink()
-
