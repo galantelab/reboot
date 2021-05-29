@@ -241,7 +241,6 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 		#running regression#
 
 		coemale <- regcall(cmatrix, nel, full_data) 
-		cat("coemale")		
 		##saving coeficients##	
 	
 		if (!is.null(coemale)){
@@ -401,7 +400,6 @@ regression <- function(cmatrix){
 
 	#fit1 <- penalized::profL1(survival::Surv(OS.time,OS)~., data=cmatrix, fold=10, maxlambda1=100, plot=F, trace=F)
 	#options(show.error.messages = F)
-	cat("teste")
         try(fit1 <- penalized::profL1(survival::Surv(OS.time,OS)~., data=cmatrix, fold=10, plot=F, trace=F))
 	fit1 <- penalized::profL1(survival::Surv(OS.time,OS)~., data=cmatrix, fold=10, plot=F, trace=F)
 	#fit2 <- penalized::profL2(survival::Surv(OS.time,OS)~., data=cmatrix, fold=fit1$fold, minl = 0.1, maxlambda2 = 10)
