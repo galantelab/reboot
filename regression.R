@@ -263,12 +263,11 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 	aux <- rbind(aux, cbind(feature, coefficient))
 	}	
 	tt <- as.data.frame(aux)
-
-	tt <- filter(tt, abs(as.numeric(as.character(coefficient))) >= bar)
-
 	if (any(!complete.cases(tt$coefficient))){
 		cat("NA coefficient found, increase coverage for a proper analysis", "\n")
 	}
+
+	tt <- dplyr::filter(tt, abs(as.numeric(as.character(coefficient))) >= bar)
 
 	
 	if (any(!(tt$coefficient == 0)) & dim(tt)[1]!=0){
@@ -423,12 +422,12 @@ lolli <- function(out,tt){
 	tt$coefficient <- as.numeric(as.character(tt$coefficient))
 	tt <- dplyr::filter(tt,coefficient!=0)
 	tt$feature = factor(tt$feature, levels=tt[order(tt$coefficient),"feature"])
-	filter <- as.character(top_n(tt, 10, abs(coefficient))$feature)
+	filter <- as.character(dplyr::top_n(tt, 10, abs(coefficient))$feature)
 	tt <- dplyr::filter(tt, feature %in% filter)
-	tt <- mutate(tt, name = fct_reorder(feature, coefficient))
+	tt <- dplyr::mutate(tt, name = forcats::fct_reorder(feature, coefficient))
 
 	pdf(fname)					
-		ll <- ggplot2d::plot(tt, ggplot2::aes(x=reorder(feature, coefficient), y=coefficient)) +
+		ll <- ggplot2::ggplot(tt, ggplot2::aes(x=reorder(feature, coefficient), y=coefficient)) +
 		ggplot2::geom_segment(ggplot2::aes(x=feature, xend=feature, y=0, yend=coefficient), size=2, color="grey") +
 		ggplot2::geom_point(size=4, colour="#1c9099") +
 		#ggplot2::theme_light(base_family = "Helvetica") +
@@ -458,11 +457,11 @@ histogram <- function(out,tt){
 	tt$coefficient <- as.numeric(as.character(tt$coefficient))
 	tt <- dplyr::filter(tt, coefficient != 0)
 	pdf(fname)
-	pl<-ggplot2::plot(tt, ggplot2::aes(x = coefficient))+
+	pl<-ggplot2::ggplot(tt, ggplot2::aes(x = coefficient))+
 		ggplot2::geom_histogram(binwidth = 0.005, alpha=1, position="identity") +
-		scale_y_continuous(expand = c(0,0)) +
-		xlab("coefficients")+
-		ylab("") +
+		ggplot2::scale_y_continuous(expand = c(0,0)) +
+		ggplot2::xlab("coefficients")+
+		ggplot2::ylab("") +
 		mytheme
 		print (pl)
 	dev.off()
