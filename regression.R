@@ -289,7 +289,7 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 varfun <- function(cmatrix, var, file, fierce, out) {
 	if (any(apply(cmatrix, 2, function(x) any(is.na(x))))){
 		cat("Cheking NAs\n")
-		impu <- mice(cmatrix, print=F)
+		impu <- mice::mice(cmatrix, print=F)
 		cmatrix <-  mice::complete(impu)	
 	}
 	colnames(cmatrix)[1:2] <- c("OS","OS.time")	
