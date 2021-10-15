@@ -140,6 +140,7 @@ numberfilter1 <- function(dataf, g, outname, outplot) {
 		coefficient <- unname(coemale)
 		if (any(!(coefficient==0))){
 			coemale <- cbind(feature,coefficient)
+			coemale <- gsub("__","-",coemale)
 			#coemale <- gsub("@#!", "-", coemale)   #back to initial names
 			write.table(coemale, outname, sep="\t", row.names=F, quote=F)
 			#histogram(outplot,coemale)
@@ -172,6 +173,7 @@ numberfilter2 <- function(dataf, g, outname, outplot) {
 		    coefficient <- unname(coemale)
 		    if (any(!(coefficient==0))){
                         coemale <- cbind(feature,coefficient)
+			coemale <- gsub("__","-",coemale)
 			#coemale <- gsub("@#!", "-", coemale)   #back to initial names
                         write.table(coemale, outname ,sep="\t", row.names=F, quote=F)
 			histogram(outplot,coemale)
