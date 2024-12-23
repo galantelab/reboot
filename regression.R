@@ -201,7 +201,7 @@ corfun <- function(cmatrix, pf){
 			names <- c(names, paste(colnames(cmatrix)[t],colnames(cmatrix)[u],sep="_"))
 		}
 	}
-	if (((sum((indexes > 0.80) & (pval < 0.05))) / length(pf)) >= pf){ 
+	if (((sum((indexes > 0.80) & (pval < 0.05))) / length(pval)) >= pf){ 
 		switch=1
 		cat("This iteration was avoided due to correlation among columns. Sperman correlation values and p-values are respectively:", "\n")
 		cat(paste(names,indexes,pval,sep=":"),"\n","\n")
@@ -232,7 +232,7 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 		if(ncol(full_data) == 3) {
 			cmatrix = full_data
 		} else {
-			cmatrix <- subsample(full_data, nel)
+			cmatrix <- subsample(full_data, nel, i)
 			#checking correlation#
 			if (nel > 1){   #1 element avoided
 				if (corfun(cmatrix, pf) == 1){
@@ -256,13 +256,14 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 	}
   
 	#Processing result
-	aux=c(NULL,NULL)
+	aux=c(NULL,NULL, NULL)
 	
 	##calculating mean##
 
 	for (feature in hash::keys(yield)){
 	coefficient <- suppressWarnings(eval(parse(text=paste("mean(yield$", feature, ")", sep=""))))
-	aux <- rbind(aux, cbind(feature, coefficient))
+        sd <- suppressWarnings(eval(parse(text=paste("sd(yield$", feature, ")", sep=""))))
+	aux <- rbind(aux, cbind(feature, coefficient, sd))
 	}	
 	tt <- as.data.frame(aux)
 	if (any(!complete.cases(tt$coefficient))){
@@ -369,8 +370,8 @@ varfun <- function(cmatrix, var, file, fierce, out) {
 
 ######Subsampling procedure#########
 
-subsample <- function(full_data, nel){
-
+subsample <- function(full_data, nel, seed=i){
+	set.seed(seed)
 	shuffle <- sample(colnames(full_data[,3:ncol(full_data)]), size=nel, replace=F)
 	cat("Picked columns: ",shuffle,"\n","\n")
 	cmatrix <- cbind(full_data[,1:2],subset(full_data,select=shuffle))
@@ -512,5 +513,3 @@ if (elapsed_time >= 3600) {
 }
 
 sink()
-
-                  
