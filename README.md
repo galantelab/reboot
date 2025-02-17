@@ -14,13 +14,14 @@
 4. **Run** Reboot modules!
 
 ### Quick usage (CMDs):
-- XXX
-- XXX
-- XXX
+- `git clone https://github.com/galantelab/reboot.git` (direct) | `docker pull galantelab/reboot` ([Docker](https://docs.docker.com/get-started/get-docker/) must be installed)
+- `sudo sh reboot/install.sh` (if 'direct' installation was chosen, dependencies must be manually installed)
+- `reboot.R complete <options>` (direct) | `docker run --rm -v $(pwd):$(pwd) galantelab/reboot reboot.R complete <options>`
+**PS:** for a complete step by step walkthrough, please refer to our detailed guide at our [documentation](https://galantelab.github.io/reboot/).
 
 ### Citation:
 If you use either the GUI or the CLI of Reboot, please cite us: **Reboot: a straightforward approach to identify genes and splicing isoforms associated with cancer patient prognosis.** Felipe R. C. dos Santos, Gabriela D. A. Guardia, Filipe F. dos Santos, Daniel T. Ohara, and Pedro A. F. Galante. *NAR Cancer*. DOI: [10.1093/narcan/zcab024](https://doi.org/10.1093/narcan/zcab024). PMID: [34316711](https://pubmed.ncbi.nlm.nih.gov/34316711/).
 
 ## CONTACT
-[^1]: You can contact any of the authors by email.
 For more information, you are welcome to visit us at our [Lab's website](https://www.bioinfo.mochsl.org.br/)!
+[^1]: You can contact any of the authors by email.
