@@ -1,4 +1,4 @@
-# Welcome to Reboot (regression and survival tool with a multivariate bootstrap approach)
+# WELCOME TO REBOOT (regression and survival tool with a multivariate bootstrap approach)
 ## A flexible and easy-to-use algorithm to identify and validate genes / transcripts expression signatures and associate it with patient survival. Reboot innovates by using a multivariate strategy with penalized Cox regression (Lasso method) combined with a bootstrap approach. Several statistical tests and images for signature score are generated.
 ### documentation [^1]: https://galantelab.github.io/reboot
 ### web tool: https://www.bioinfo.mochsl.org.br/reboot
@@ -17,6 +17,7 @@
 - `git clone https://github.com/galantelab/reboot.git` (direct) | `docker pull galantelab/reboot` ([Docker](https://docs.docker.com/get-started/get-docker/) must be installed)
 - `sudo sh reboot/install.sh` (if 'direct' installation was chosen, dependencies must be manually installed)
 - `reboot.R complete <options>` (direct) | `docker run --rm -v $(pwd):$(pwd) galantelab/reboot reboot.R complete <options>`
+
 **PS:** for a complete step by step walkthrough, please refer to our detailed guide at our [documentation](https://galantelab.github.io/reboot/).
 
 ### Citation:
