@@ -232,6 +232,9 @@ tmp$score <- apply(tmp, 1, function(x) sum(x))
 tmp = tmp[,ncol(tmp),drop=F]
 data = cbind(data[,1:2],tmp)
 
+#Outputs data table used to generate the KM plot
+write.table(data, paste(out,"_ScoreCont_Table.tsv",sep=""), row.names=F, col.names=T, quote=F, sep="\t")
+
 #Edited "ggcoxzph" function to add the global Schoenfeld Test p-value
 reboot_ggcoxzph <- function(fit, resid = T, se = T, df = 4, nsmo = 40, var, point.col = "red", point.size = 1,
                             point.shape = 19, point.alpha = 1, caption = NULL, ggtheme = survminer::theme_survminer(), ...){
@@ -1247,6 +1250,9 @@ if(type & clin_file != ""){
 
       multi_cox = suppressWarnings(multiCox.test(clin, univ_cox, res_logrank, selected_covariates, uni_covariates))
       multi_model = suppressWarnings(multiCox.model(dat = clin, univ_result = multi_cox, covariates = selected_covariates))
+
+      #Outputs data table used to generate the KM plot
+      write.table(clin, paste(out,"_ScoreCat_Table.tsv",sep=""), row.names=F, col.names=T, quote=F, sep="\t")
 
       #Write result to file
       write.table(multi_cox, paste(out,"_multiCox.txt",sep=""), row.names=F, col.names=T, quote=F, sep="\t")
