@@ -210,9 +210,9 @@ In summary, 3 subcommands are available:
 
 ### Output
 
-   As result, Reboot generates one log file, a .tsv file containing regression coefficients and 2 plots. The .tsv file is in the following format:
+   As result, Reboot generates a log file, a .txt file containing regression coefficients for the signature and 2 plots in .pdf. The .txt file is in the following format:
 	
-   | Feature name | coefficient | 
+   | feature | coefficient | 
    | --- | --- |
    | PARPBP | 0.17014 | 
    | CXCR6 | 0.22173 |
@@ -232,7 +232,11 @@ In summary, 3 subcommands are available:
 
 ## Applying signatures of genes or transcripts in survival
 
-   Reboot produces and applies a score for all samples based on the signature previously obtained from the **regression** module. Besides, Reboot also offers the multivariate option, where further clinical variables (e.g., therapy, age and gender) can be loaded in a multivariate survival model. Multiple univariate analyses are executed and only variables with a p-value <= 0.2 and that passed the Schoenfeld’s test are selected for the final multivariate model. Statistical tests are performed in order to evaluate the relevance of the signature score along with co-variables as prognostic factors of a given event (overall / progression-free / recurrence-free survival).
+   Reboot produces and applies a score for all samples based on the signature previously obtained from the **regression** module according to the following formula:
+
+   $\text{Risk Score} = \sum_{i=1}^{n} C_i \cdot E_i$
+   
+   Besides, Reboot also offers the multivariate option, where further clinical variables (e.g., therapy, age and gender) can be loaded in a multivariate survival model. Multiple univariate analyses are executed and only variables with a p-value <= 0.2 and that passed the Schoenfeld’s test are selected for the final multivariate model. Statistical tests are performed in order to evaluate the relevance of the signature score along with co-variables as prognostic factors of a given event (overall / progression-free / recurrence-free survival).
 
    By default, both univariate and multivariate survival analyses use the median score value as a cutoff to stratify patients in high and low score signatures. Alternatively, this cutoff value may be based on a Receiver Operator Characteristic (ROC) curve using Nearest Neighbour Estimate (NNE) method and the Youden statistics, where J = [sensitivity + (specificity -1)]. If more than one J coefficient is available, then the first one is chosen.
 
@@ -304,10 +308,10 @@ In summary, 3 subcommands are available:
 
    1. Univariate mode
        
-      This is the simplest mode and requires a single input file. The expected .tsv file contains a set of features (genes/transcripts) and their corresponding coefficients provided as output by the **regression** module:
+      This is the simplest mode and requires a single input file. The expected .txt file contains a set of features (genes/transcripts) and their corresponding coefficients provided as output by the **regression** module:
 
 
-      | Feature name | coefficient |
+      | feature | coefficient |
       | --- | --- |
       | PARPBP | 0.17014 |
       | CXCR6 | 0.22173 |
@@ -333,11 +337,15 @@ In summary, 3 subcommands are available:
 
    1. Univariate mode
 
-      If the analysis is performed in univariate mode, Reboot returns a log and a **lograng.txt** file, containing the survival results for the signature score:
+      If the analysis is performed in univariate mode, Reboot returns 4 files: (i) log; (ii) univariate summary results; (iii) table with the scores calculated for all patients; (iv) and an updated signature file for interpretation.
+
+      The **uniCox.txt** file contains the survival results for the signature score:
 
       <table width="600" cellspacing="0" cellpadding="0">
       <tr>
       <td width="10%"><b>feature</b></td>
+	  <td width="10%"><b>control</b></td>
+	  <td width="10%"><b>condition</b></td>
       <td width="10%"><b>coefficient</b></td>
       <td width="20%"><b>hazard.ratio</b></td>
       <td width="10%"><b>log.rank.pvalue</b></td>
@@ -348,6 +356,8 @@ In summary, 3 subcommands are available:
       </tr>
       <tr>
       <td>score</td>
+	  <td>high</td>
+	  <td>low</td>
       <td>-1.0091</td>
       <td>0.3645 (95% CI, 0.2456-0.541)</td>
       <td>0.003</td>
@@ -359,19 +369,88 @@ In summary, 3 subcommands are available:
       </table>
 
       <br>
-       
+      
+	  The **scoreCont_table.tsv** file contains the scores calculated for each patient:
+
+      <table width="600" cellspacing="0" cellpadding="0">
+      <tr>
+      <td width="10%"><b></b></td>
+	  <td width="10%"><b>OS</b></td>
+	  <td width="10%"><b>OS.time</b></td>
+      <td width="15%"><b>score</b></td>
+      </tr>
+      <tr>
+      <td>patient_1</td>
+	  <td>0</td>
+	  <td>518</td>
+      <td>-0.0015</td>
+      </tr>
+	  <tr>
+      <td>patient_2</td>
+	  <td>0</td>
+	  <td>2022</td>
+      <td>-0.1929</td>
+      </tr>
+	  <tr>
+      <td>patient_3</td>
+	  <td>1</td>
+	  <td>395</td>
+      <td>0.1239</td>
+      </tr>
+	  <tr>
+      <td>...</td>
+	  <td>...</td>
+	  <td>...</td>
+      <td>...</td>
+      </tr>
+      </table>
+
+      <br>
+
+	  The **signature_updated.tsv** file contains the same features and coefficients from the **regression** module, with an additional column translating the values into prognosis:
+
+      <table width="600" cellspacing="0" cellpadding="0">
+      <tr>
+      <td width="10%"><b>feature</b></td>
+	  <td width="15%"><b>coefficient</b></td>
+      <td width="15%"><b>prognostic</b></td>
+      </tr>
+      <tr>
+      <td>PARPBP</td>
+	  <td>0.17014</td>
+      <td>worse</td>
+      </tr>
+	  <tr>
+      <td>CXCR6</td>
+	  <td>0.22173</td>
+      <td>worse</td>
+      </tr>
+	  <tr>
+      <td>NTRK1</td>
+	  <td>-0.1517</td>
+      <td>better</td>
+      </tr>
+	  <tr>
+      <td>...</td>
+	  <td>...</td>
+      <td>...</td>
+      </tr>
+      </table>
+
+      <br>
+
       Plots returned in this mode include: a proportional hazard assumptions plot (result of Schoenfeld test) and a Kaplan Meier plot (see bellow).
 
       ![](Fig3_doc.png)
 
    2. Multivariate mode
  
-      If the analysis is performed in multivariate mode, reboot returns all files created in the univariate mode in addition to a **multicox.txt** file, which contains the survival results of the signature score along with all other clinical variables:
+      If the analysis is performed in multivariate mode, Reboot returns all files created in the univariate mode in addition to a **multicox.txt** file containing the survival results of the signature score along with all other clinical variables:
 
       <table width="600" cellspacing="0" cellpadding="0">
       <tr>
       <td width="10%"><b>variable</b></td>
-      <td width="10%"><b>reference</b></td>
+      <td width="10%"><b>condition</b></td>
       <td width="20%"><b>univariate.hazard.ratio</b></td>
       <td width="10%"><b>univariate.Cox.pvalue</b></td>
       <td width="10%"><b>univariate.prognosis</b></td>
@@ -423,7 +502,54 @@ In summary, 3 subcommands are available:
 
       <br>
 
-      Plots returned in this mode include a forest plot for all clinical variables, a Kaplan Meier plot, and a proportional hazard assumptions plot (Schoenfeld tests). If the option --ROC is selected, only the most relevant variables (p-value <= 0.05 in at least 25% of iterations) are plotted. A ROC curve and a histogram of co-variable frequencies are also provided (see bellow).
+	  The signature score groups - after the cutoff is applied - and all other clinical variables used in the final multivariate model are displayed in the **scoreCat_table.tsv** file for further inspection:
+
+	  <table width="600" cellspacing="0" cellpadding="0">
+      <tr>
+      <td width="10%"><b></b></td>
+      <td width="10%"><b>OS</b></td>
+      <td width="10%"><b>OS.time</b></td>
+      <td width="10%"><b>score</b></td>
+      <td width="10%"><b>age</b></td>
+	  <td width="10%"><b>gender</b></td>
+      </tr>
+      <tr>
+      <td>patient_1</td>
+      <td>0</td>
+      <td>518</td>
+      <td>low</td>
+      <td>18-55 years</td>
+      <td>male</td>
+      </tr>
+      <tr>
+      <td>patient_2</td>
+      <td>0</td>
+      <td>2022</td>
+      <td>low</td>
+      <td>18-55 years</td>
+      <td>female</td>
+      </tr>
+      <tr>
+      <td>patient_3</td>
+      <td>1</td>
+      <td>395</td>
+      <td>high</td>
+      <td>56+ years</td>
+      <td>male</td>
+      </tr>
+      <tr>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      </tr>
+      </table>
+
+      <br>
+
+      Plots returned in this mode include all figures created in the univariate mode in addition to a forest plot for all clinical variables evaluated. If the option --ROC is selected, only the most relevant variables (p-value <= 0.05 in at least 25% of iterations) are plotted. A ROC curve and a histogram of co-variable frequencies are also provided (see bellow).
 
       ![](Fig4_doc.png)
 
@@ -523,7 +649,7 @@ In summary, 3 subcommands are available:
    This command returns 2 .tsv files, mentioned above, called expression.tsv and clinical.tsv. A MANIFEST.txt file and a set of expression and clinical data are also created, as intermediates of TCGA download process.
    The composition of the expression dataset comprises clinical variables: OS (survival status) and OS.time (follow up time) and 50 random picked gene expression (FPKM).
 
-   Finally, reboot can be run in the complete mode:
+   Finally, Reboot can be run in the complete mode:
 
    ```bash
    # for docker container
