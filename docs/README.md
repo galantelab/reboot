@@ -136,8 +136,7 @@ In summary, 3 subcommands are available:
 
 ### Usage
 
-   For gene or transcript signature obtention, run the following: 
-   
+   For gene or transcript signature obtention, run the following:
 
    ```bash 
    # for docker container
@@ -232,9 +231,9 @@ In summary, 3 subcommands are available:
 
 ## Applying signatures of genes or transcripts in survival
 
-   Reboot produces and applies a score for all samples based on the signature previously obtained from the **regression** module according to the following formula:
+   Reboot produces and applies in the **survival** module a score for all samples based on the signature previously obtained from the **regression** module according to the following formula:
 
-   $\text{Risk Score} = \sum_{i=1}^{n} C_i \cdot E_i$
+   Risk Score = sum_{i=1}^n C_i * E_i
    
    Besides, Reboot also offers the multivariate option, where further clinical variables (e.g., therapy, age and gender) can be loaded in a multivariate survival model. Multiple univariate analyses are executed and only variables with a p-value <= 0.2 and that passed the Schoenfeld’s test are selected for the final multivariate model. Statistical tests are performed in order to evaluate the relevance of the signature score along with co-variables as prognostic factors of a given event (overall / progression-free / recurrence-free survival).
 
@@ -308,7 +307,7 @@ In summary, 3 subcommands are available:
 
    1. Univariate mode
        
-      This is the simplest mode and requires a single input file. The expected .txt file contains a set of features (genes/transcripts) and their corresponding coefficients provided as output by the **regression** module:
+      This is the simplest mode and requires a single input file. The expected .txt file contains a set of features (genes/transcripts) and their corresponding coefficients provided as output by the *regression* module:
 
 
       | feature | coefficient |
@@ -407,7 +406,7 @@ In summary, 3 subcommands are available:
 
       <br>
 
-	  The **signature_updated.tsv** file contains the same features and coefficients from the **regression** module, with an additional column translating the values into prognosis:
+	  The **signature_updated.tsv** file contains the same features and coefficients from the *regression* module, with an additional column translating the values into prognosis:
 
       <table width="600" cellspacing="0" cellpadding="0">
       <tr>
@@ -439,7 +438,7 @@ In summary, 3 subcommands are available:
 
       <br>
 
-      Plots returned in this mode include: a proportional hazard assumptions plot (result of Schoenfeld test) and a Kaplan Meier plot (see bellow).
+      Plots in .pdf returned in this mode include: a proportional hazard assumptions plot (result of Schoenfeld test) and a Kaplan Meier plot (see bellow).
 
       ![](Fig3_doc.png)
 
@@ -549,7 +548,7 @@ In summary, 3 subcommands are available:
 
       <br>
 
-      Plots returned in this mode include all figures created in the univariate mode in addition to a forest plot for all clinical variables evaluated. If the option --ROC is selected, only the most relevant variables (p-value <= 0.05 in at least 25% of iterations) are plotted. A ROC curve and a histogram of co-variable frequencies are also provided (see bellow).
+      Plots in .pdf returned in this mode include all figures created in the univariate mode in addition to a forest plot for all clinical variables evaluated. If the option --ROC is selected, only the most relevant variables (p-value <= 0.05 in at least 25% of iterations) are plotted. A ROC curve and a histogram of co-variable frequencies are also provided (see bellow).
 
       ![](Fig4_doc.png)
 
