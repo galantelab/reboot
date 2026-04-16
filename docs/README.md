@@ -305,7 +305,6 @@ In summary, 3 subcommands are available:
       | PARPBP | 0.17014 |
       | CXCR6 | 0.22173 |
       | ... | ... |
-      <br>
 
 
    3. Multivariate mode
