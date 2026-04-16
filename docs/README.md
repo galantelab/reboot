@@ -136,7 +136,7 @@ In summary, 3 subcommands are available:
 
 ### Usage
 
-    For gene or transcript signature obtention, run the following: 
+   For gene or transcript signature obtention, run the following: 
    
 
    ```bash 
