@@ -111,6 +111,13 @@ if(type & clin_file!="" & !file.exists(clin_file)){
 signature = read.table(sig_file, header=T, check.names=F, stringsAsFactors=F)
 data = read.table(exp_file, header=T, check.names=F, stringsAsFactors=F)
 
+#Add extra column to associate the coefficient signal to its prognostic value and save it for user
+signature$prognostic = ifelse(signature$coefficient > 0, "worse", "better")
+write.table(signature, paste(out,"_signature_updated.tsv",sep=""), row.names=F, col.names=T, quote=F, sep="\t")
+
+#Get only the first 2 relevant columns (feature and coefficient) for downstream analyses
+signature = signature[,c(1, 2)]
+
 if(type & clin_file!=""){
   clin = read.delim(clin_file, header=T, row.names=1)
 }
@@ -233,7 +240,7 @@ tmp = tmp[,ncol(tmp),drop=F]
 data = cbind(data[,1:2],tmp)
 
 #Outputs data table used to generate the KM plot
-write.table(data, paste(out,"_ScoreCont_Table.tsv",sep=""), row.names=T, col.names=T, quote=F, sep="\t")
+write.table(data, paste(out,"_scoreCont_table.tsv",sep=""), row.names=T, col.names=T, quote=F, sep="\t")
 
 #Edited "ggcoxzph" function to add the global Schoenfeld Test p-value
 reboot_ggcoxzph <- function(fit, resid = T, se = T, df = 4, nsmo = 40, var, point.col = "red", point.size = 1,
@@ -398,7 +405,7 @@ test_ph_assumptions <- function(model_object, covariates, is_multi)
 
   pdf(file = paste(out, "_ph_assumptions_plot.pdf", sep=""))
   for (plot in phplot) {
-    print(plot, newpage = T)
+    print(plot, newpage = TRUE)
   }
   garbage = dev.off()
 
@@ -504,6 +511,9 @@ if(type & clin_file != ""){
     clin$score = ifelse(clin$score > median(clin$score), "high", "low")
     }
 
+  #Explicitly set the "high" group as REF to control for HR (CI 95%) values
+  clin$score = factor(clin$score, levels = c("high", "low"))
+  
   #Check if all columns have categorical variables with only 2 factors
   for(i in 3:ncol(clin)){
 
@@ -618,12 +628,19 @@ logrank.test <- function(dat,filename){
     roc = survivalROC::survivalROC(Stime = dat$OS.time, status = dat$OS, marker = dat$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
     score_cutoff = cutoff_ROC(dataset = dat, auc_val = as.numeric(roc$AUC), filename = paste(out, "_ROC.pdf", sep=""), plot = T)
     dat$score = ifelse(dat$score > score_cutoff, "high", "low")
+    cat(paste("ROC cutoff: ", round(score_cutoff,4), ".\n",sep=""))
     cat("Done\n\n")
 
   } else {
+    cat("Using the median value...\n")
     dat$score = ifelse(dat$score > median(dat$score), "high", "low")
+    cat(paste("Median cutoff: ", round(median(dat$score),4), ".\n",sep=""))
+    cat("Done\n\n")
   }
 
+  #Explicitly set the "high" group as REF to control for HR (CI 95%) values
+  dat$score = factor(dat$score, levels = c("high", "low"))
+  
   #Test proportional hazards assumptions
   cat("Testing proportional hazards assumption (signature score)...\n")
   uni_model = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS) ~ score')) , data = dat)
@@ -657,12 +674,13 @@ logrank.test <- function(dat,filename){
     } else if(!is.na(log.rank.pvalue) & log.rank.pvalue<0.05 & coef>0){
       prognosis = "worse"
     } else{
-      prognosis = "----"
+      prognosis = "---"
     }
 
     #Create dataframe with result to be used in multivariate analysis
-    result = data.frame(feature="score", coefficient=round(coef,4), hazard.ratio=hazard.ratio, log.rank.pvalue=round(log.rank.pvalue,4),
-                        low.high.samples=low.high.samples, median.survival.low=median.survival.low, median.survival.high=median.survival.high, prognosis=prognosis)
+    result = data.frame(feature="score", control="high", condition="low", coefficient=round(coef,4), hazard.ratio=hazard.ratio,
+                        log.rank.pvalue=round(log.rank.pvalue,4), low.high.samples=low.high.samples,
+                        median.survival.low=median.survival.low, median.survival.high=median.survival.high, prognosis=prognosis)
 
     #Write log-rank result to file
     write.table(result, filename, row.names=F, col.names=T, quote=F, sep="\t")
@@ -674,7 +692,7 @@ logrank.test <- function(dat,filename){
 }
 
 #Run log-rank test for score signatures
-res_logrank = logrank.test(data, paste(out, "_logrank.txt",sep=""))
+res_logrank = logrank.test(data, paste(out, "_uniCox.txt",sep=""))
 
 #Check if logrank model is not null
 if(is.null(res_logrank)){
@@ -700,27 +718,40 @@ logrank.plot <- function(dat,filename){
 
     roc = survivalROC::survivalROC(Stime = dat$OS.time, status = dat$OS, marker = dat$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
     score_cutoff = cutoff_ROC(dataset = dat, auc_val = as.numeric(roc$AUC), plot = F)
-    sig_value = round(score_cutoff,2)
+    sig_value = round(score_cutoff,4)
     dat$score = ifelse(dat$score > score_cutoff, "high", "low")
   } else {
-    sig_value = round(median(dat$score),2)
+    sig_value = round(median(dat$score),4)
     dat$score = ifelse(dat$score > median(dat$score), "high", "low")
   }
 
+  #Explicitly set the "high" group as REF to control for HR (CI 95%) values
+  dat$score = factor(dat$score, levels = c("high", "low"))
+  
   #If there is at least two groups to be compared, create Kaplan-meier curve
   if(nlevels(as.factor(dat$score))>1){
 
-    pdf(filename)
-    # Perhaps remove legend.labs...
     pp = survminer::ggsurvplot(survival::survfit(survival::Surv(OS.time, OS) ~ score, data=dat),
-                               risk.table=TRUE, tables.theme = survminer::theme_cleantable(), tables.y.text = F,
-                               tables.height=0.2, pval=paste("p =",format(res_logrank[,4],scientific=T),sep=" "),
-                               font.legend=16, font.x=22, font.y=22, font.tickslab=8, pval.size=6, pval.coord=c(0,0.05),
-                               title= "", legend = c(0.7, 0.9), legend.title="", censor=T,
-                               legend.labs = survival::strata(c(paste("score>",sig_value, sep=""),
-                                                                paste("score<=",sig_value, sep=""))), data=dat) +
-      ggplot2::xlab("Survival time")
-    print(pp, newpage = FALSE)
+                               risk.table="abs_pct", surv.scale = "percent", palette = c("#D73027", "#1A9850"),
+                               ylab = "Survival probability", ylim = c(0, 1), break.y.by = .25,
+                               #break.x.by = round((max(dat$OS.time, na.rm = TRUE) / 5), 0),
+                               risk.table.title = "Number at risk (%)", tables.y.text = F, xlab = "Time",
+                               tables.theme = survminer::theme_cleantable(), ggtheme = survminer::theme_survminer(),
+                               conf.int = F, linetype = 1, censor.shape = 73, censor=T, censor.size = 4,
+                               tables.height=0.2, pval=paste("p =",format(res_logrank[,6],scientific=T),sep=" "),
+                               font.legend=14, font.x=18, font.y=18, font.tickslab=14, pval.size=5, pval.coord=c(0,0.05),
+                               title="", legend = c(0.8, 0.9), legend.title="", size = 1,
+                               fontsize = 3, axes.offset = T, surv.median.line = "none",
+                               legend.labs = survival::strata(c(paste("score >",sig_value, sep=" "),
+                                                                paste("score <=",sig_value, sep=" "))),
+                               data=dat)
+    
+    #Modify risk table title
+    pp$table <- pp$table + ggplot2::theme(plot.title = ggplot2::element_text(size = 14, hjust = 0),
+                                          plot.margin = ggplot2::margin(5, 5, 5, 30))
+    
+    pdf(filename, onefile = FALSE)
+    print(pp)
     garbage = dev.off()
 
   } else{
@@ -748,7 +779,7 @@ univCox.test <- function(dat, covariates){
                        colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
                        res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
                        res$Cox.pvalue = round(res$Cox.pvalue,4)
-                       res$prognosis = "----"
+                       res$prognosis = "---"
                        if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.2 & res$coefficient<0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.2 & !is.na(res$coefficient) & res$coefficient<0,]$prognosis <- "better"}
                        if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.2 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.2 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
                        res = res[,c(1,7,4,8)]
@@ -790,8 +821,28 @@ my_bootstrap_method <- function(raw_df, boot_df, boot_sample)
 #Make forest plot for multivariate analysis
 generate_forest_plot <- function(model_object, filename)
 {
+  #Custom panels
+  panels <- list(list(width = 0.01),
+                 list(width = 0.1, display = ~variable, fontface = "plain", heading = "Variable"),
+                 list(width = 0.1, display = ~level, fontface = "italic", heading = "Group"),
+                 list(width = 0.05, display = ~n, hjust = 1, fontface = "plain", heading = "N"),
+                 list(width = 0.01, item = "vline", hjust = 0.5),
+                 list(width = 0.7, item = "forest", hjust = 0.5, heading = "Hazard Ratio", linetype = "dashed", line_x = 0),
+                 list(width = 0.01, item = "vline", hjust = 0.5),
+                 list(width = 0.05, fontface = "plain", heading = "HR (95% CI)",
+                      display = ~ifelse(reference, "Reference",
+                                        sprintf("%0.2f (%0.2f - %0.2f)",
+                                                trans(estimate), trans(conf.low), trans(conf.high))), display_na = NA),
+                 list(width = 0.05, fontface = "plain",
+                      display = ~ifelse(reference, "",
+                                        ifelse(p.value < 0.0001, "<0.0001", round(x = p.value, digits = 4))),
+                      display_na = NA, hjust = 1, heading = "p-value"),
+                 list(width = 0.01))
+  
   pdf(filename)
-  forest_plot <- suppressWarnings(forestmodel::forest_model(model = model_object, exponentiate = T, factor_separate_line = F, recalculate_width = T, recalculate_height = T))
+  forest_plot <- suppressWarnings(forestmodel::forest_model(model = model_object, exponentiate = T, panels = panels,
+                                                            breaks = log(c(0.2, 0.4, 0.6, 0.8, 1)), limits = log(c(0.19, 1.1)),
+                                                            factor_separate_line = F, recalculate_width = T, recalculate_height = T))
   suppressWarnings(print(forest_plot, newpage = FALSE))
   garbage = dev.off()
 }
@@ -1145,8 +1196,8 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
     final[grepl("score",final$variable),]$Cox.pvalue.x = logrank_result$log.rank.pvalue
     final[grepl("score",final$variable),]$prognosis.x = as.character(logrank_result$prognosis)
 
-    #Replace all NAs with "----"
-    final[is.na(final)] <- "----"
+    #Replace all NAs with "---"
+    final[is.na(final)] <- "---"
 
     #Rename columns
     colnames(final) = c("variable", "univariate.hazard.ratio", "univariate.Cox.pvalue", "univariate.prognosis",
@@ -1173,7 +1224,7 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
     }
 
     final$variable <- tmp_covariates2
-    final$reference <- tmp_covariates3
+    final$condition <- tmp_covariates3
 
     final <- final[,c(1,8,2,3,4,5,6,7)]
 
@@ -1187,7 +1238,7 @@ multiCox.model <- function(dat, univ_result, covariates){
   tmp_covariates <- c()
   #Select only relevant clinical parameters for multivariable Cox regression (p<0.2)
   covariates = c("score",covariates)
-  new_covariates = c(univ_result[(univ_result$multivariate.Cox.pvalue != "----"),1])
+  new_covariates = c(univ_result[(univ_result$multivariate.Cox.pvalue != "---"),1])
 
   #Match string to get from 'new covariates' the original 'covariates' name
   for(var in new_covariates)
@@ -1252,7 +1303,7 @@ if(type & clin_file != ""){
       multi_model = suppressWarnings(multiCox.model(dat = clin, univ_result = multi_cox, covariates = selected_covariates))
 
       #Outputs data table used to generate the KM plot
-      write.table(clin, paste(out,"_ScoreCat_Table.tsv",sep=""), row.names=T, col.names=T, quote=F, sep="\t")
+      write.table(clin, paste(out,"_scoreCat_table.tsv",sep=""), row.names=T, col.names=T, quote=F, sep="\t")
 
       #Write result to file
       write.table(multi_cox, paste(out,"_multiCox.txt",sep=""), row.names=F, col.names=T, quote=F, sep="\t")
