@@ -224,7 +224,9 @@ In summary, 3 subcommands are available:
 
    Reboot produces and applies in the **survival** module a score for all samples based on the signature previously obtained from the **regression** module according to the following formula:
 
-   ![formula](https://latex.codecogs.com/png.image?\text{Risk\ Score}=\sum_{i=1}^{n}C_i\cdot E_i)
+   <p align="center">
+   <img src="https://latex.codecogs.com/png.image?\text{Risk\ Score}=\sum_{i=1}^{n}C_i\cdot E_i" width="400"/>
+   </p>
 
    Besides, Reboot also offers the multivariate option, where further clinical variables (e.g., therapy, age and gender) can be loaded in a multivariate survival model. Multiple univariate analyses are executed and only variables with a p-value <= 0.2 and that passed the Schoenfeld’s test are selected for the final multivariate model. Statistical tests are performed in order to evaluate the relevance of the signature score along with co-variables as prognostic factors of a given event (overall / progression-free / recurrence-free survival).
 
