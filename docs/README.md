@@ -130,8 +130,6 @@ In summary, 3 subcommands are available:
    |300|15|400|20|
    |500|12|1736|42|
 
-   <br>
-
    We recommend avoidance of regression set that may not present unimodal distribution, which may introduce some bias. The regression analysis implemented in Reboot is performed approximately linearly in time in relation to the number of bootstrap iterations. If the analysis should take no longer than a period of the day, we encourage a maximum of 10,000 iterations.
 
 ### Usage
@@ -193,8 +191,6 @@ In summary, 3 subcommands are available:
    </tr>
    </table>
 
-   <br>
-
 ### Input
 		
    To produce a genetic signature, Reboot requires a .tsv file containing normalized expression values in Transcripts Per Million (TPM) or in Fragments Per Kilobase per Million (FPKM) for genes or transcripts across multiple samples, in addition to survival data: survival status (e.g., 0 = alive or 1 = dead) and follow up time:
@@ -204,8 +200,6 @@ In summary, 3 subcommands are available:
    | patient_1 | 1 | 448 | 41.81557 | 34.70869 | ... | 
    | patient_2 | 0 | 466 | 24.78227 | 64.80153 | ... |
    | ... | ... | ... | ... | ... | ... |
-
-   <br>   
 
 ### Output
 
@@ -219,11 +213,8 @@ In summary, 3 subcommands are available:
    
    Coefficients may be interpreted according to absolute value and signal. Significance is as high as the absolute value that the coefficient gets. Positive signals contribute to the accountability of bad prognosis, while negative signals contribute to the accountability of good prognosis.
 
-   <br>
-
    The plots generated are a histogram with the distribution of the regression coefficients and a lollipop plot with the most relevant coefficients (see bellow).
 
-   <br>
    <p align="center">
    <img src="Fig2_doc.png" />
    </p>
@@ -233,7 +224,9 @@ In summary, 3 subcommands are available:
 
    Reboot produces and applies in the **survival** module a score for all samples based on the signature previously obtained from the **regression** module according to the following formula:
 
-   Risk Score = sum_{i=1}^n C_i * E_i
+   $$
+   \text{Risk Score} = \sum_{i=1}^{n} C_i \cdot E_i
+   $$
    
    Besides, Reboot also offers the multivariate option, where further clinical variables (e.g., therapy, age and gender) can be loaded in a multivariate survival model. Multiple univariate analyses are executed and only variables with a p-value <= 0.2 and that passed the Schoenfeld’s test are selected for the final multivariate model. Statistical tests are performed in order to evaluate the relevance of the signature score along with co-variables as prognostic factors of a given event (overall / progression-free / recurrence-free survival).
 
@@ -298,8 +291,6 @@ In summary, 3 subcommands are available:
    <td>Show this help message and exit</td>
    </tr>
    </table>
-
-   <br>
  
 ### Inputs
 
@@ -316,8 +307,6 @@ In summary, 3 subcommands are available:
       | CXCR6 | 0.22173 |
       | ... | ... |
 
-      <br>      
-    
    2. Multivariate mode
 
       In case multivariate mode is chosen, a .tsv file containing clinical information is also necessary. Note that all clinical variables MUST be categorical and present ONLY 2 classes (NA values are allowed):
@@ -327,8 +316,6 @@ In summary, 3 subcommands are available:
       | patient_1 | 18-55 years | male | radiation | ... | 
       | patient_2 | 56+ years | female | chemoradiation | ... |
       | ... | ... | ... | ... | ... |
-
-      <br>
 
 ### Outputs
 
@@ -367,9 +354,7 @@ In summary, 3 subcommands are available:
       </tr>
       </table>
 
-      <br>
-      
-	  The **scoreCont_table.tsv** file contains the scores calculated for each patient:
+      The **scoreCont_table.tsv** file contains the scores calculated for each patient:
 
       <table width="600" cellspacing="0" cellpadding="0">
       <tr>
@@ -404,9 +389,7 @@ In summary, 3 subcommands are available:
       </tr>
       </table>
 
-      <br>
-
-	  The **signature_updated.tsv** file contains the same features and coefficients from the *regression* module, with an additional column translating the values into prognosis:
+      The **signature_updated.tsv** file contains the same features and coefficients from the *regression* module, with an additional column translating the values into prognosis:
 
       <table width="600" cellspacing="0" cellpadding="0">
       <tr>
@@ -435,8 +418,6 @@ In summary, 3 subcommands are available:
       <td>...</td>
       </tr>
       </table>
-
-      <br>
 
       Plots in .pdf returned in this mode include: a proportional hazard assumptions plot (result of Schoenfeld test) and a Kaplan Meier plot (see bellow).
 
@@ -499,9 +480,7 @@ In summary, 3 subcommands are available:
       </tr>
       </table>
 
-      <br>
-
-	  The signature score groups - after the cutoff is applied - and all other clinical variables used in the final multivariate model are displayed in the **scoreCat_table.tsv** file for further inspection:
+      The signature score groups - after the cutoff is applied - and all other clinical variables used in the final multivariate model are displayed in the **scoreCat_table.tsv** file for further inspection:
 
 	  <table width="600" cellspacing="0" cellpadding="0">
       <tr>
@@ -545,8 +524,6 @@ In summary, 3 subcommands are available:
       <td>...</td>
       </tr>
       </table>
-
-      <br>
 
       Plots in .pdf returned in this mode include all figures created in the univariate mode in addition to a forest plot for all clinical variables evaluated. If the option --ROC is selected, only the most relevant variables (p-value <= 0.05 in at least 25% of iterations) are plotted. A ROC curve and a histogram of co-variable frequencies are also provided (see bellow).
 
@@ -623,8 +600,6 @@ In summary, 3 subcommands are available:
    <td>Show this help message and exit</td>
    </tr>
    </table>
-
-   <br>
 
 ## Toy example
 
