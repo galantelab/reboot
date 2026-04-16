@@ -222,7 +222,7 @@ In summary, 3 subcommands are available:
    Reboot produces and applies in the **survival** module a score for all samples based on the signature previously obtained from the **regression** module according to the following formula:
 
    <p align="center">
-   <img src="https://latex.codecogs.com/png.image?\text{Risk\ Score}=\sum_{i=1}^{n}C_i\cdot E_i" width="100"/>
+   <img src="https://latex.codecogs.com/png.image?\text{Risk\ Score}=\sum_{i=1}^{n}C_i\cdot E_i" width="200"/>
    </p>
 
    Where "C" is the Cox regression coefficient and "E" is the expression value of each gene/transcript in the signature.
@@ -305,9 +305,10 @@ In summary, 3 subcommands are available:
       | PARPBP | 0.17014 |
       | CXCR6 | 0.22173 |
       | ... | ... |
+      <br>
 
 
-   2. Multivariate mode
+   3. Multivariate mode
 
       In case multivariate mode is chosen, a .tsv file containing clinical information is also necessary. Note that all clinical variables MUST be categorical and present ONLY 2 classes (NA values are allowed):
 
