@@ -307,8 +307,6 @@ In summary, 3 subcommands are available:
       | ... | ... |
 
 
-   <br>
-
    2. Multivariate mode
 
       In case multivariate mode is chosen, a .tsv file containing clinical information is also necessary. Note that all clinical variables MUST be categorical and present ONLY 2 classes (NA values are allowed):
