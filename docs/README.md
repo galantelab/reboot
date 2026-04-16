@@ -224,10 +224,8 @@ In summary, 3 subcommands are available:
 
    Reboot produces and applies in the **survival** module a score for all samples based on the signature previously obtained from the **regression** module according to the following formula:
 
-   $$
-   \text{Risk Score} = \sum_{i=1}^{n} C_i \cdot E_i
-   $$
-   
+   Risk Score = sum(C_i * E_i) for i = 1..n
+
    Besides, Reboot also offers the multivariate option, where further clinical variables (e.g., therapy, age and gender) can be loaded in a multivariate survival model. Multiple univariate analyses are executed and only variables with a p-value <= 0.2 and that passed the Schoenfeld’s test are selected for the final multivariate model. Statistical tests are performed in order to evaluate the relevance of the signature score along with co-variables as prognostic factors of a given event (overall / progression-free / recurrence-free survival).
 
    By default, both univariate and multivariate survival analyses use the median score value as a cutoff to stratify patients in high and low score signatures. Alternatively, this cutoff value may be based on a Receiver Operator Characteristic (ROC) curve using Nearest Neighbour Estimate (NNE) method and the Youden statistics, where J = [sensitivity + (specificity -1)]. If more than one J coefficient is available, then the first one is chosen.
