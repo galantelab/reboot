@@ -1,4 +1,4 @@
-## Contents
+# Contents
 
 1. [Overview](#overview)
 2. [Installation](#installation)
@@ -105,8 +105,6 @@ In summary, 3 subcommands are available:
 | **regression** | generates a signature through multivariate Cox regression |
 | **survival** | applies a signature score in survival analysis |
 | **complete** | generates a signature and applies its derived score in survival analysis| 
-
-<br>
 
 ## Finding signatures of genes or transcripts
 
@@ -218,7 +216,6 @@ In summary, 3 subcommands are available:
    <p align="center">
    <img src="Fig2_doc.png" />
    </p>
-   <br>
 
 ## Applying signatures of genes or transcripts in survival
 
@@ -228,6 +225,8 @@ In summary, 3 subcommands are available:
    <img src="https://latex.codecogs.com/png.image?\text{Risk\ Score}=\sum_{i=1}^{n}C_i\cdot E_i" width="100"/>
    </p>
 
+   Where "C" is the Cox regression coefficient and "E" is the expression value of each gene/transcript in the signature.
+   
    Besides, Reboot also offers the multivariate option, where further clinical variables (e.g., therapy, age and gender) can be loaded in a multivariate survival model. Multiple univariate analyses are executed and only variables with a p-value <= 0.2 and that passed the Schoenfeld’s test are selected for the final multivariate model. Statistical tests are performed in order to evaluate the relevance of the signature score along with co-variables as prognostic factors of a given event (overall / progression-free / recurrence-free survival).
 
    By default, both univariate and multivariate survival analyses use the median score value as a cutoff to stratify patients in high and low score signatures. Alternatively, this cutoff value may be based on a Receiver Operator Characteristic (ROC) curve using Nearest Neighbour Estimate (NNE) method and the Youden statistics, where J = [sensitivity + (specificity -1)]. If more than one J coefficient is available, then the first one is chosen.
@@ -306,6 +305,7 @@ In summary, 3 subcommands are available:
       | PARPBP | 0.17014 |
       | CXCR6 | 0.22173 |
       | ... | ... |
+
 
    2. Multivariate mode
 
