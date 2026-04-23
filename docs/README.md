@@ -201,13 +201,13 @@ In summary, 3 subcommands are available:
 
 ### Output
 
-   As result, Reboot generates a log file, a .txt file containing regression coefficients for the signature and 2 plots in .pdf. The .txt file is in the following format:
+   As result, Reboot generates a log file, a .txt file containing mean regression coefficients (with standard deviation, where applicable) for the signature and 2 plots in .pdf. The .txt file is in the following format:
 	
-   | feature | coefficient | 
-   | --- | --- |
-   | PARPBP | 0.17014 | 
-   | CXCR6 | 0.22173 |
-   | ... | ... |
+   | feature | coefficient | sd |
+   | --- | --- | --- |
+   | PARPBP | 0.17014 | 3.13942 |
+   | CXCR6 | 0.22173 | 2.16845 |
+   | ... | ... | ... |
    
    Coefficients may be interpreted according to absolute value and signal. Significance is as high as the absolute value that the coefficient gets. Positive signals contribute to the accountability of bad prognosis, while negative signals contribute to the accountability of good prognosis.
 
@@ -307,6 +307,7 @@ In summary, 3 subcommands are available:
       | ... | ... |
 
 
+
    2. Multivariate mode
 
       In case multivariate mode is chosen, a .tsv file containing clinical information is also necessary. Note that all clinical variables MUST be categorical and present ONLY 2 classes (NA values are allowed):
@@ -395,25 +396,30 @@ In summary, 3 subcommands are available:
       <tr>
       <td width="10%"><b>feature</b></td>
 	  <td width="15%"><b>coefficient</b></td>
+	  <td width="15%"><b>sd</b></td>
       <td width="15%"><b>prognostic</b></td>
       </tr>
       <tr>
       <td>PARPBP</td>
 	  <td>0.17014</td>
+	  <td>3.13942</td>
       <td>worse</td>
       </tr>
 	  <tr>
       <td>CXCR6</td>
 	  <td>0.22173</td>
+	  <td>2.16845</td>
       <td>worse</td>
       </tr>
 	  <tr>
       <td>NTRK1</td>
 	  <td>-0.1517</td>
+	  <td>1.84659</td>
       <td>better</td>
       </tr>
 	  <tr>
       <td>...</td>
+	  <td>...</td>
 	  <td>...</td>
       <td>...</td>
       </tr>
@@ -649,6 +655,6 @@ In summary, 3 subcommands are available:
 
    Pedro Alexandre Favoretto Galante
  
-   *These authors contributed equally for the work
+   *\*These authors contributed equally for the work*
 
 [Back to top](#contents)
