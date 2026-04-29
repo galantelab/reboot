@@ -19,7 +19,7 @@ option_list <- list(
                         help = "Minimum normalized variance (0-1) required for each gene/transcript among samples (numeric). Default: 0.01"),
   optparse::make_option(c("-T", "--type"), action = "store", type = 'character', dest = "ty", default = "gene",
                         help = "Declare which type of transcriptome data to be analyzed: gene or transcript (character). Default: gene"),
-  optparse::make_option(c("-F", "--force"), action = "store", type = 'logical', dest = "force", default = FALSE,
+  optparse::make_option(c("-F", "--force"), action = "store_true", type = 'logical', dest = "force", default = FALSE,
                         help = "To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F (boolean). Default: FALSE")
 )
 
