@@ -1,9 +1,5 @@
 #!/usr/bin/env Rscript
 
-#suppressMessages(library(optparse))
-#options(lifecycle_disable_verbose_retirement = TRUE)
-#options(warn=-1)
-
 #Time counter
 start_time <- Sys.time()
 
@@ -23,10 +19,10 @@ type = "integer", dest = "booty", default = "5", help = "Number of iterations fo
 optparse::make_option(c("-G", "--groupsize"), action="store",
 type='integer', dest = "nel", default = "10", help="Number of genes/transcripts to be selected in each bootstrap simulation (int). Default: 10"),
 
-optparse::make_option(c("-P", "--percentagefilter"), action="store",
+optparse::make_option(c("-P", "--pcentfilter"), action="store",
 type='numeric', dest = "pf", default = "0.3", help="Percentage of correlated gene/transcript pairs allowed in each iteration. Default: 0.3"),
 
-optparse::make_option(c("-V", "--variancefilter"), action="store",
+optparse::make_option(c("-V", "--varfilter"), action="store",
 type='numeric', dest = "var", default = "0.01", help="Minimum normalized variance (0-1) required for each gene/transcript among samples (double). Default: 0.01"),
 
 optparse::make_option(c("-T", "--type"), action="store",
@@ -42,14 +38,6 @@ outname <- paste(in_object$out, "_signature.txt", sep="")
 outplot <- in_object$out
 fierce <-in_object$fierce
 ty <- in_object$ty
- 
-####Importing libraries####
-
-#suppressMessages(library("mice"))
-#suppressMessages(library("penalized"))
-#suppressMessages(library("tidyverse"))
-#suppressMessages(library("hash"))
-#suppressMessages(library("R.utils"))
 
 ######read input file######
 
@@ -62,7 +50,8 @@ if (ty=="gene") {
 } else {
 	cat("Type has to be either gene or transcript\n")
 	q(status=0)
-} 
+}
+
 ####Setting plot theme#####
 
 mytheme <- ggplot2::theme_bw() + 
@@ -125,9 +114,7 @@ ph_assumptions <- function(full_data){
 	losers <- setdiff(attributes, filt)
 	cat(length(losers)," columns not allowed by schoenfeld test: ",losers, "\n\n")
 	return(full_data[,c(colnames(full_data)[1:2],filt)])
-	
 }
-
 
 ######Error check 1#######
 
@@ -141,9 +128,7 @@ numberfilter1 <- function(dataf, g, outname, outplot) {
 		if (any(!(coefficient==0))){
 			coemale <- cbind(feature,coefficient)
 			coemale <- gsub("__","-",coemale)
-			#coemale <- gsub("@#!", "-", coemale)   #back to initial names
 			write.table(coemale, outname, sep="\t", row.names=F, quote=F)
-			#histogram(outplot,coemale)
 			cat("Done", "\n")
 		}
 		else {
@@ -174,7 +159,6 @@ numberfilter2 <- function(dataf, g, outname, outplot) {
 		    if (any(!(coefficient==0))){
                         coemale <- cbind(feature,coefficient)
 			coemale <- gsub("__","-",coemale)
-			#coemale <- gsub("@#!", "-", coemale)   #back to initial names
                         write.table(coemale, outname ,sep="\t", row.names=F, quote=F)
 			histogram(outplot,coemale)
                         cat("Done", "\n")
@@ -185,7 +169,7 @@ numberfilter2 <- function(dataf, g, outname, outplot) {
 		    q(status=0)
        }
 }
-			
+
 ######Correlation filter######
 
 corfun <- function(cmatrix, pf){
@@ -205,14 +189,12 @@ corfun <- function(cmatrix, pf){
 		switch=1
 		cat("This iteration was avoided due to correlation among columns. Sperman correlation values and p-values are respectively:", "\n")
 		cat(paste(names,indexes,pval,sep=":"),"\n","\n")
-
 	}
 	else{
 		switch=0
 	}
 	return(switch)
 }
-
 
 ######Bootfunction######
 
@@ -271,7 +253,6 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 	}
 
 	tt <- dplyr::filter(tt, abs(as.numeric(as.character(coefficient))) >= bar)
-
 	
 	if (any(!(tt$coefficient == 0)) & dim(tt)[1]!=0){
 		tt$feature <- gsub("__","-",tt$feature)
@@ -283,10 +264,8 @@ bootstrapfun <- function(full_data, booty, nel , outname, outplot, pf, bar){
 		cat("No signature found, all coefficients are not significant", "\n")
 }
 	cat("Done\n")
-
 }
 
-	
 ######Variance filter######
 
 varfun <- function(cmatrix, var, file, fierce, out) {
@@ -360,13 +339,10 @@ varfun <- function(cmatrix, var, file, fierce, out) {
 			sink()
 			q(status=0)
 		}
-		
 	}
 	}
-	return(cmatrix)  
-
-}	
-
+	return(cmatrix)
+}
 
 ######Subsampling procedure#########
 
@@ -375,9 +351,7 @@ subsample <- function(full_data, nel, seed=i){
 	shuffle <- sample(colnames(full_data[,3:ncol(full_data)]), size=nel, replace=F)
 	cat("Picked columns: ",shuffle,"\n","\n")
 	cmatrix <- cbind(full_data[,1:2],subset(full_data,select=shuffle))
-		
 }
-
 
 ######Regression time keeper#######
 
@@ -393,33 +367,24 @@ regcall <- function(cmatrix, nel, full_data){
 			#return(coemale)
 		    }
 	)
-}	
-
+}
 
 ######Regression procedure############
 
 regression <- function(cmatrix){
 
-	#fit1 <- penalized::profL1(survival::Surv(OS.time,OS)~., data=cmatrix, fold=10, maxlambda1=100, plot=F, trace=F)
-	#options(show.error.messages = F)
-        try(fit1 <- penalized::profL1(survival::Surv(OS.time,OS)~., data=cmatrix, fold=10, plot=F, trace=F))
+	try(fit1 <- penalized::profL1(survival::Surv(OS.time,OS)~., data=cmatrix, fold=10, plot=F, trace=F))
 	fit1 <- penalized::profL1(survival::Surv(OS.time,OS)~., data=cmatrix, fold=10, plot=F, trace=F)
-	#fit2 <- penalized::profL2(survival::Surv(OS.time,OS)~., data=cmatrix, fold=fit1$fold, minl = 0.1, maxlambda2 = 10)
-	#opt1 <- penalized::optL1(survival::Surv(OS.time,OS)~., data=cmatrix, fold=fit1$fold, maxlambda1=10, trace=F )
 	opt1 <- penalized::optL1(survival::Surv(OS.time,OS)~., data=cmatrix, fold=fit1$fold, trace=F )
-	#opt2 <- penalized::optL2(survival::Surv(OS.time,OS)~., data=cmatrix, fold=fit2$fold)
 	fit <- penalized::penalized(survival::Surv(OS.time,OS)~., data=cmatrix, lambda1=opt1$lambda, trace=F)
 	coemale <- penalized::coefficients(fit, "all")
 	return(coemale)
-	
 }
-
 
 #######lollipop plot#################
 
 lolli <- function(out,tt){
 	cat("building ranking plot\n")
-	#fname <- paste(out,"_lollipop.png",sep="")
 	fname <- paste(out,"_lollipop.pdf",sep="")
 	tt<-tt[complete.cases(tt), ]
 	tt$coefficient <- as.numeric(as.character(tt$coefficient))
@@ -433,22 +398,15 @@ lolli <- function(out,tt){
 		ll <- ggplot2::ggplot(tt, ggplot2::aes(x=reorder(feature, coefficient), y=coefficient)) +
 		ggplot2::geom_segment(ggplot2::aes(x=feature, xend=feature, y=0, yend=coefficient), size=2, color="grey") +
 		ggplot2::geom_point(size=4, colour="#1c9099") +
-		#ggplot2::theme_light(base_family = "Helvetica") +
 		mytheme +
 		ggplot2::theme(panel.grid.major.x = ggplot2::element_blank(),
 			axis.ticks.x = ggplot2::element_blank(),
 			axis.title.y = ggplot2::element_blank(),
 			axis.title.x = ggplot2::element_blank(),
 			panel.border = ggplot2::element_blank(),
-			#axis.text.y = ggplot2::element_text(angle=90),
-			#axis.text.x = ggplot2::element_text(face="bold",angle=45, size=12, hjust=0),
 			axis.text.x = ggplot2::element_text(angle=60, hjust=1))
-			#axis.text.y= ggplot2::element_text(face="bold")) 
-	#scale_y_continuous(breaks = round(seq(min(tt$coefficient), max(tt$coefficient), by = 0.005),3)) 
 	print (ll, newpage=F)
 	dev.off()
-	
-	
 }
 
 #######Histogram plot#################
@@ -472,10 +430,6 @@ histogram <- function(out,tt){
 
 ####Main####
 
-#check number of lines#
-
-#nlines(full_data, in_object$nel)
-
 #Perform variance filter#
 
 full_data <- varfun(full_data, in_object$var, in_object$fname, fierce, logname)
@@ -495,7 +449,6 @@ numberfilter2(full_data, in_object$nel, outname, outplot)
 #Perform Regression#
 
 bootstrapfun(full_data, in_object$booty, in_object$nel, outname, outplot, in_object$pf, bar)
-
 
 ####Time feedback####
 
