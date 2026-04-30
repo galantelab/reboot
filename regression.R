@@ -6,7 +6,7 @@ start_time <- Sys.time()
 ######Argument parser######
 option_list <- list(
   optparse::make_option(c("-I", "--filein"), action = "store", type = 'character', dest = "fname",
-                        help = "Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters"),
+                        help = "Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival parameters"),
   optparse::make_option(c("-O", "--outprefix"), action = "store", type = 'character', dest = "out", default = "reboot",
                         help = "Output file prefix. Default: reboot"),
   optparse::make_option(c("-B", "--bootstrap"), action = "store", type = "integer", dest = "boot_iter", default = "1",
@@ -23,6 +23,7 @@ option_list <- list(
                         help = "To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F (boolean). Default: FALSE")
 )
 
+#Change variables
 opo <- optparse::OptionParser(option_list = option_list, add_help_option = T)
 in_object <- optparse::parse_args(opo)
 logname <- in_object$out
