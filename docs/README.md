@@ -108,7 +108,7 @@ In summary, 3 subcommands are available:
 
 ## Finding signatures of genes or transcripts
 
-   Reboot searches for a genetic signature (significance coefficients) correlated with patient survival based on a multivariate Cox regression of genes or transcripts. This module uses a LASSO algorithm combined with a bootstrap approach to deal with possible dimension vulnerabilities (especially when data has many attributes and few instances).
+   Reboot searches in the **regression** module for a genetic signature (significance coefficients) correlated with patient survival based on a multivariate Cox regression of genes or transcripts. This module uses a LASSO algorithm combined with a bootstrap approach to deal with possible dimension vulnerabilities (especially when data has many attributes and few instances).
 
    In addition, a number of filters are implemented. Reboot analyses starts off by checking if the provided expression dataset has the minimum of 20 variables (genes/transcripts) necessary for the next steps to take place correctly. Also, a minimum of 10 samples is required due to cross validation steps performed to optimize LASSO coefficient choice. Then, data attributes with variance lower than a user-defined cut-off are removed. If a low variance is detected in the provided follow up times or  the proportion between individuals with diverging survival status (e.g., dead and alive) is greater than 80% or lower than 20%, the analysis halts and returns a warning due to possible convergence problems in the regression process. Prior to starting the analysis, a Schoenfeld's test filter is also performed in a univariate way to exclude variables which do not meet the proportional hazard assumptions of Cox models. Next, a Spearman’s correlation filter is applied for every iteration of the bootstrap process based on the user-defined allowed fraction of pairs with correlation coefficients higher than 0.8 and p-values lower than 0.05. To minimize false positives in the results, empirical coefficient cutoffs for genes/transcripts were established: genes with coefficients higher than 0.0035 are selected, whereas only transcripts with coefficients higher than 0.011 are chosen based on random bootstrap resampling analyses.
 
@@ -180,6 +180,10 @@ In summary, 3 subcommands are available:
    <td>Minimum normalized variance (0-1) required for each gene or transcript among samples (double). Default: 0.01</td>
    </tr>
    <tr>
+   <td>-T, --ty</td>
+   <td>Type of transcriptome data to be analyzed: gene or transcript (character). Default: gene</td>
+   </tr>
+   <tr>
    <td>-F, --force</td>
    <td>Choose -F to bypass OS and OStime filters</td>
    </tr>
@@ -201,7 +205,7 @@ In summary, 3 subcommands are available:
 
 ### Output
 
-   As result, Reboot generates a log file, a .txt file containing mean regression coefficients (with standard deviation, where applicable) for the signature and 2 plots in .pdf. The .txt file is in the following format:
+   As result, Reboot generates a log file, a .txt file containing mean regression coefficients (with standard deviation, where applicable) for the signature and 2 plots in .pdf. The **signature.txt** file is in the following format:
 	
    | feature | coefficient | sd |
    | --- | --- | --- |
@@ -211,7 +215,7 @@ In summary, 3 subcommands are available:
    
    Coefficients may be interpreted according to absolute value and signal. Significance is as high as the absolute value that the coefficient gets. Positive signals contribute to the accountability of bad prognosis, while negative signals contribute to the accountability of good prognosis.
 
-   The plots generated are a histogram with the distribution of the regression coefficients and a lollipop plot with the most relevant coefficients (see bellow).
+   The plots generated are a **histogram** with the distribution of the regression coefficients and a **lollipop plot** with the most relevant coefficients (see bellow).
 
    <p align="center">
    <img src="Fig2_doc.png" />
@@ -231,7 +235,7 @@ In summary, 3 subcommands are available:
 
    By default, both univariate and multivariate survival analyses use the median score value as a cutoff to stratify patients in high and low score signatures. Alternatively, this cutoff value may be based on a Receiver Operator Characteristic (ROC) curve using Nearest Neighbour Estimate (NNE) method and the Youden statistics, where J = [sensitivity + (specificity -1)]. If more than one J coefficient is available, then the first one is chosen.
 
-   If a multivariate analysis is performed based on a ROC curve, a bootstrap resampling method is applied once the provided clinical dataset passes the following additional filters: (i) final dataset with at least 70% of the original one (Not Available - NA filter) and; (ii) the frequency of the less abundant category for each co-variable is not less than 20% (proportion filter). Otherwise, the multivariate analysis is performed without the bootstrap method. After 100 iterations, the relevance frequency of each co-variable with the event is calculated.
+   If a multivariate analysis is performed based on a ROC curve, a bootstrap resampling method is applied once the provided clinical dataset passes the following additional filters: (i) final dataset with at least 70% of the original one and; (ii) the frequency of the less abundant category for each co-variable is not less than 20% (proportion filter). Otherwise, the multivariate analysis is performed without the bootstrap method. After 100 iterations, the relevance frequency of each co-variable with the event is calculated.
 
 ### Usage
 
@@ -266,6 +270,10 @@ In summary, 3 subcommands are available:
    <td>Output file prefix (string). Default: reboot</td>
    </tr>
    <tr>
+   <td>-S, --signature</td>
+   <td>Tab-separated values (.tsv) file containing a set of genes or transcripts and corresponding cox coefficients</td>
+   </tr>
+   <tr>
    <td>-M, --multivariate</td>
    <td>If clinical variables should be included, choose -M. This option is tied with -C option. Default: FALSE</td>
    </tr>
@@ -278,8 +286,8 @@ In summary, 3 subcommands are available:
    <td>To categorize the genetic score according to a ROC curve instead of median value, choose -R. Default: FALSE</td>
    </tr>
    <tr>
-   <td>-S, --signature</td>
-   <td>Tab-separated values (.tsv) file containing a set of genes or transcripts and corresponding cox coefficients</td>
+   <td>-V, --varfilter</td>
+   <td>Minimum normalized variance (0-1) required for follow up time (double). Default: 0.01</td>
    </tr>
    <tr>
    <td>-F, --force</td>
@@ -310,7 +318,7 @@ In summary, 3 subcommands are available:
 
    2. Multivariate mode
 
-      In case multivariate mode is chosen, a .tsv file containing clinical information is also necessary. Note that all clinical variables MUST be categorical and present ONLY 2 classes (NA values are allowed):
+      In case multivariate mode is chosen, a .tsv file containing clinical information is also necessary. Note that all clinical variables must be categorical and present only 2 classes (NA values are allowed):
 
       | Sample ID | age | gender | therapy | ... |   
       |---|---|---|---|---|
@@ -425,7 +433,7 @@ In summary, 3 subcommands are available:
       </tr>
       </table>
 
-      Plots in .pdf returned in this mode include: a proportional hazard assumptions plot (result of Schoenfeld test) and a Kaplan Meier plot (see bellow).
+      Plots in .pdf returned in this mode include: a **proportional hazard assumptions plot** (result of Schoenfeld test) and a **Kaplan Meier plot** (see bellow).
 
       ![](Fig3_doc.png)
 
@@ -531,7 +539,7 @@ In summary, 3 subcommands are available:
       </tr>
       </table>
 
-      Plots in .pdf returned in this mode include all figures created in the univariate mode in addition to a forest plot for all clinical variables evaluated. If the option --ROC is selected, only the most relevant variables (p-value <= 0.05 in at least 25% of iterations) are plotted. A ROC curve and a histogram of co-variable frequencies are also provided (see bellow).
+      Plots in .pdf returned in this mode include all figures created in the univariate mode in addition to a **forest plot** for all clinical variables evaluated. If the option --ROC is selected, a **ROC curve** is also generated (see below). In this case (-R TRUE), a **barplot** of co-variable frequencies may also be provided for the most relevant variables (p-value <= 0.05 in at least 25% of iterations).
 
       ![](Fig4_doc.png)
 
@@ -582,6 +590,10 @@ In summary, 3 subcommands are available:
    <td>Percentage of correlated gene or transcript pairs allowed in each iteration (double). Default: 0.3</td>
    </tr>
    <tr>
+   <td>-T, --ty</td>
+   <td>Type of transcriptome data to be analyzed: gene or transcript (character). Default: gene</td>
+   </tr>
+   <tr>
    <td>-V, --varfilter</td>
    <td>Minimum normalized variance (0-1) required for each gene or transcript among samples (double). Default: 0.01</td>
    </tr>
@@ -626,10 +638,9 @@ In summary, 3 subcommands are available:
    toyscript.R
    ``` 
 
-   This command returns 2 .tsv files, mentioned above, called expression.tsv and clinical.tsv. A MANIFEST.txt file and a set of expression and clinical data are also created, as intermediates of TCGA download process.
-   The composition of the expression dataset comprises clinical variables: OS (survival status) and OS.time (follow up time) and 50 random picked gene expression (FPKM).
+   This command returns 2 .tsv files, mentioned above, called **expression.tsv** and **clinical.tsv**. A *MANIFEST.txt* file and a set of expression and clinical data are also created, as intermediates of the TCGA download process. The composition of the expression dataset comprises clinical variables: OS (survival status) and OS.time (follow up time) and 50 random picked genes with expression in FPKM.
 
-   Finally, Reboot can be run in the complete mode:
+   Finally, Reboot can be run in the **complete** mode:
 
    ```bash
    # for docker container
