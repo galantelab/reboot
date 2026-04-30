@@ -1,73 +1,53 @@
 #!/usr/bin/env Rscript
 
 #Suppress all warning messages
-options(warn=-1)
+options(warn = -1)
 
+#Time counter
 start_time <- suppressMessages(Sys.time())
 
-#suppressMessages(library("optparse"))
-
+######Argument parser######
 option_list <- list(
+  optparse::make_option(c("-I", "--filein"), action = "store", type = 'character', dest = "exp_file",
+                        help = "Input file name. Tab separated values (tsv) file containing expression and survival parameters"),
+  optparse::make_option(c("-O", "--outprefix"), action = "store", type = 'character', dest = "out", default = "reboot",
+                        help = "Output file prefix. Default: reboot"),
+  optparse::make_option(c("-S", "--signature"), action = "store", type = 'character', dest = "sig_file",
+                        help = "Tab separated values (tsv) file containing a set of features and corresponding regression coefficients"),
+  optparse::make_option(c("-M", "--multivariate"), action = "store_true", dest = "type", default = FALSE,
+                        help = "If clinical variables should be included, choose -M. This option is tied with -C option (boolean)"),
+  optparse::make_option(c("-C", "--clinical"), action = "store", type = 'character', dest = "clin_file", default = "",
+                        help = "Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen"),
+  optparse::make_option(c("-R", "--roc"), action = "store_true", dest = "roc_curve", default = FALSE,
+                        help = "If molecular score should be categorized according to a ROC curve instead of the median, choose -R (boolean)"),
+  optparse::make_option(c("-V", "--varfilter"), action = "store", type = 'double', dest = "var", default = 0.01,
+                        help = "Minimum normalized variance (0-1) required for follow up time (double). Default: 0.01"),
+  optparse::make_option(c("-F", "--force"), action = "store_true", dest = "force", default = FALSE,
+                        help = "To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F (boolean)"))
 
-optparse::make_option(c("-I", "--filein"), action="store",
-type='character', dest = "exp_file", help="Input file name. Tab separated values (tsv) file containing genes/transcripts expression and survival paramenters"),
-
-optparse::make_option(c("-O", "--outprefix"), action="store",
-type='character', dest = "out", default = "reboot", help="Output file prefix. Default: reboot"),
-
-optparse::make_option(c("-S", "--signature"), action="store",
-type='character', dest = "sig_file", help="Tab separated values (tsv) file containing a set of genes/transcripts and corresponding cox coefficients"),
-
-optparse::make_option(c("-M", "--multivariate"), action="store",
-type='logical', dest = "type", default = FALSE, help="If clinical variables should be included, choose -M. This option is tied with -C option"),
-
-optparse::make_option(c("-C", "--clinical"), action="store",
-type='character', dest = "clin_file", default = "", help="Tab separated values (tsv) file containing binary categorical variables only. Required if -M option is chosen"),
-
-optparse::make_option(c("-R", "--roc"), action="store",
-type='logical', dest = "roc_curve", default = FALSE, help="If continuous variables should be categorized according to a ROC curve instead of median, choose -R"),
-
-optparse::make_option(c("-V", "--variancefilter"), action="store",
-type='numeric', dest = "var", default = "0.01", help="Minimum normalized variance (0-1) required for follow up time among samples (double). Default: 0.01"),
-
-optparse::make_option(c("-F", "--force"), action="store",
-type='logical', dest = "force", default = FALSE, help="To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F"))
-
-opo <- optparse::OptionParser(option_list=option_list, add_help_option = T)
+opo <- optparse::OptionParser(option_list = option_list, add_help_option = T)
 in_object <- optparse::parse_args(opo)
 
 #Change variables
-exp_file = in_object$exp_file
-out = in_object$out
-sig_file = in_object$sig_file
-type = in_object$type
-clin_file = in_object$clin_file
-roc_curve = in_object$roc_curve
-var = in_object$var
-force = in_object$force
+exp_file <- in_object$exp_file
+out <- in_object$out
+sig_file <- in_object$sig_file
+type <- in_object$type
+clin_file <- in_object$clin_file
+roc_curve <- in_object$roc_curve
+var <- in_object$var
+force <- in_object$force
 
 #Check if clinical data is provided in case type == TRUE
-if(type){
-  if(clin_file == ""){
+if (type) {
+  if (clin_file == "") {
     cat("Insert clinical variables file\n")
-    q(status=0)
+    q(status = 0)
   }
 }
 
 ####### Log file ##########
-sink(file = paste(out, ".log", sep=''), append=T)
-
-#Load libraries
-# suppressMessages(library("survcomp"))
-# suppressMessages(library("survival"))
-# suppressMessages(library("survminer"))
-# suppressMessages(library("OptimalCutpoints"))
-# suppressMessages(library("survivalROC"))
-# suppressMessages(library("forestmodel"))
-# suppressMessages(library("sjstats"))
-# suppressMessages(library("data.table"))
-# suppressMessages(library("plyr"))
-# suppressMessages(library("dplyr"))
+sink(file = paste(out, ".log", sep = ''), append = T)
 
 cat("\n\n============================================================")
 cat(" Apply Signature ")
@@ -77,177 +57,180 @@ cat("Chosen parameters: ")
 cat(paste(commandArgs(trailingOnly = T), collapse = " "))
 cat("\n\n")
 
-if(force){
-  cat("You have chosen the --force option which may lead to Cox model convergence issues. In this case, please consider using another survival endpoint.\n\n")
-}
+if (force) {cat("You have chosen the '--force' option which may lead to Cox model convergence issues. In this case, please consider using another survival endpoint.\n\n")}
 
 #Print log message
 cat("Checking provided files...\n")
 
 #Check if provided files exist
-if(!file.exists(exp_file)){
+if (!file.exists(exp_file)) {
   ####### Error file ##########
-  sink(file = paste(out, ".err", sep=''), append=T)
-  cat(paste("Error: File ", exp_file, " does not exist. Please provide a valid file.\n",sep=""))
+  sink(file = paste(out, ".err", sep = ''), append = T)
+  cat(paste("Error: File ", exp_file, " does not exist. Please provide a valid file.\n", sep = ""))
   sink()
-  quit(save="no")
+  quit(save = "no")
 }
-if(!file.exists(sig_file)){
+
+if (!file.exists(sig_file)) {
   ####### Error file ##########
-  sink(file = paste(out, ".err", sep=''), append=T)
-  cat(paste("Error: File ", sig_file, " does not exist. Please provide a valid file.\n",sep=""))
+  sink(file = paste(out, ".err", sep = ''), append = T)
+  cat(paste("Error: File ", sig_file, " does not exist. Please provide a valid file.\n", sep = ""))
   sink()
-  quit(save="no")
+  quit(save = "no")
 }
-if(type & clin_file!="" & !file.exists(clin_file)){
+
+if (type & clin_file != "" & !file.exists(clin_file)) {
   ####### Error file ##########
-  sink(file = paste(out, ".err", sep=''), append=T)
-  cat(paste("Error: File ", clin_file, " does not exist. Please provide a valid file.\n",sep=""))
+  sink(file = paste(out, ".err", sep = ''), append = T)
+  cat(paste("Error: File ", clin_file, " does not exist. Please provide a valid file.\n", sep = ""))
   sink()
-  quit(save="no")
+  quit(save = "no")
 }
 
 #Read provided files
-signature = read.table(sig_file, header=T, check.names=F, stringsAsFactors=F)
-data = read.table(exp_file, header=T, check.names=F, stringsAsFactors=F)
+signature <- read.table(sig_file, header = T, check.names = F, stringsAsFactors = F)
+data <- read.table(exp_file, header = T, check.names = F, stringsAsFactors = F)
 
 #Add extra column to associate the coefficient signal to its prognostic value and save it for user
-signature$prognostic = ifelse(signature$coefficient > 0, "worse", "better")
-write.table(signature, paste(out,"_signature_updated.tsv",sep=""), row.names=F, col.names=T, quote=F, sep="\t")
+signature$prognostic <- ifelse(signature$coefficient > 0, "worse", "better")
+write.table(signature, paste(out,"_signature_updated.tsv", sep = ""), row.names = F, col.names = T, quote = F, sep = "\t")
 
 #Get only the first 2 relevant columns (feature and coefficient) for downstream analyses
-signature = signature[,c(1, 2)]
+signature <- signature[,c(1, 2)]
 
-if(type & clin_file!=""){
-  clin = read.delim(clin_file, header=T, row.names=1)
-}
+if (type & clin_file != "") {clin = read.delim(clin_file, header = T, row.names = 1)}
 
 #Check OS
-if(class(data[,2])!="integer" | levels(as.factor(data[,2]))[1] != "0" | levels(as.factor(data[,2]))[2] != "1"){
+if (class(data[,2]) != "integer" | levels(as.factor(data[,2]))[1] != "0" | levels(as.factor(data[,2]))[2] != "1") {
   ####### Error file ##########
-  sink(file = paste(out, ".err", sep=''), append=T)
-  cat(paste("Error: The second column of file ", exp_file, " does not contain endpoint status. Please check the manual for more information.\n",sep=""))
+  sink(file = paste(out, ".err", sep = ''), append = T)
+  cat(paste("Error: The second column of file ", exp_file, " does not contain endpoint status. Please check the manual for more information.\n", sep = ""))
   sink()
-  quit(save="no")
+  quit(save = "no")
 }
 
 #Check OS.time
-if(class(data[,3])!="integer" | min(data[,3])<0){
+if (class(data[,3]) != "integer" | min(data[,3]) < 0) {
   ####### Error file ##########
-  sink(file = paste(out, ".err", sep=''), append=T)
-  cat(paste("Error: The third column of file ", exp_file, " does not contain endpoint times. Please check the manual for more information.\n",sep=""))
+  sink(file = paste(out, ".err", sep = ''), append = T)
+  cat(paste("Error: The third column of file ", exp_file, " does not contain endpoint times. Please check the manual for more information.\n", sep = ""))
   sink()
-  quit(save="no")
+  quit(save = "no")
 }
 
 #Check number of columns in signature file
-if(ncol(signature)!=2){
+if (ncol(signature) != 2) {
   ####### Error file ##########
-  sink(file = paste(out, ".err", sep=''), append=T)
-  cat(paste("Error: ", sig_file, " should have 2 columns. Please check the manual for more information.\n",sep=""))
+  sink(file = paste(out, ".err", sep = ''), append = T)
+  cat(paste("Error: ", sig_file, " should have 2 columns. Please check the manual for more information.\n", sep = ""))
   sink()
-  quit(save="no")
+  quit(save = "no")
 }
 
 #Check signature file format
-if(!is.character(signature[,1])){
+if (!is.character(signature[,1])) {
   ####### Error file ##########
-  sink(file = paste(out, ".err", sep=''), append=T)
-  cat(paste("Error: Invalid format for column 1 of file ", sig_file, ". It should be a list of features (characters).\n",sep=""))
+  sink(file = paste(out, ".err", sep = ''), append = T)
+  cat(paste("Error: Invalid format for column 1 of file ", sig_file, ". It should be a list of features (characters).\n", sep = ""))
   sink()
-  quit(save="no")
+  quit(save = "no")
 }
 
 #Check signature format
-if(!is.numeric(signature[,2])){
+if (!is.numeric(signature[,2])) {
   ####### Error file ##########
-  sink(file = paste(out, ".err", sep=''), append=T)
-  cat(paste("Error: Invalid format for column 2 of file ", sig_file, ". It should be a list of Cox coefficients (numeric values).\n",sep=""))
+  sink(file = paste(out, ".err", sep = ''), append = T)
+  cat(paste("Error: Invalid format for column 2 of file ", sig_file, ". It should be a list of Cox coefficients (numeric values).\n", sep = ""))
   sink()
-  quit(save="no")
+  quit(save = "no")
 }
 
-colnames(signature) = c("feature", "coefficient")
-colnames(data)[1:3] = c("sample", "OS", "OS.time")
+colnames(signature) <- c("feature", "coefficient")
+colnames(data)[1:3] <- c("sample", "OS", "OS.time")
 
 #Replace column names
-signature$feature = gsub("-","_",signature$feature)
-colnames(data) = gsub("-","_",colnames(data))
+signature$feature <- gsub("-","_",signature$feature)
+colnames(data) <- gsub("-","_",colnames(data))
 
 #Check if there is at least one valid feature in signature
-signature = signature[!is.na(signature$coefficient) & signature$coefficient!=0,]
-if(nrow(signature)==0){
+signature <- signature[!is.na(signature$coefficient) & signature$coefficient != 0,]
+if (nrow(signature) == 0) {
   ####### Error file ##########
-  sink(file = paste(out, ".err", sep=''), append=T)
-  cat(paste("Error: No valid features to be tested in the signature.\n",sep=""))
+  sink(file = paste(out, ".err", sep = ''), append = T)
+  cat(paste("Error: No valid features to be tested in the signature.\n", sep = ""))
   sink()
-  quit(save="no")
+  quit(save = "no")
 }
 
 #Check if all genes in signature are present on data file
-data = data[,grep(paste("^sample$","^OS$","^OS.time$",paste("^",signature$feature,"$",collapse="|",sep=""),sep="|"),colnames(data))]
-if(ncol(data) != (nrow(signature)+3)){
-  if(ncol(data) > (nrow(signature)+3)){
+data <- data[, grep(paste("^sample$", "^OS$", "^OS.time$", paste("^", signature$feature, "$", collapse = "|", sep = ""), sep = "|"), colnames(data))]
+if (ncol(data) != (nrow(signature) + 3)) {
+  if (ncol(data) > (nrow(signature) + 3)) {
     ####### Error file ##########
-    sink(file = paste(out, ".err", sep=''), append=T)
-    cat(paste("Error: Duplicated features are not allowed. Please check the provided files.\n",sep=""))
+    sink(file = paste(out, ".err", sep = ''), append = T)
+    cat(paste("Error: Duplicated features are not allowed. Please check the provided files.\n", sep = ""))
     sink()
-    quit(save="no")
+    quit(save = "no")
   }
-  if(ncol(data) < (nrow(signature)+3)){
+  if (ncol(data) < (nrow(signature) + 3)) {
     ####### Error file ##########
-    sink(file = paste(out, ".err", sep=''), append=T)
-    cat(paste("Error: Not all features are present in both files. Please check the provided files.\n",sep=""))
+    sink(file = paste(out, ".err", sep = ''), append = T)
+    cat(paste("Error: Not all features are present in both files. Please check the provided files.\n", sep = ""))
     sink()
-    quit(save="no")
+    quit(save = "no")
   }
 }
 
 #Check OS and OS.time
-if(!force){
+if (!force) {
     OSstatus <- data[,2]
     percentage <- sum(OSstatus)/length(OSstatus)
-    if(percentage < 0.2 | percentage > 0.8){
+    if (percentage < 0.2 | percentage > 0.8) {
         cat("Survival status proportion:", percentage, " is probably not enough to the analysis. \nDeath or recidive are alternative options for the analysis", "\n\n")
         cat("If you want to continue anyway, choose the flag F. \n\n")
-        q(status=0)
+        q(status = 0)
     }
 
     followup <- data[,3]
     uplimit <- max(followup)
     normalized <- followup/uplimit
     fvar <- var(normalized)
-    if(fvar < var){
+    if (fvar < var) {
         cat("Follow up variance: ", var, " has not passed the variance filter. \n\n")
         cat("If you want to continue anyway, choose the flag F. \n\n")
-        q(status=0)
+        q(status = 0)
     }
 }
 
 #Reorder colnames of data according to signature order
-target = c("sample","OS","OS.time",signature$feature)
-data = data[,match(target, colnames(data))]
+target <- c("sample","OS","OS.time", signature$feature)
+data <- data[, match(target, colnames(data))]
 
 #Create rownames
-rownames(data) = data$sample
-data = data[,2:ncol(data)]
+rownames(data) <- data$sample
+data <- data[,2:ncol(data)]
 
 #Create signature score for each sample
-tmp = as.matrix(data[,3:ncol(data)])
-if(nrow(signature)>1){ tmp = as.data.frame(tmp%*%diag(signature$coefficient)) }else{ tmp = as.data.frame(tmp*signature$coefficient) }
+tmp <- as.matrix(data[,3:ncol(data)])
+if (nrow(signature) > 1)
+{
+  tmp = as.data.frame(tmp %*% diag(signature$coefficient))
+} else {
+  tmp = as.data.frame(tmp*signature$coefficient)
+}
+
 tmp$score <- apply(tmp, 1, function(x) sum(x))
-tmp = tmp[,ncol(tmp),drop=F]
-data = cbind(data[,1:2],tmp)
+tmp <- tmp[, ncol(tmp), drop = F]
+data <- cbind(data[,1:2], tmp)
 
 #Outputs data table used to generate the KM plot
-write.table(data, paste(out,"_scoreCont_table.tsv",sep=""), row.names=T, col.names=T, quote=F, sep="\t")
+write.table(data, paste(out,"_scoreCont_table.tsv", sep = ""), row.names = T, col.names = T, quote = F, sep = "\t")
 
 #Edited "ggcoxzph" function to add the global Schoenfeld Test p-value
 reboot_ggcoxzph <- function(fit, resid = T, se = T, df = 4, nsmo = 40, var, point.col = "red", point.size = 1,
-                            point.shape = 19, point.alpha = 1, caption = NULL, ggtheme = survminer::theme_survminer(), ...){
+                            point.shape = 19, point.alpha = 1, caption = NULL, ggtheme = survminer::theme_survminer(), ...) {
   x <- fit
-  if(!methods::is(x, "cox.zph"))
-    stop("Can't handle an object of class ", class(x))
+  if (!methods::is(x, "cox.zph")) {stop("Can't handle an object of class ", class(x))}
 
   xx <- x$x
   yy <- x$y
@@ -260,95 +243,116 @@ reboot_ggcoxzph <- function(fit, resid = T, se = T, df = 4, nsmo = 40, var, poin
   pmat <- lmat[1:nsmo, ]
   xmat <- lmat[-(1:nsmo), ]
   qmat <- qr(xmat)
-  if (qmat$rank < df)
-    stop("Spline fit is singular, try a smaller degrees of freedom")
-  if (se) {
+  
+  if (qmat$rank < df) {stop("Spline fit is singular, try a smaller degrees of freedom")}
+
+  if (se)
+  {
     bk <- backsolve(qmat$qr[1:df, 1:df], diag(df))
     xtx <- bk %*% t(bk)
     seval <- d * ((pmat %*% xtx) * pmat) %*% rep(1, df)
   }
+  
   ylab <- paste("Beta(t) for", dimnames(yy)[[2]])
+  
   if (missing(var))
+  {
     var <- 1:nvar
-  else {
-    if (is.character(var))
-      var <- match(var, dimnames(yy)[[2]])
-    if (any(is.na(var)) || max(var) > nvar || min(var) <
-        1)
-      stop("Invalid variable requested")
+  } else {
+    if (is.character(var)) {var <- match(var, dimnames(yy)[[2]])}
+    if (any(is.na(var)) || max(var) > nvar || min(var) < 1) {stop("Invalid variable requested")}
   }
-  if (x$transform == "log") {
+  
+  if (x$transform == "log")
+  {
     xx <- exp(xx)
     pred.x <- exp(pred.x)
-  }
-  else if (x$transform != "identity") {
+  } else if (x$transform != "identity") {
     xtime <- as.numeric(dimnames(yy)[[1]])
     indx <- !duplicated(xx)
-    apr1 <- stats::approx(xx[indx], xtime[indx], seq(min(xx), max(xx),
-                                              length = 17)[2 * (1:8)])
+    apr1 <- stats::approx(xx[indx], xtime[indx], seq(min(xx), max(xx), length = 17)[2 * (1:8)])
     temp <- signif(apr1$y, 2)
     apr2 <- stats::approx(xtime[indx], xx[indx], temp)
     xaxisval <- apr2$y
     xaxislab <- rep("", 8)
     for (i in 1:8) xaxislab[i] <- format(temp[i])
   }
+  
   plots <- list()
   lapply(var, function(i) {
     invisible(round(x$table[i, 3],4) -> pval)
     invisible(round(x$table[nrow(x$table), 3],4) -> global)
+    
     ggplot2::ggplot() + ggplot2::labs(title = paste0('Global Schoenfeld Test p: ', global),
-                    subtitle = paste0('Individual Schoenfeld Test p: ', pval)) +
+                                      subtitle = paste0('Individual Schoenfeld Test p: ', pval)) +
       ggtheme + ggplot2::theme(plot.title = ggplot2::element_text(hjust = .5, vjust = .5, face = "bold", margin = ggplot2::margin(0, 0, 10, 0)),
-                      plot.subtitle = ggplot2::element_text(hjust = 0, vjust = .5, face = "plain", margin = ggplot2::margin(10, 0, 10, 0))) -> gplot
+                               plot.subtitle = ggplot2::element_text(hjust = 0, vjust = .5, face = "plain", margin = ggplot2::margin(10, 0, 10, 0))) -> gplot
+    
     y <- yy[, i]
     yhat <- as.vector(pmat %*% qr.coef(qmat, y))
+    
     if (resid)
+    {
       yr <- range(yhat, y)
-    else yr <- range(yhat)
-    if (se) {
+    } else {
+      yr <- range(yhat)
+    }
+    
+    if (se)
+    {
       temp <- as.vector(2 * sqrt(x$var[i, i] * seval))
       yup <- yhat + temp
       ylow <- yhat - temp
       yr <- range(yr, yup, ylow)
     }
+    
     if (x$transform == "identity") {
-      gplot + ggplot2::geom_line(ggplot2::aes(x=pred.x, y=yhat)) +
+      gplot + ggplot2::geom_line(ggplot2::aes(x = pred.x, y = yhat)) +
         ggplot2::xlab("Time") +
         ggplot2::ylab(ylab[i]) +
         ggplot2::ylim(yr) -> gplot
     } else if (x$transform == "log") {
-      gplot + ggplot2::geom_line(ggplot2::aes(x=log(pred.x), y=yhat)) +
+      gplot + ggplot2::geom_line(ggplot2::aes(x = log(pred.x), y = yhat)) +
         ggplot2::xlab("Time") +
         ggplot2::ylab(ylab[i]) +
         ggplot2::ylim(yr)  -> gplot
     } else {
-      gplot + ggplot2::geom_line(ggplot2::aes(x=pred.x, y=yhat)) +
+      gplot + ggplot2::geom_line(ggplot2::aes(x = pred.x, y = yhat)) +
         ggplot2::xlab("Time") +
         ggplot2::ylab(ylab[i]) +
         ggplot2::scale_x_continuous(breaks = xaxisval,
                            labels = xaxislab) +
-        ggplot2::ylim(yr)-> gplot
+        ggplot2::ylim(yr) -> gplot
     }
 
     if (resid)
-      gplot <- gplot + ggplot2::geom_point(ggplot2::aes(x = xx, y =y),
-                                  col = point.col, shape = point.shape, size = point.size, alpha = point.alpha)
+    {
+      gplot <- gplot + ggplot2::geom_point(ggplot2::aes(x = xx, y = y), col = point.col,
+                                           shape = point.shape, size = point.size, alpha = point.alpha)
+    }
 
-    if (se) {
-      gplot <- gplot + ggplot2::geom_line(ggplot2::aes(x=pred.x, y=yup), lty = "dashed") +
+    if (se)
+    {
+      gplot <- gplot + ggplot2::geom_line(ggplot2::aes(x = pred.x, y = yup), lty = "dashed") +
         ggplot2::geom_line(ggplot2::aes( x = pred.x, y = ylow), lty = "dashed")
     }
 
     ggpubr::ggpar(gplot, ...)
 
-
   }) -> plots
+  
   names(plots) <- var
   class(plots) <- c("ggcoxzph", "ggsurv", "list")
 
-  if("GLOBAL" %in% rownames(x$table)) # case of multivariate Cox
+  # case of multivariate Cox
+  if ("GLOBAL" %in% rownames(x$table))
+  {
     global_p <- x$table["GLOBAL", 3]
-  else global_p <- NULL # Univariate Cox
+  } else {
+    # Univariate Cox
+    global_p <- NULL
+  }
+  
   attr(plots, "global_pval") <- global_p
   attr(plots, "caption") <- caption
   plots
@@ -357,72 +361,65 @@ reboot_ggcoxzph <- function(fit, resid = T, se = T, df = 4, nsmo = 40, var, poin
 #Function to test Cox Proportional Assumptions (Schoenfeld Test)
 test_ph_assumptions <- function(model_object, covariates, is_multi)
 {
-
-  if(!is_multi & is.null(model_object)){
+  if (!is_multi & is.null(model_object))
+  {
     ####### Error file ##########
-    sink(file = paste(out, ".err", sep=''), append=T)
-    cat(paste("Error: Cox model could not be fitted to score due to convergence issues. Please consider using another survival endpoint.\n",sep=""))
+    sink(file = paste(out, ".err", sep = ''), append = T)
+    cat(paste("Error: Cox model could not be fitted to score due to convergence issues. Please consider using another survival endpoint.\n", sep = ""))
     sink()
-    quit(save="no")
-  } else if(is_multi & is.null(model_object)){
+    quit(save = "no")
+  } else if (is_multi & is.null(model_object)) {
     ####### Error file ##########
-    sink(file = paste(out, ".err", sep=''), append=T)
-    cat(paste("Error: Multivariate Cox model could not be fitted due to convergence issues. Please check the provided clinical variables or consider using another survival endpoint.\n",sep=""))
+    sink(file = paste(out, ".err", sep = ''), append = T)
+    cat(paste("Error: Multivariate Cox model could not be fitted due to convergence issues. Please check the provided clinical variables or consider using another survival endpoint.\n", sep = ""))
     sink()
-    quit(save="no")
+    quit(save = "no")
   }
 
   test.ph <- survival::cox.zph(model_object)
 
-  if(is_multi){
-
+  if (is_multi)
+  {
     tmp_covariates <- c()
-    covariates = c("score", covariates)
-    new_covariates = colnames(test.ph$y)
-
+    covariates <- c("score", covariates)
+    new_covariates <- colnames(test.ph$y)
+    
     #Match string to get from 'new covariates' the original 'covariates' name
-    for(var in new_covariates)
+    for (var in new_covariates)
     {
-      for(var2 in covariates)
+      for (var2 in covariates)
       {
-        if(grepl(var2, var)){tmp_covariates <- append(tmp_covariates, var2)}
+        if (grepl(var2, var)) {tmp_covariates <- append(tmp_covariates, var2)}
       }
     }
-  } else{
-
-    tmp_covariates <- c("score")
-
-  }
+  } else {tmp_covariates <- c("score")}
 
   rownames(test.ph$table) <- c(tmp_covariates, "GLOBAL")
   colnames(test.ph$y) <- tmp_covariates
 
-  if(is_multi) {
-    phplot <- reboot_ggcoxzph(fit = test.ph)
-  } else {
-    phplot <- survminer::ggcoxzph(fit = test.ph)
-  }
+  if (is_multi) {phplot <- reboot_ggcoxzph(fit = test.ph)} else {phplot <- survminer::ggcoxzph(fit = test.ph)}
 
-  pdf(file = paste(out, "_ph_assumptions_plot.pdf", sep=""))
-  for (plot in phplot) {
-    print(plot, newpage = TRUE)
-  }
+  pdf(file = paste(out, "_ph_assumptions_plot.pdf", sep = ""))
+  for (plot in phplot) {print(plot, newpage = TRUE)}
   garbage = dev.off()
 
   tmp_df <- as.data.frame(test.ph$table)
   global_p <- tmp_df[nrow(tmp_df),3]
-  pvalues <- tmp_df[1:(nrow(tmp_df)-1),3,drop=F]
-  variables = as.character(rownames(pvalues[pvalues[[1]]>0.05,,drop=F]))
-  dropped = as.character(rownames(pvalues[pvalues[[1]]<=0.05,,drop=F]))
+  pvalues <- tmp_df[1:(nrow(tmp_df) - 1), 3, drop = F]
+  variables <- as.character(rownames(pvalues[pvalues[[1]] > 0.05, , drop = F]))
+  dropped <- as.character(rownames(pvalues[pvalues[[1]] <= 0.05, , drop = F]))
 
-  if(length(dropped)>0){
-    cat(paste("\tWarning: Proportional Hazards Assumptions not met (Global p = ", round(x = global_p, digits = 4), "). The following variables will be disregarded: ", paste(dropped,collapse=", "), ".\n", "\tFor more information, check plot: '",out,"_ph_assumptions_plot.pdf'\n",sep=""))
-  } else{
+  if (length(dropped) > 0)
+  {
+    cat(paste("\tWarning: Proportional Hazards Assumptions not met (Global p = ",
+              round(x = global_p, digits = 4), "). The following variables will be disregarded: ",
+              paste(dropped, collapse = ", "), ".\n", "\tFor more information, check plot: '", out,
+              "_ph_assumptions_plot.pdf'\n", sep = ""))
+  } else {
     cat(paste("Proportional Hazards Assumptions met (Global p = ", round(x = global_p, digits = 4), ").\n", sep = ""))
   }
 
   return(variables)
-
 }
 
 #Function to calculate ROC curve
@@ -435,7 +432,6 @@ cutoff_ROC <- function(dataset, auc_val, filename, plot)
                                           tag.healthy = 0, methods = "Youden",
                                           data = dataset,
                                           control = OptimalCutpoints::control.cutpoints(),
-                                          #ci.fit = TRUE,
                                           direction = ">")
   }
   else
@@ -444,92 +440,92 @@ cutoff_ROC <- function(dataset, auc_val, filename, plot)
                                           status = "OS",
                                           tag.healthy = 0, methods = "Youden",
                                           data = dataset,
-                                          #ci.fit = TRUE,
                                           control = OptimalCutpoints::control.cutpoints())
   }
 
   var_cutoff <- as.numeric(optimal.cutpoint$Youden$Global$optimal.cutoff$cutoff)
 
-  if (length(var_cutoff) >= 2)
-  {
-    var_cutoff <- var_cutoff[1]
-  }
-  else
-  {
-    var_cutoff <- var_cutoff
-  }
+  if (length(var_cutoff) >= 2) {var_cutoff <- var_cutoff[1]} else {var_cutoff <- var_cutoff}
 
-  if (plot){
+  if (plot)
+  {
     pdf(filename)
     roc_curve_plot <- OptimalCutpoints::plot.optimal.cutpoints(x = optimal.cutpoint, legend = T, which = c(1), col = "blue", bg = "white")
-    garbage = dev.off()
+    garbage <- dev.off()
   }
 
   return(var_cutoff)
 }
 
 #If some clinical file is provided
-if(type & clin_file != ""){
-
+if (type & clin_file != "")
+{
   #Check if all samples in exp_file are present on clin_file
-  clin = merge(data,clin,by=0)
-  if(nrow(data) != nrow(clin)){
-    if(nrow(data) > nrow(clin)){
+  clin <- merge(data, clin, by = 0)
+  if (nrow(data) != nrow(clin))
+  {
+    if (nrow(data) > nrow(clin))
+    {
       ####### Error file ##########
-      sink(file = paste(out, ".err", sep=''), append=T)
-      cat(paste("Error: Not all samples from file ", exp_file," are provided in file ", clin_file,". Please check the provided files.\n",sep=""))
+      sink(file = paste(out, ".err", sep = ''), append = T)
+      cat(paste("Error: Not all samples from file ", exp_file, " are provided in file ", clin_file,
+                ". Please check the provided files.\n", sep = ""))
       sink()
-      quit(save="no")
+      quit(save = "no")
     }
-    if(nrow(data) < nrow(clin)){
+    
+    if (nrow(data) < nrow(clin))
+    {
       ####### Error file ##########
-      sink(file = paste(out, ".err", sep=''), append=T)
-      cat(paste("Error: Not all samples from file ", clin_file," are provided in file ", exp_file,". Please check the provided files.\n",sep=""))
+      sink(file = paste(out, ".err", sep = ''), append = T)
+      cat(paste("Error: Not all samples from file ", clin_file, " are provided in file ", exp_file,
+                ". Please check the provided files.\n", sep = ""))
       sink()
-      quit(save="no")
+      quit(save = "no")
     }
   }
-
+  
   #Change rownames of clinical data
-  rownames(clin) = clin$Row.names
-  clin = clin[,2:ncol(clin)]
-
+  rownames(clin) <- clin$Row.names
+  clin <- clin[,2:ncol(clin)]
+  
   #Print log message
   cat("Done\n")
   cat("\n")
-
+  
   #Transform score to categorical with ROC curve or with median value
-  if(roc_curve){
+  if (roc_curve)
+  {
     #This value can be changed. By default, it uses the median followup time
-    cutoff = median(x = clin$OS.time, na.rm = TRUE)
+    cutoff <- median(x = clin$OS.time, na.rm = TRUE)
     nobs <- nrow(clin)
-
-    roc = survivalROC::survivalROC(Stime = clin$OS.time, status = clin$OS, marker = clin$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
-    score_cutoff = cutoff_ROC(dataset = clin, auc_val = as.numeric(roc$AUC), plot = F)
-    clin$score = ifelse(clin$score > score_cutoff, "high", "low")
+    roc <- survivalROC::survivalROC(Stime = clin$OS.time, status = clin$OS, marker = clin$score,
+                                    predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
+    score_cutoff <- cutoff_ROC(dataset = clin, auc_val = as.numeric(roc$AUC), plot = F)
+    clin$score <- ifelse(clin$score > score_cutoff, "high", "low")
   } else {
-    clin$score = ifelse(clin$score > median(clin$score), "high", "low")
-    }
-
+    clin$score <- ifelse(clin$score > median(clin$score), "high", "low")
+  }
+  
   #Explicitly set the "high" group as REF to control for HR (CI 95%) values
-  clin$score = factor(clin$score, levels = c("high", "low"))
+  clin$score <- factor(clin$score, levels = c("high", "low"))
   
   #Check if all columns have categorical variables with only 2 factors
-  for(i in 3:ncol(clin)){
-
-    if(nlevels(as.factor(clin[,i])) != 2){
+  for (i in 3:ncol(clin))
+  {
+    if (nlevels(as.factor(clin[,i])) != 2)
+    {
       ####### Error file ##########
-      sink(file = paste(out, ".err", sep=''), append=T)
-      cat(paste("Error: Variable \"", colnames(clin)[i], "\" in file ", clin_file," does not have 2 categories. Please check the provided file.\n",sep=""))
+      sink(file = paste(out, ".err", sep = ''), append = T)
+      cat(paste("Error: Variable \"", colnames(clin)[i], "\" in file ", clin_file,
+                " does not have 2 categories. Please check the provided file.\n", sep = ""))
       sink()
-      quit(save="no")
+      quit(save = "no")
     }
   }
-} else{
-
+} else {
   #Print log message
   cat("Done\n\n")
-
 }
 
 #Print log message
@@ -542,39 +538,27 @@ my_hazard.ratio <- function(x, surv.time, surv.event, weights, strat, alpha = 0.
                             ...)
 {
   method.test <- match.arg(method.test)
-  if (!missing(weights)) {
-    if (length(weights) != length(x)) {
-      stop("bad length for parameter weights!")
-    }
-  }
-  else {
-    weights <- rep(1, length(x))
-  }
-  if (!missing(strat)) {
-    if (length(strat) != length(x)) {
-      stop("bad length for parameter strat!")
-    }
+  if (!missing(weights)) {if (length(weights) != length(x)) {stop("bad length for parameter weights!")}}
+  else {weights <- rep(1, length(x))}
+  if (!missing(strat))
+  {
+    if (length(strat) != length(x)) {stop("bad length for parameter strat!")}
     iix <- weights <= 0
-    if (any(iix)) {
-      warning("samples with weight<=0 are discarded")
-    }
+    if (any(iix)) {warning("samples with weight<=0 are discarded")}
     weights[iix] <- NA
   }
   else {
     strat <- rep(1, length(x))
   }
-  cc.ix <- complete.cases(x, surv.time, surv.event, weights, 
-                          strat)
-  if (sum(cc.ix) < 3) {
-    data <- list(x = x, z = rep(NA, length(x)), surv.time = surv.time, 
-                 surv.event = surv.event, weights = weights, strat = strat)
-    return(list(hazard.ratio = NA, coef = NA, se = NA, lower = NA, 
-                upper = NA, p.value = NA, n = sum(cc.ix), coxm = NA, 
-                data = data))
+  cc.ix <- complete.cases(x, surv.time, surv.event, weights, strat)
+  
+  if (sum(cc.ix) < 3)
+  {
+    data <- list(x = x, z = rep(NA, length(x)), surv.time = surv.time, surv.event = surv.event, weights = weights, strat = strat)
+    return(list(hazard.ratio = NA, coef = NA, se = NA, lower = NA, upper = NA, p.value = NA, n = sum(cc.ix), coxm = NA, data = data))
   }
-  if (any(!cc.ix) & !na.rm) {
-    stop("NA values are present!")
-  }
+  
+  if (any(!cc.ix) & !na.rm) {stop("NA values are present!")}
   sx <- x[cc.ix]
   oo <- order(sx, decreasing = FALSE)
   sx <- sx[oo]
@@ -584,123 +568,110 @@ my_hazard.ratio <- function(x, surv.time, surv.event, weights, strat, alpha = 0.
   sstrat <- strat[cc.ix][oo]
   data <- list(x = x, surv.time = surv.time, surv.event = surv.event)
   options(warn = 2)
-  # Removes "strata(sstrat)" when calling coxph due to contrasts bug...
   rr <- try(survival::coxph(survival::Surv(stime, sevent) ~ sx, weights = sweights, ...))
-  #rr <- try(survival::coxph(survival::Surv(stime, sevent) ~ survival::strata(sstrat) + sx, 
-  #                          weights = sweights, ...))
   options(warn = 0)
-  if (class(rr) == "try-error") {
-    res <- list(hazard.ratio = NA, coef = NA, se = NA, lower = NA, 
-                upper = NA, p.value = NA, n = sum(cc.ix), coxm = NA, 
-                data = data)
+  if (class(rr) == "try-error")
+  {
+    res <- list(hazard.ratio = NA, coef = NA, se = NA, lower = NA, upper = NA, p.value = NA,
+                n = sum(cc.ix), coxm = NA, data = data)
   }
   else {
     hrcoef <- rr$coefficients
     hrse <- sqrt(drop(rr$var))
     names(hrcoef) <- names(hrse) <- NULL
     mystat <- NA
-    switch(method.test, logrank = {
-      mystat <- rr$score
-    }, likelihood.ratio = {
-      mystat <- 2 * (rr$loglik[2] - rr$loglik[1])
-    }, wald = {
-      mystat <- rr$wald.test
-    })
+    switch(method.test,
+           logrank = {mystat <- rr$score},
+           likelihood.ratio = {mystat <- 2 * (rr$loglik[2] - rr$loglik[1])},
+           wald = {mystat <- rr$wald.test})
     mypp <- pchisq(mystat, df = 1, lower.tail = FALSE)
-    res <- list(hazard.ratio = exp(hrcoef), coef = hrcoef, 
-                se = hrse, lower = exp(hrcoef - qnorm(alpha/2, lower.tail = FALSE) * 
-                                         hrse), upper = exp(hrcoef + qnorm(alpha/2, lower.tail = FALSE) * 
-                                                              hrse), p.value = mypp, n = rr$n, coxm = rr, data = data)
+    res <- list(hazard.ratio = exp(hrcoef), coef = hrcoef, se = hrse,
+                lower = exp(hrcoef - qnorm(alpha/2, lower.tail = FALSE) * hrse),
+                upper = exp(hrcoef + qnorm(alpha/2, lower.tail = FALSE) * hrse),
+                p.value = mypp, n = rr$n, coxm = rr, data = data)
   }
+  
   return(res)
 }
 
 #Create function to run log-rank test for score signatures
-logrank.test <- function(dat,filename){
+logrank.test <- function(dat,filename) {
 
   #Transform score to categorical with ROC curve or with median value
-  if(roc_curve){
+  if (roc_curve)
+  {
     #This value can be changed. By default, it uses the median followup time
-    cutoff = median(x = dat$OS.time, na.rm = TRUE)
+    cutoff <- median(x = dat$OS.time, na.rm = TRUE)
     nobs <- nrow(dat)
-
     cat("Generating ROC curve...\n")
-    roc = survivalROC::survivalROC(Stime = dat$OS.time, status = dat$OS, marker = dat$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
-    score_cutoff = cutoff_ROC(dataset = dat, auc_val = as.numeric(roc$AUC), filename = paste(out, "_ROC.pdf", sep=""), plot = T)
-    dat$score = ifelse(dat$score > score_cutoff, "high", "low")
-    cat(paste("ROC cutoff: ", round(score_cutoff,4), ".\n",sep=""))
+    roc <- survivalROC::survivalROC(Stime = dat$OS.time, status = dat$OS, marker = dat$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
+    score_cutoff <- cutoff_ROC(dataset = dat, auc_val = as.numeric(roc$AUC), filename = paste(out, "_ROC.pdf", sep = ""), plot = T)
+    dat$score <- ifelse(dat$score > score_cutoff, "high", "low")
+    cat(paste("ROC cutoff: ", round(score_cutoff,4), ".\n", sep = ""))
     cat("Done\n\n")
-
   } else {
     cat("Using the median value...\n")
-    dat$score = ifelse(dat$score > median(dat$score), "high", "low")
-    cat(paste("Median cutoff: ", round(median(dat$score),4), ".\n",sep=""))
+    dat$score <- ifelse(dat$score > median(dat$score), "high", "low")
+    cat(paste("Median cutoff: ", round(median(dat$score),4), ".\n", sep = ""))
     cat("Done\n\n")
   }
 
   #Explicitly set the "high" group as REF to control for HR (CI 95%) values
-  dat$score = factor(dat$score, levels = c("high", "low"))
+  dat$score <- factor(dat$score, levels = c("high", "low"))
   
   #Test proportional hazards assumptions
   cat("Testing proportional hazards assumption (signature score)...\n")
-  uni_model = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS) ~ score')) , data = dat)
+  uni_model <- survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS) ~ score')) , data = dat)
   test_ph_assumptions(model_object = uni_model, covariates = "NULL", is_multi = F)
   cat("Done\n\n")
-
   cat("Running log-rank test for signature score...\n")
 
   tryCatch({
-
     #Run log rank test
-    hr_model = my_hazard.ratio(x = dat$score, surv.time = dat$OS.time, surv.event = dat$OS,
-                               alpha = .05, method.test = "logrank", na.rm = T)
+    hr_model <- my_hazard.ratio(x = dat$score, surv.time = dat$OS.time, surv.event = dat$OS, alpha = .05, method.test = "logrank", na.rm = T)
 
     #Extract result fields: p-value, hazard ratio(95% confidence interval) and coefficient
-    hazard.ratio = paste(round(hr_model$hazard.ratio,4), " (95% CI, ", round(hr_model$lower,4), " - ", round(hr_model$upper,4), ")", sep="")
-    coef = hr_model$coef
-    log.rank.pvalue = hr_model$p.value
+    hazard.ratio <- paste(round(hr_model$hazard.ratio,4), " (95% CI, ", round(hr_model$lower,4), " - ", round(hr_model$upper,4), ")", sep = "")
+    coef <- hr_model$coef
+    log.rank.pvalue <- hr_model$p.value
 
     #Get number of high/low expression samples
-    low.high.samples = paste(nrow(dat[dat$score=="low",]),nrow(dat[dat$score=="high",]),sep="/")
+    low.high.samples <- paste(nrow(dat[dat$score == "low",]), nrow(dat[dat$score == "high",]), sep = "/")
 
     #Run survfit to get median survival of groups and 95% confidence interval
-    fit = survival::survfit(survival::Surv(OS.time, OS) ~ score, data=dat)
-    median.survival.low = paste(summary(fit)$table[2,7], " (95% CI, ", summary(fit)$table[2,8]," - ", summary(fit)$table[2,9], ")" ,sep="")
-    median.survival.high = paste(summary(fit)$table[1,7], " (95% CI, ", summary(fit)$table[1,8]," - ", summary(fit)$table[1,9], ")" ,sep="")
+    fit <- survival::survfit(survival::Surv(OS.time, OS) ~ score, data = dat)
+    median.survival.low <- paste(summary(fit)$table[2,7], " (95% CI, ", summary(fit)$table[2,8]," - ", summary(fit)$table[2,9], ")" , sep = "")
+    median.survival.high <- paste(summary(fit)$table[1,7], " (95% CI, ", summary(fit)$table[1,8]," - ", summary(fit)$table[1,9], ")", sep = "")
 
     #Add information about prognosis
-    if(!is.na(log.rank.pvalue) & log.rank.pvalue<0.05 & coef<0){
-      prognosis = "better"
-    } else if(!is.na(log.rank.pvalue) & log.rank.pvalue<0.05 & coef>0){
-      prognosis = "worse"
-    } else{
-      prognosis = "---"
-    }
+    if (!is.na(log.rank.pvalue) & log.rank.pvalue < 0.05 & coef < 0) {prognosis <- "better"}
+    else if (!is.na(log.rank.pvalue) & log.rank.pvalue < 0.05 & coef > 0) {prognosis <- "worse"}
+    else {prognosis <- "---"}
 
     #Create dataframe with result to be used in multivariate analysis
-    result = data.frame(feature="score", control="high", condition="low", coefficient=round(coef,4), hazard.ratio=hazard.ratio,
-                        log.rank.pvalue=round(log.rank.pvalue,4), low.high.samples=low.high.samples,
-                        median.survival.low=median.survival.low, median.survival.high=median.survival.high, prognosis=prognosis)
+    result <- data.frame(feature = "score", control = "high", condition = "low", coefficient = round(coef, 4),
+                         hazard.ratio = hazard.ratio, log.rank.pvalue = round(log.rank.pvalue, 4),
+                         low.high.samples = low.high.samples, median.survival.low = median.survival.low,
+                         median.survival.high = median.survival.high, prognosis = prognosis)
 
     #Write log-rank result to file
-    write.table(result, filename, row.names=F, col.names=T, quote=F, sep="\t")
+    write.table(result, filename, row.names = F, col.names = T, quote = F, sep = "\t")
 
     return(result)
-
   }, warning = function(w){}, error = function(e){})
-
 }
 
 #Run log-rank test for score signatures
-res_logrank = logrank.test(data, paste(out, "_uniCox.txt",sep=""))
+res_logrank <- logrank.test(data, paste(out, "_uniCox.txt", sep = ""))
 
 #Check if logrank model is not null
-if(is.null(res_logrank)){
+if (is.null(res_logrank))
+{
   ####### Error file ##########
-  sink(file = paste(out, ".err", sep=''), append=T)
-  cat(paste("Error: Cox model could not be fitted to score due to convergence issues. Please consider using another survival endpoint.\n",sep=""))
+  sink(file = paste(out, ".err", sep = ''), append = T)
+  cat(paste("Error: Cox model could not be fitted to score due to convergence issues. Please consider using another survival endpoint.\n", sep = ""))
   sink()
-  quit(save="no")
+  quit(save = "no")
 }
 
 #Print log messages
@@ -708,43 +679,40 @@ cat("Done\n\n")
 cat("Generating Kaplan-Meier curve...\n")
 
 #Create function to plot survival curve
-logrank.plot <- function(dat,filename){
-
+logrank.plot <- function(dat,filename) {
   #Get cutoff (either median or ROC) score of data signature AND transform data to categorical
-  if(roc_curve){
+  if (roc_curve)
+  {
     #This value can be changed. By default, it uses the median followup time
-    cutoff = median(x = dat$OS.time, na.rm = TRUE)
+    cutoff <- median(x = dat$OS.time, na.rm = TRUE)
     nobs <- nrow(dat)
-
-    roc = survivalROC::survivalROC(Stime = dat$OS.time, status = dat$OS, marker = dat$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
-    score_cutoff = cutoff_ROC(dataset = dat, auc_val = as.numeric(roc$AUC), plot = F)
-    sig_value = round(score_cutoff,4)
-    dat$score = ifelse(dat$score > score_cutoff, "high", "low")
+    roc <- survivalROC::survivalROC(Stime = dat$OS.time, status = dat$OS, marker = dat$score, predict.time = cutoff, method = "NNE", span = 0.25*nobs^(-0.20))
+    score_cutoff <- cutoff_ROC(dataset = dat, auc_val = as.numeric(roc$AUC), plot = F)
+    sig_value <- round(score_cutoff,4)
+    dat$score <- ifelse(dat$score > score_cutoff, "high", "low")
   } else {
-    sig_value = round(median(dat$score),4)
-    dat$score = ifelse(dat$score > median(dat$score), "high", "low")
+    sig_value <- round(median(dat$score),4)
+    dat$score <- ifelse(dat$score > median(dat$score), "high", "low")
   }
 
   #Explicitly set the "high" group as REF to control for HR (CI 95%) values
-  dat$score = factor(dat$score, levels = c("high", "low"))
+  dat$score <- factor(dat$score, levels = c("high", "low"))
   
   #If there is at least two groups to be compared, create Kaplan-meier curve
-  if(nlevels(as.factor(dat$score))>1){
-
-    pp = survminer::ggsurvplot(survival::survfit(survival::Surv(OS.time, OS) ~ score, data=dat),
-                               risk.table="abs_pct", surv.scale = "percent", palette = c("#D73027", "#1A9850"),
-                               ylab = "Survival probability", ylim = c(0, 1), break.y.by = .25,
-                               #break.x.by = round((max(dat$OS.time, na.rm = TRUE) / 5), 0),
-                               risk.table.title = "Number at risk (%)", tables.y.text = F, xlab = "Time",
-                               tables.theme = survminer::theme_cleantable(), ggtheme = survminer::theme_survminer(),
-                               conf.int = F, linetype = 1, censor.shape = 73, censor=T, censor.size = 4,
-                               tables.height=0.2, pval=paste("p =",format(res_logrank[,6],scientific=T),sep=" "),
-                               font.legend=14, font.x=18, font.y=18, font.tickslab=14, pval.size=5, pval.coord=c(0,0.05),
-                               title="", legend = c(0.8, 0.9), legend.title="", size = 1,
-                               fontsize = 3, axes.offset = T, surv.median.line = "none",
-                               legend.labs = survival::strata(c(paste("score >",sig_value, sep=" "),
-                                                                paste("score <=",sig_value, sep=" "))),
-                               data=dat)
+  if (nlevels(as.factor(dat$score)) > 1)
+  {
+    pp <- survminer::ggsurvplot(survival::survfit(survival::Surv(OS.time, OS) ~ score, data = dat),
+                                risk.table = "abs_pct", surv.scale = "percent", palette = c("#D73027", "#1A9850"),
+                                ylab = "Survival probability", ylim = c(0, 1), break.y.by = .25, tables.height = 0.2,
+                                risk.table.title = "Number at risk (%)", tables.y.text = F, xlab = "Time",
+                                tables.theme = survminer::theme_cleantable(), ggtheme = survminer::theme_survminer(),
+                                conf.int = F, linetype = 1, censor.shape = 73, censor = T, censor.size = 4,
+                                pval = paste("p =", format(res_logrank[, 6], scientific = T), sep = " "),
+                                font.legend = 14, font.x = 18, font.y = 18, font.tickslab = 14, pval.size = 5,
+                                pval.coord = c(0, 0.05), title = "", legend = c(0.8, 0.9), legend.title = "", size = 1,
+                                fontsize = 3, axes.offset = T, surv.median.line = "none",
+                                legend.labs = survival::strata(c(paste("score >", sig_value, sep = " "),
+                                                                 paste("score <=", sig_value, sep = " "))), data = dat)
     
     #Modify risk table title
     pp$table <- pp$table + ggplot2::theme(plot.title = ggplot2::element_text(size = 14, hjust = 0),
@@ -752,40 +720,38 @@ logrank.plot <- function(dat,filename){
     
     pdf(filename, onefile = FALSE)
     print(pp)
-    garbage = dev.off()
-
-  } else{
-    cat(paste("Warning: Data could not be partitioned into low/high scores.\n",sep=""))
+    garbage <- dev.off()
   }
+  else {cat(paste("Warning: Data could not be partitioned into low/high scores.\n", sep = ""))}
 }
 
 #Make survival plot (log-rank test for score signatures)
-logrank.plot(data, paste(out, "_km_plot.pdf",sep=""))
+logrank.plot(data, paste(out, "_km_plot.pdf", sep = ""))
 
 #Print log messages
 cat("Done\n\n")
 
 #Create function to run univariate Cox-regression for each provided clinical parameter
-univCox.test <- function(dat, covariates){
-
-  univ_formulas = sapply(covariates, function(x) as.formula(paste('survival::Surv(OS.time, OS)~', x)))
-  univ_models = lapply( univ_formulas, function(x){survival::coxph(x, data = dat)})
-  univ_results <- lapply(univ_models, function(x){
-
-                       coef = as.data.frame(stats::coef(summary(x)))
-                       ci = as.data.frame(summary(x)$conf.int)
-                       res = merge(coef,ci,by=0)
-                       res = res[,c(1:3,6,9:10)]
-                       colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
-                       res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
-                       res$Cox.pvalue = round(res$Cox.pvalue,4)
-                       res$prognosis = "---"
-                       if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.2 & res$coefficient<0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.2 & !is.na(res$coefficient) & res$coefficient<0,]$prognosis <- "better"}
-                       if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.2 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.2 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
-                       res = res[,c(1,7,4,8)]
-                       return(res)
-                })
-  univ_res = do.call("rbind", univ_results)
+univCox.test <- function(dat, covariates) {
+  univ_formulas <- sapply(covariates, function(x) as.formula(paste('survival::Surv(OS.time, OS)~', x)))
+  univ_models <- lapply(univ_formulas, function(x){survival::coxph(x, data = dat)})
+  univ_results <- lapply(univ_models, function(x) {
+    coef <- as.data.frame(stats::coef(summary(x)))
+    ci <- as.data.frame(summary(x)$conf.int)
+    res <- merge(coef, ci, by = 0)
+    res <- res[,c(1:3,6,9:10)]
+    colnames(res) <- c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
+    res$hazard.ratio <- paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ",
+                              round(res$upper.ci,4), ")", sep = "")
+    res$Cox.pvalue <- round(res$Cox.pvalue, 4)
+    res$prognosis <- "---"
+    if (nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.2 & res$coefficient < 0),]) > 0) {res[!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.2 & !is.na(res$coefficient) & res$coefficient < 0,]$prognosis <- "better"}
+    if (nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.2 & res$coefficient > 0),]) > 0) {res[!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.2 & !is.na(res$coefficient) & res$coefficient > 0,]$prognosis <- "worse"}
+    res <- res[,c(1,7,4,8)]
+    return(res)
+  })
+  
+  univ_res <- do.call("rbind", univ_results)
 
   return(univ_res)
 }
@@ -798,9 +764,9 @@ my_bootstrap_method <- function(raw_df, boot_df, boot_sample)
   bootstrap_df <- as.data.frame(raw_df[boot_vec,])
 
   #Check if all columns have categorical variables with only 2 factors
-  for(i in 3:ncol(bootstrap_df))
+  for (i in 3:ncol(bootstrap_df))
   {
-    if(nlevels(as.factor(bootstrap_df[,i])) != 2)
+    if (nlevels(as.factor(bootstrap_df[,i])) != 2)
     {
       bootstrap_df <- "repeat"
       break
@@ -834,17 +800,43 @@ generate_forest_plot <- function(model_object, filename)
                                         sprintf("%0.2f (%0.2f - %0.2f)",
                                                 trans(estimate), trans(conf.low), trans(conf.high))), display_na = NA),
                  list(width = 0.05, fontface = "plain",
-                      display = ~ifelse(reference, "",
-                                        ifelse(p.value < 0.0001, "<0.0001", round(x = p.value, digits = 4))),
+                      display = ~ifelse(reference, "", ifelse(p.value < 0.0001, "<0.0001",
+                                                              round(x = p.value, digits = 4))),
                       display_na = NA, hjust = 1, heading = "p-value"),
                  list(width = 0.01))
   
+  #Extract model limits
+  sum_model <- summary(model_object)
+  conf_int <- sum_model$conf.int
+  hr_min <- min(conf_int[, "lower .95"], na.rm = TRUE)
+  hr_max <- max(conf_int[, "upper .95"], na.rm = TRUE)
+  
+  #Avoid invalid values
+  hr_min <- max(hr_min, 1e-6)
+  
+  #Clip extreme values
+  hr_min <- max(hr_min, 0.001)
+  hr_max <- min(hr_max, 100)
+  
+  #Symmetric log scale around HR = 1
+  max_range <- max(abs(log(hr_min)), abs(log(hr_max)))
+  
+  #Define symmetrical boundaries
+  max_range <- round(max_range, 2)
+  limits_log <- c(-max_range, max_range)
+  
+  #Control breaks
+  hr_breaks <- c(0.25, 0.5, 1, 2, 4, 8)
+  hr_breaks <- hr_breaks[hr_breaks >= exp(limits_log[1]) & hr_breaks <= exp(limits_log[2])]
+  breaks_log <- log(hr_breaks)
+  
   pdf(filename)
   forest_plot <- suppressWarnings(forestmodel::forest_model(model = model_object, exponentiate = T, panels = panels,
-                                                            breaks = log(c(0.2, 0.4, 0.6, 0.8, 1)), limits = log(c(0.19, 1.1)),
-                                                            factor_separate_line = F, recalculate_width = T, recalculate_height = T))
+                                                            breaks = breaks_log, limits = limits_log,
+                                                            factor_separate_line = F,
+                                                            recalculate_width = T, recalculate_height = T))
   suppressWarnings(print(forest_plot, newpage = FALSE))
-  garbage = dev.off()
+  garbage <- dev.off()
 }
 
 #Merge tmp tables generated in multivariate cox regression with bootstrap
@@ -874,11 +866,11 @@ merge_tables <- function(tables_list, covariates)
   new_covariates = final_table[[1]]
 
   #Match string to get from 'new covariates' the original 'covariates' name
-  for(var in new_covariates)
+  for (var in new_covariates)
   {
-    for(var2 in covariates)
+    for (var2 in covariates)
     {
-      if(grepl(var2, var)){tmp_covariates <- append(tmp_covariates, var2)}
+      if (grepl(var2, var)) {tmp_covariates <- append(tmp_covariates, var2)}
     }
   }
 
@@ -891,50 +883,52 @@ merge_tables <- function(tables_list, covariates)
 barplot_co_variables <- function(plot_df, filename, covariates)
 {
   tmp_covariates <- c()
-  covariates = c("score", covariates)
-  new_covariates = plot_df[[1]]
+  covariates <- c("score", covariates)
+  new_covariates <- plot_df[[1]]
 
   #Match string to get from 'new covariates' the original 'covariates' name
-  for(var in new_covariates)
+  for (var in new_covariates)
   {
-    for(var2 in covariates)
+    for (var2 in covariates)
     {
-      if(grepl(var2, var)){tmp_covariates <- append(tmp_covariates, var2)}
+      if (grepl(var2, var)) {tmp_covariates <- append(tmp_covariates, var2)}
     }
   }
 
-  plot_df$var = tmp_covariates
+  plot_df$var <- tmp_covariates
 
   pdf(filename)
-  final_plot <- ggplot2::ggplot(data = plot_df, ggplot2::aes(x = stats::reorder(plot_df[[3]], -plot_df[[2]]), y = plot_df[[2]])) +
+  final_plot <- ggplot2::ggplot(data = plot_df, ggplot2::aes(x = stats::reorder(plot_df[[3]], -plot_df[[2]]),
+                                                             y = plot_df[[2]])) +
     ggplot2::geom_bar(stat = "identity", width = 0.5, color = "black", fill = "black") +
     ggplot2::xlab("") + ggplot2::ylab("Frequency (%)") +
-    ggplot2::geom_segment(ggplot2::aes(x = .5, y = 25, xend = (nrow(plot_df) + .5), yend = 25), color = "red", linetype = "dashed", size = .5) +
+    ggplot2::geom_segment(ggplot2::aes(x = .5, y = 25, xend = (nrow(plot_df) + .5), yend = 25),
+                          color = "red", linetype = "dashed", linewidth = .5) +
     ggplot2::theme_bw() +
-    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 60, hjust = 1), axis.text = ggplot2::element_text(face = "plain", colour = "black"),
-    legend.text = ggplot2::element_text(colour = "black", face = "plain"), axis.ticks = element_line(colour = "black"), axis.line = element_line(colour = "black"),
-    panel.grid.major.x = element_blank(), text = ggplot2::element_text(face = "plain", colour = "black")) +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 60, hjust = 1),
+                   axis.text = ggplot2::element_text(face = "plain", colour = "black"),
+                   legend.text = ggplot2::element_text(colour = "black", face = "plain"),
+                   axis.ticks = element_line(colour = "black"),
+                   axis.line = element_line(colour = "black"),
+                   panel.grid.major.x = element_blank(),
+                   text = ggplot2::element_text(face = "plain", colour = "black")) +
     ggplot2::scale_y_continuous(breaks = seq(0, 100, by = 20))
   print(final_plot, newpage = FALSE)
-  garbage = dev.off()
-
+  garbage <- dev.off()
 }
 
 #Create function to run multivariate Cox regression for score + clinical parameters
-multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_covariates){
-
+multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_covariates) {
   roc_curve2 <<- F
   filters <<- T
 
   #Select only relevant clinical parameters for multivariable Cox regression (p<0.2) which passed the Schoenfeld test
-  covariates = rownames(univ_result[(!is.na(univ_result$Cox.pvalue) & univ_result$Cox.pvalue<0.2),])
-  covariates = intersect(uni_covariates,covariates)
-  if(!is.element("score",covariates)){covariates=c("score",covariates)}
+  covariates <- rownames(univ_result[(!is.na(univ_result$Cox.pvalue) & univ_result$Cox.pvalue < 0.2),])
+  covariates <- intersect(uni_covariates,covariates)
+  if (!is.element("score",covariates)) {covariates = c("score",covariates)}
 
   tryCatch({
-
-    if (roc_curve){
-
+    if (roc_curve) {
       #Remove row if "NA" in at least one column (variable)
       counter <- ncol(dat)
 
@@ -946,13 +940,12 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
       # Ensure table without 'NAs' has at least 70% of the samples from the original dataframe
       while (tmp_table < sample_cutoff)
       {
-
-        if (counter < 5){
+        if (counter < 5)
+        {
           cat("\tWarning: Minimum number of covariables (3) not achieved. Please check variables provided in clinical file. ")
           cat("Performing multivariate regression without bootstrap resampling...\n\n")
           break
         } else {
-
           remove_var_vec <- c()
           remove_index <- 0
 
@@ -960,7 +953,6 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
           {
             tmp_var_size <- as.vector(is.na(temporary_table[[col]]))
             tmp_var_size2 <- length(tmp_var_size[tmp_var_size == T])
-
             remove_index <- remove_index + 1
             remove_var_vec[remove_index] <- tmp_var_size2
           }
@@ -969,9 +961,9 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
 
           if (remove_col == length(remove_var_vec))
           {
-            temporary_table <- temporary_table[,c(1:(remove_col-1))]
+            temporary_table <- temporary_table[,c(1:(remove_col - 1))]
           } else {
-            temporary_table <- temporary_table[,c(1:(remove_col-1),(remove_col+1):ncol(temporary_table))]
+            temporary_table <- temporary_table[,c(1:(remove_col - 1),(remove_col + 1):ncol(temporary_table))]
           }
 
           tmp_table <- nrow(temporary_table[stats::complete.cases(temporary_table),])
@@ -993,62 +985,51 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
         if (var1 <= var2)
         {
           prop <- (var1 / (var1 + var2))
-
-          if (prop < .2)
-          {
-            next
-          } else
-          {
-            tmp_cols <- append(tmp_cols, col)
-          }
-        } else
-        {
+          if (prop < .2) {next} else {tmp_cols <- append(tmp_cols, col)}
+        } else {
           prop <- (var2 / (var1 + var2))
-
-          if (prop < .2)
-          {
-            next
-          } else
-          {
-            tmp_cols <- append(tmp_cols, col)
-          }
+          if (prop < .2) {next} else {tmp_cols <- append(tmp_cols, col)}
         }
       }
 
       dat <- dat[, tmp_cols]
-
       n_cols_aft <- ncol(dat)
       n_cols_diff <- n_cols_bef - n_cols_aft
-
       counter <- counter - n_cols_diff
       barPlot_counter <- counter
 
-      if (counter < 5){
-
+      if (counter < 5)
+      {
         filters <<- F
         cat("\tWarning: Minimum number of covariables (3) not achieved. Please check variables provided in clinical file. ")
         cat("Performing multivariate regression without bootstrap resampling...\n\n")
-
         dat <- backup_dat
-
+        
         #Run multivariate Cox
-        res = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
-
+        res <- survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~',
+                                                       paste(covariates, collapse = " + "))), data = dat)
+        
         #Extract results
-        coef = as.data.frame(stats::coef(summary(res)))
-        ci = as.data.frame(summary(res)$conf.int)
-        res = merge(coef,ci,by=0)
-        res = res[,c(1:3,6,9:10)]
-
-        colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
-        res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
-        res$Cox.pvalue = round(res$Cox.pvalue,4)
-        res$prognosis = NA
-        if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient<0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient<0,]$prognosis <- "better"}
-        if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
-        res = res[,c(1,7,4,8)]
+        coef <- as.data.frame(stats::coef(summary(res)))
+        ci <- as.data.frame(summary(res)$conf.int)
+        res <- merge(coef, ci, by = 0)
+        res <- res[, c(1:3,6,9:10)]
+        
+        colnames(res) <- c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
+        res$hazard.ratio <- paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ",
+                                  round(res$upper.ci,4), ")", sep = "")
+        res$Cox.pvalue <- round(res$Cox.pvalue,4)
+        res$prognosis <- NA
+        if (nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & res$coefficient < 0),]) > 0)
+        {
+          res[!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & !is.na(res$coefficient) & res$coefficient < 0,]$prognosis <- "better"
+        }
+        if (nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & res$coefficient > 0),]) > 0)
+        {
+          res[!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & !is.na(res$coefficient) & res$coefficient > 0,]$prognosis <- "worse"
+        }
+        res <- res[,c(1,7,4,8)]
       } else {
-
         # Update covariates
         update_covariates <- c()
         for (col in 3:ncol(dat))
@@ -1060,74 +1041,85 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
           }
         }
 
-        if (length(update_covariates) < 3){
-
+        if (length(update_covariates) < 3)
+        {
           filters <<- F
           cat("\tWarning: Minimum number of covariables (3) not achieved. Please check variables provided in clinical file. ")
           cat("Performing multivariate regression without bootstrap resampling...\n\n")
           dat <- backup_dat
-
+          
           #Run multivariate Cox
-          res = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
+          res <- survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~',
+                                                         paste(covariates, collapse = " + "))), data = dat)
 
           #Extract results
-          coef = as.data.frame(stats::coef(summary(res)))
-          ci = as.data.frame(summary(res)$conf.int)
-          res = merge(coef,ci,by=0)
-          res = res[,c(1:3,6,9:10)]
+          coef <- as.data.frame(stats::coef(summary(res)))
+          ci <- as.data.frame(summary(res)$conf.int)
+          res <- merge(coef, ci, by = 0)
+          res <- res[,c(1:3,6,9:10)]
 
-          colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
-          res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
-          res$Cox.pvalue = round(res$Cox.pvalue,4)
-          res$prognosis = NA
-          if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient<0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient<0,]$prognosis <- "better"}
-          if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
-          res = res[,c(1,7,4,8)]
+          colnames(res) <- c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
+          res$hazard.ratio <- paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ",
+                                    round(res$upper.ci,4), ")", sep = "")
+          res$Cox.pvalue <- round(res$Cox.pvalue,4)
+          res$prognosis <- NA
+          if (nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & res$coefficient < 0),]) > 0)
+          {
+            res[!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & !is.na(res$coefficient) & res$coefficient < 0,]$prognosis <- "better"
+          }
+          if (nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & res$coefficient > 0),]) > 0)
+          {
+            res[!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & !is.na(res$coefficient) & res$coefficient > 0,]$prognosis <- "worse"
+          }
+          res <- res[,c(1,7,4,8)]
         } else {
-
           covariates <- update_covariates
-
           roc_curve2 <<- T
-
           tables_list <- list()
           boot_backup_dat <- dat
-
           boot_tmp <- sjstats::bootstrap(data = dat, n = 100, size = .6)
           boot_loop <- 0
           boot_control <- 0
           cat("\tBootstrap progress:\n\t")
 
-          while(boot_loop < 100)
+          while (boot_loop < 100)
           {
             boot_loop <- boot_loop + 1
             dat <- my_bootstrap_method(raw_df = boot_backup_dat, boot_df = boot_tmp, boot_sample = boot_control)
 
-            if (class(dat) != "data.frame") {
+            if (class(dat) != "data.frame")
+            {
               boot_loop <- boot_loop - 1
               boot_control <- 0
               boot_tmp <- sjstats::bootstrap(data = boot_backup_dat, n = (100 - boot_loop), size = .6)
             } else {
               boot_control <- boot_control + 1
-
               if (boot_loop == 100) {cat("# 100%\n\n")} else {cat("#")}
 
               #Run multivariate Cox
-              res = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', paste(covariates, collapse = " + "))) , data = dat)
+              res <- survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~',
+                                                             paste(covariates, collapse = " + "))), data = dat)
 
               #Extract results
-              coef = as.data.frame(stats::coef(summary(res)))
-              ci = as.data.frame(summary(res)$conf.int)
-              res = merge(coef,ci,by=0)
-              res = res[,c(1:3,6,9:10)]
+              coef <- as.data.frame(stats::coef(summary(res)))
+              ci <- as.data.frame(summary(res)$conf.int)
+              res <- merge(coef, ci, by = 0)
+              res <- res[,c(1:3,6,9:10)]
 
-              colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
-              res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
-              res$Cox.pvalue = round(res$Cox.pvalue,4)
-              res$prognosis = NA
-              if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient<0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient<0,]$prognosis <- "better"}
-              if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
-              res = res[,c(1,7,4,8)]
-
+              colnames(res) <- c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
+              res$hazard.ratio <- paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4),
+                                        " - ", round(res$upper.ci,4), ")", sep = "")
+              res$Cox.pvalue <- round(res$Cox.pvalue,4)
+              res$prognosis <- NA
+              if (nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & res$coefficient < 0),]) > 0)
+              {
+                res[!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & !is.na(res$coefficient) & res$coefficient < 0,]$prognosis <- "better"
+              }
+              if (nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & res$coefficient > 0),]) > 0)
+              {
+                res[!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & !is.na(res$coefficient) & res$coefficient > 0,]$prognosis <- "worse"
+              }
+              res <- res[,c(1,7,4,8)]
               tables_list[[boot_loop]] <- res
             }
           }
@@ -1141,80 +1133,93 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
           tmp_covariates <- c()
 
           #Match string to get from 'new covariates' the original 'covariates' name
-          for(var in new_covariates)
+          for (var in new_covariates)
           {
-            for(var2 in covariates)
+            for (var2 in covariates)
             {
-              if(grepl(var2, var)){tmp_covariates <- append(tmp_covariates, var2)}
+              if (grepl(var2, var)) {tmp_covariates <- append(tmp_covariates, var2)}
             }
           }
 
           #Run multivariate Cox
           dat <- boot_backup_dat
           covariates <- tmp_covariates
-          res = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
+          res <- survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~',
+                                                         paste(covariates, collapse = " + "))), data = dat)
 
           #Extract results
-          coef = as.data.frame(stats::coef(summary(res)))
-          ci = as.data.frame(summary(res)$conf.int)
-          res = merge(coef,ci,by=0)
-          res = res[,c(1:3,6,9:10)]
+          coef <- as.data.frame(stats::coef(summary(res)))
+          ci <- as.data.frame(summary(res)$conf.int)
+          res <- merge(coef, ci, by = 0)
+          res <- res[,c(1:3,6,9:10)]
 
-          colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
-          res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
-          res$Cox.pvalue = round(res$Cox.pvalue,4)
-          res$prognosis = NA
-          if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient<0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient<0,]$prognosis <- "better"}
-          if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
-          res = res[,c(1,7,4,8)]
+          colnames(res) <- c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
+          res$hazard.ratio <- paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4),
+                                    " - ", round(res$upper.ci,4), ")", sep = "")
+          res$Cox.pvalue <- round(res$Cox.pvalue,4)
+          res$prognosis <- NA
+          if (nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & res$coefficient < 0),]) > 0)
+          {
+            res[!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & !is.na(res$coefficient) & res$coefficient < 0,]$prognosis <- "better"
+          }
+          if (nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & res$coefficient > 0),]) > 0)
+          {
+            res[!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & !is.na(res$coefficient) & res$coefficient > 0,]$prognosis <- "worse"
+          }
+          res <- res[,c(1,7,4,8)]
         }
       }
     } else {
-
       #Run multivariate Cox
-      res = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', paste(covariates,collapse=" + "))) , data = dat)
+      res <- survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~',
+                                                     paste(covariates, collapse = " + "))), data = dat)
 
       #Extract results
-      coef = as.data.frame(stats::coef(summary(res)))
-      ci = as.data.frame(summary(res)$conf.int)
-      res = merge(coef,ci,by=0)
-      res = res[,c(1:3,6,9:10)]
+      coef <- as.data.frame(stats::coef(summary(res)))
+      ci <- as.data.frame(summary(res)$conf.int)
+      res <- merge(coef, ci, by = 0)
+      res <- res[,c(1:3,6,9:10)]
 
-      colnames(res) = c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
-      res$hazard.ratio = paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4), " - ", round(res$upper.ci,4), ")", sep="")
-      res$Cox.pvalue = round(res$Cox.pvalue,4)
-      res$prognosis = NA
-      if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient<0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient<0,]$prognosis <- "better"}
-      if(nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & res$coefficient>0),])>0){res[!is.na(res$Cox.pvalue) & res$Cox.pvalue<0.05 & !is.na(res$coefficient) & res$coefficient>0,]$prognosis <- "worse"}
-      res = res[,c(1,7,4,8)]
+      colnames(res) <- c("variable", "coefficient", "hr", "Cox.pvalue", "lower.ci", "upper.ci")
+      res$hazard.ratio <- paste(round(res$hr,4), " (95% CI, ", round(res$lower.ci,4),
+                                " - ", round(res$upper.ci,4), ")", sep = "")
+      res$Cox.pvalue <- round(res$Cox.pvalue,4)
+      res$prognosis <- NA
+      if (nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & res$coefficient < 0),]) > 0)
+      {
+        res[!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & !is.na(res$coefficient) & res$coefficient < 0,]$prognosis <- "better"
+      }
+      if (nrow(res[(!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & res$coefficient > 0),]) > 0)
+      {
+        res[!is.na(res$Cox.pvalue) & res$Cox.pvalue < 0.05 & !is.na(res$coefficient) & res$coefficient > 0,]$prognosis <- "worse"
+      }
+      res <- res[,c(1,7,4,8)]
     }
 
     #Merge univ_result with multi_result
-    final = merge(univ_result, res, by = "variable", all = T)
-
-    final[grepl("score",final$variable),]$hazard.ratio.x = as.character(logrank_result$hazard.ratio)
-    final[grepl("score",final$variable),]$Cox.pvalue.x = logrank_result$log.rank.pvalue
-    final[grepl("score",final$variable),]$prognosis.x = as.character(logrank_result$prognosis)
+    final <- merge(univ_result, res, by = "variable", all = T)
+    final[grepl("score",final$variable),]$hazard.ratio.x <- as.character(logrank_result$hazard.ratio)
+    final[grepl("score",final$variable),]$Cox.pvalue.x <- logrank_result$log.rank.pvalue
+    final[grepl("score",final$variable),]$prognosis.x <- as.character(logrank_result$prognosis)
 
     #Replace all NAs with "---"
     final[is.na(final)] <- "---"
 
     #Rename columns
-    colnames(final) = c("variable", "univariate.hazard.ratio", "univariate.Cox.pvalue", "univariate.prognosis",
-                        "multivariate.hazard.ratio", "multivariate.Cox.pvalue", "multivariate.prognosis")
+    colnames(final) <- c("variable", "univariate.hazard.ratio", "univariate.Cox.pvalue", "univariate.prognosis",
+                         "multivariate.hazard.ratio", "multivariate.Cox.pvalue", "multivariate.prognosis")
 
     tmp_covariates2 <- c()
     tmp_covariates3 <- c()
-
-    covariates2 = c('score',all_covariates)
+    covariates2 <- c('score',all_covariates)
     new_covariates2 <- as.vector(final[[1]])
 
     #Match string to get from 'new covariates' the original 'covariates' name
-    for(var in new_covariates2)
+    for (var in new_covariates2)
     {
-      for(var2 in covariates2)
+      for (var2 in covariates2)
       {
-        if(grepl(var2, var))
+        if (grepl(var2, var))
         {
           tmp_covariates2 <- append(tmp_covariates2, var2)
           refGroup <- substr(x = var, start = (nchar(var2) + 1), stop = nchar(var))
@@ -1225,7 +1230,6 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
 
     final$variable <- tmp_covariates2
     final$condition <- tmp_covariates3
-
     final <- final[,c(1,8,2,3,4,5,6,7)]
 
     return(final)
@@ -1234,107 +1238,102 @@ multiCox.test <- function(dat, univ_result, logrank_result, uni_covariates, all_
 }
 
 #Create function to run multivariate Cox regression for score + clinical parameters
-multiCox.model <- function(dat, univ_result, covariates){
+multiCox.model <- function(dat, univ_result, covariates) {
   tmp_covariates <- c()
+  
   #Select only relevant clinical parameters for multivariable Cox regression (p<0.2)
-  covariates = c("score",covariates)
-  new_covariates = c(univ_result[(univ_result$multivariate.Cox.pvalue != "---"),1])
+  covariates <- c("score",covariates)
+  new_covariates <- c(univ_result[(univ_result$multivariate.Cox.pvalue != "---"),1])
 
   #Match string to get from 'new covariates' the original 'covariates' name
-  for(var in new_covariates)
+  for (var in new_covariates)
   {
-    for(var2 in covariates)
+    for (var2 in covariates)
     {
-      if(grepl(var2, var)){tmp_covariates <- append(tmp_covariates, var2)}
+      if (grepl(var2, var)) {tmp_covariates <- append(tmp_covariates, var2)}
     }
   }
 
   tryCatch({
-
     #Run multivariate Cox
-    res = survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', paste(tmp_covariates,collapse=" + "))) , data = dat)
+    res <- survival::coxph(formula = formula(paste('survival::Surv(OS.time, OS)~', paste(tmp_covariates, collapse = " + "))) , data = dat)
 
     return(res)
-
   }, warning = function(w){ }, error = function(e){ })
 }
 
 #If some clinical file is provided, run multivariate analysis
-if(type & clin_file != ""){
+if (type & clin_file != "") {
 
   #Print log message
   cat("Running multivariate analysis...\n\n")
 
-  uni_covariates = colnames(clin)[4:ncol(clin)]
+  uni_covariates <- colnames(clin)[4:ncol(clin)]
 
   #Run univariate Cox-regression for each provided clinical parameter
   cat("\tSelecting covariables (multiple univariate analyses)...\n")
-  univ_cox = suppressWarnings(univCox.test(clin,uni_covariates))
+  univ_cox <- suppressWarnings(univCox.test(clin, uni_covariates))
 
-  tmp = univ_cox[(!is.na(univ_cox$Cox.pvalue) & univ_cox$Cox.pvalue<0.2),]
-  if(nrow(tmp)==0){
-
+  tmp <- univ_cox[(!is.na(univ_cox$Cox.pvalue) & univ_cox$Cox.pvalue < 0.2),]
+  if (nrow(tmp) == 0)
+  {
     cat("\tNo covariables passed the univariate analyses. Multivariate analysis could not be performed. ")
     cat("\tDone\n\n")
-
-  }else{
-
-    cat("\tThe following covariables passed the univariate analyses (p<0.2): ", paste(rownames(tmp),collapse=", "),".\n",sep="")
+  } else {
+    cat("\tThe following covariables passed the univariate analyses (p<0.2): ",
+        paste(rownames(tmp), collapse = ", "), ".\n", sep = "")
     cat("\tDone\n\n")
 
     #Run multivariate Cox regression if there are relevant clinical variables
-    multi_cox = suppressWarnings(multiCox.test(clin, univ_cox, res_logrank, uni_covariates, uni_covariates))
+    multi_cox <- suppressWarnings(multiCox.test(clin, univ_cox, res_logrank, uni_covariates, uni_covariates))
 
     #Test proportional hazards assumptions
     cat("\tTesting proportional hazards assumptions (multivariate)...\n")
-    multi_model = suppressWarnings(multiCox.model(dat = clin, univ_result = multi_cox, covariates = uni_covariates))
+    multi_model <- suppressWarnings(multiCox.model(dat = clin, univ_result = multi_cox, covariates = uni_covariates))
     cat("\tDone\n\n")
-    selected_covariates <- test_ph_assumptions(model_object = multi_model, covariates = uni_covariates, is_multi=T)
+    selected_covariates <- test_ph_assumptions(model_object = multi_model, covariates = uni_covariates, is_multi = T)
     cat("\tOverwriting plot from 'signature score'...\n")
     cat("\tDone\n\n")
 
-    if (length(selected_covariates)==0 || (length(selected_covariates)==1 && selected_covariates=="score")) {
-
+    if (length(selected_covariates) == 0 || (length(selected_covariates) == 1 && selected_covariates == "score"))
+    {
       cat("\tWarning: No covariables met the Proportional Hazards Assumptions. Multivariate analysis could not be performed.")
-
     } else {
-
-      multi_cox = suppressWarnings(multiCox.test(clin, univ_cox, res_logrank, selected_covariates, uni_covariates))
-      multi_model = suppressWarnings(multiCox.model(dat = clin, univ_result = multi_cox, covariates = selected_covariates))
+      multi_cox <- suppressWarnings(multiCox.test(clin, univ_cox, res_logrank, selected_covariates, uni_covariates))
+      multi_model <- suppressWarnings(multiCox.model(dat = clin, univ_result = multi_cox, covariates = selected_covariates))
 
       #Outputs data table used to generate the KM plot
-      write.table(clin, paste(out,"_scoreCat_table.tsv",sep=""), row.names=T, col.names=T, quote=F, sep="\t")
+      write.table(clin, paste(out, "_scoreCat_table.tsv", sep = ""), row.names = T, col.names = T, quote = F, sep = "\t")
 
       #Write result to file
-      write.table(multi_cox, paste(out,"_multiCox.txt",sep=""), row.names=F, col.names=T, quote=F, sep="\t")
+      write.table(multi_cox, paste(out, "_multiCox.txt", sep = ""), row.names = F, col.names = T, quote = F, sep = "\t")
 
       #Makes bar plot if ROC curve option is TRUE
-      if(roc_curve2){
+      if (roc_curve2)
+      {
         cat("\tMaking BarPlot...\n")
-
+        
         score_freq <- as.numeric(merged_table[merged_table[[1]] == "score", 2])
-        if (score_freq < 25) {
-          cat(paste("\tWarning: variable 'score' did not appear in at least 25% of bootstrap iterations (", round(x = score_freq, digits = 2),
-                    "%). Check plot: '", paste(out, "_frequency_bootstrap.pdf'\n", sep = ""), sep = ""))
+        if (score_freq < 25)
+        {
+          cat(paste("\tWarning: variable 'score' did not appear in at least 25% of bootstrap iterations (",
+                    round(x = score_freq, digits = 2), "%). Check plot: '",
+                    paste(out, "_frequency_bootstrap.pdf'\n", sep = ""), sep = ""))
         }
-
         barplot_co_variables(plot_df = merged_table, filename = paste(out, "_frequency_bootstrap.pdf", sep = ""), covariates = selected_covariates)
         cat("\tDone\n\n")
       }
 
       #Makes Forest Plot
       cat("\tMaking Forest Plot...\n")
-      generate_forest_plot(model_object = multi_model, filename = paste(out, "_forest_plot.pdf", sep=""))
+      generate_forest_plot(model_object = multi_model, filename = paste(out, "_forest_plot.pdf", sep = ""))
       cat("\tDone\n\n")
-
     }
-
   }
 
   #Print log message
   cat("Done\n")
   cat("\n")
-
 }
 
 #Print log message
@@ -1345,15 +1344,12 @@ end_time <- suppressMessages(Sys.time())
 elapsed_time <- difftime(time1 = end_time, time2 = start_time, units = "secs")
 
 if (elapsed_time >= 3600) {
-  cat(paste("Time to run 'survival' analysis: ", round(x = (elapsed_time[[1]] / 3600), digits = 2),
-            " hours.\n", sep = ""))
+  cat(paste("Time to run 'survival' analysis: ", round(x = (elapsed_time[[1]] / 3600), digits = 2), " hours.\n", sep = ""))
 } else {
   if (elapsed_time >= 60) {
-    cat(paste("Time to run 'survival' analysis: ", round(x = (elapsed_time[[1]] / 60), digits = 2),
-              " minutes.\n", sep = ""))
+    cat(paste("Time to run 'survival' analysis: ", round(x = (elapsed_time[[1]] / 60), digits = 2), " minutes.\n", sep = ""))
   } else {
-    cat(paste("Time to run 'survival' analysis: ", round(x = elapsed_time[[1]], digits = 2),
-              " seconds.\n", sep = ""))
+    cat(paste("Time to run 'survival' analysis: ", round(x = elapsed_time[[1]], digits = 2), " seconds.\n", sep = ""))
   }
 }
 
