@@ -1,0 +1,617 @@
+---
+title: "`r params$title`"
+author: "`r params$author`"
+other-links: false
+format:
+  pdf:
+    toc: true
+    number-sections: true
+    geometry:
+      - margin=1in
+  html:
+    toc: true
+    number-sections: true
+    css: reboot_style.css
+    embed-resources: true
+    tbl-cap-location: top
+    fig-cap-location: bottom
+execute:
+  echo: false
+  warning: false
+  message: false
+params:
+  reboot_object: NULL
+  title: "REBOOT Report"
+  author: "REBOOT"
+---
+
+![](logo.jpeg){fig-align="center" width=300px}
+
+```{r}
+obj <- readRDS(params$reboot_object)
+obj_class <- class(obj)[1]
+
+is_regression <- obj_class == "reboot_signature"
+is_survival <- obj_class == "reboot_survival"
+is_complete <- obj_class == "reboot_complete"
+
+reg <- if (is_complete) obj$regression else if (is_regression) obj else NULL
+surv <- if (is_complete) obj$survival else if (is_survival) obj else NULL
+
+safe_print <- function(x){
+  try(print(x), silent = TRUE)
+}
+
+num_summary <- function(x){
+  x <- suppressWarnings(as.numeric(x))
+  x <- x[is.finite(x)]
+
+  if (length(x) == 0)
+  {
+    return(c(
+      Minimum = NA_real_,
+      Median = NA_real_,
+      Mean = NA_real_,
+      Maximum = NA_real_
+    ))
+  }
+
+  c(
+    Minimum = min(x, na.rm = TRUE),
+    Median = median(x, na.rm = TRUE),
+    Mean = mean(x, na.rm = TRUE),
+    Maximum = max(x, na.rm = TRUE)
+  )
+}
+
+emit_table <- function(df, caption = NULL, digits = 4, font_size = 12, scale_down = FALSE)
+{
+  tbl <- knitr::kable(df, caption = caption, digits = digits, booktabs = TRUE,
+                      format = ifelse(knitr::is_latex_output(), "latex", "html"))
+
+  if (requireNamespace("kableExtra", quietly = TRUE))
+  {
+    if (knitr::is_latex_output())
+    {
+      latex_options <- "HOLD_position"
+      if (scale_down) {latex_options <- c(latex_options, "scale_down")}
+
+      tbl <- kableExtra::kable_styling(tbl,
+                                       latex_options = latex_options,
+                                       font_size = font_size)
+    } else {
+      tbl <- kableExtra::kable_styling(tbl,
+                                       bootstrap_options = c("striped", "hover", "condensed"),
+                                       full_width = TRUE, font_size = font_size)
+    }
+  }
+
+  cat(tbl, sep = "\n")
+}
+
+params_to_df <- function(x)
+{
+  data.frame(
+    Parameter = names(x),
+    Value = sapply(x, function(v)
+    {
+      if (is.null(v)) {"NULL"} else {paste(v, collapse = ", ")}
+    }),
+    row.names = NULL
+  )
+}
+
+call_to_text <- function(x)
+{
+  paste(deparse(x), collapse = "\n")
+}
+
+status_label <- function(x)
+{
+  ifelse(x == 0, "Alive / censored", ifelse(x == 1, "Dead / event", as.character(x)))
+}
+
+infer_followup_years <- function(x)
+{
+  x <- suppressWarnings(as.numeric(x))
+
+  if (all(is.na(x)))
+  {
+    return(x)
+  }
+
+  max_x <- max(x, na.rm = TRUE)
+
+  if (max_x > 100)
+  {
+    return(x / 365.25)
+  }
+
+  if (max_x > 20)
+  {
+    return(x / 12)
+  }
+
+  x
+}
+```
+
+# Overview
+
+This report provides an automated summary of the REBOOT analysis, including model parameters, generated signatures, score-based survival stratification, Cox regression results, diagnostic plots, and key descriptive statistics. The goal is to provide a compact, reproducible, and interpretable record of the analysis workflow and its main outputs.
+
+```{=html}
+<div class="format-note">
+  <strong>Note:</strong> The PDF link under <em>Other Formats</em> works only if the PDF report was also generated and saved in the same directory with the same base filename.
+</div>
+```
+
+# Analysis Information
+
+```{r}
+#| results: asis
+cat("**Object class:** ", obj_class, "\n\n", sep = "")
+cat("**Generated:** ", format(Sys.time(), "%d %B %Y - %H:%M"), "\n", sep = "")
+```
+
+```{r}
+#| results: asis
+
+if (!is.null(obj$metadata))
+{
+  metadata_df <- data.frame(
+    Field = names(obj$metadata),
+    Value = sapply(obj$metadata, function(x) paste(as.character(x), collapse = ", ")),
+    row.names = NULL
+  )
+
+  emit_table(
+    metadata_df,
+    caption = "Analysis metadata",
+    digits = 4
+  )
+}
+```
+
+# Module I - Regression
+
+```{r}
+#| results: asis
+
+if (!is.null(reg)) {
+
+  cat("## Function call\n\n")
+  cat("```r\n")
+  cat(call_to_text(reg$call), "\n")
+  cat("```\n\n")
+
+  cat("## Parameters\n\n")
+  emit_table(
+    params_to_df(reg$params),
+    caption = "Regression module parameters",
+    digits = 4
+  )
+
+  cat("\n\n## Signature\n\n")
+  emit_table(
+    reg$signature,
+    caption = "Generated signature",
+    digits = 4
+  )
+
+  cat("\n\n## Signature statistics\n\n")
+  stats_df <- data.frame(
+    Statistic = "Coefficient",
+    t(num_summary(reg$signature$coefficient)),
+    check.names = FALSE
+  )
+
+  emit_table(
+    stats_df,
+    caption = "Coefficient summary statistics",
+    digits = 4
+  )
+
+  cat("\n\nNumber of selected features:", nrow(reg$signature), "\n\n")
+}
+```
+
+## Regression plots
+
+The following plots summarize the distribution and contribution of the features selected for the REBOOT signature.
+
+```{r}
+#| fig-width: 8
+#| fig-height: 5
+#| fig-cap: "Histogram of signature coefficients."
+
+if (!is.null(reg) && !is.null(reg$plots$hist_plot)) {
+  print(reg$plots$hist_plot)
+}
+```
+
+```{r}
+#| fig-width: 9
+#| fig-height: 6
+#| fig-cap: "Lollipop plot showing the selected features and their coefficients."
+
+if (!is.null(reg) && !is.null(reg$plots$lolli_plot)) {
+  print(reg$plots$lolli_plot)
+}
+```
+
+# Module II - Survival
+
+```{r}
+#| results: asis
+
+if (!is.null(surv)) {
+
+  cat("## Function call\n\n")
+  cat("```r\n")
+  cat(call_to_text(surv$call), "\n")
+  cat("```\n\n")
+
+  cat("## Parameters\n\n")
+  emit_table(
+    params_to_df(surv$params),
+    caption = "Survival module parameters",
+    digits = 4
+  )
+
+  cat("\n\n## Updated signature\n\n")
+  emit_table(
+    surv$signature,
+    caption = "Updated signature",
+    digits = 4
+  )
+
+  cat("\n\n## Signature statistics\n\n")
+  surv_sig_stats <- data.frame(
+    Statistic = "Coefficient",
+    t(num_summary(surv$signature$coefficient)),
+    check.names = FALSE
+  )
+
+  emit_table(
+    surv_sig_stats,
+    caption = "Updated signature coefficient summary statistics",
+    digits = 4
+  )
+
+  cat("\n\n## Score cutoff\n\n")
+  score_cutoff_df <- data.frame(
+    Metric = "Score cutoff",
+    Value = surv$score_cutoff
+  )
+
+  emit_table(
+    score_cutoff_df,
+    caption = "Score cutoff used for patient stratification",
+    digits = 4
+  )
+
+  cat("\n\n## Score statistics\n\n")
+  score_stats <- data.frame(
+    Statistic = "Score",
+    t(num_summary(surv$expression_data$score)),
+    check.names = FALSE
+  )
+
+  emit_table(
+    score_stats,
+    caption = "Score summary statistics",
+    digits = 4
+  )
+
+  cat("\n\n## Clinical variables\n\n")
+  clinical_vars <- setdiff(colnames(surv$clinical_data),
+                           c("OS", "OS.time", "score", "score_group"))
+
+  clinical_df <- data.frame(Variable = clinical_vars,
+                            Categories = sapply(surv$clinical_data[, clinical_vars,
+                                                                   drop = FALSE],
+                                                function(x) {length(unique(stats::na.omit(x)))}),
+                            Values = sapply(surv$clinical_data[, clinical_vars,
+                                                                   drop = FALSE],
+                                                function(x)
+                                                {
+                                                  paste(unique(stats::na.omit(x)),
+                                                        collapse = ", ")
+                                                }), row.names = NULL)
+
+  emit_table(
+    clinical_df,
+    caption = "Clinical variables available for survival analysis",
+    digits = 4
+  )
+
+  cat("\n\n## Univariate Cox table\n\n")
+  uni_table <- surv$survival$univariate$table
+  rownames(uni_table) <- NULL
+  emit_table(uni_table, caption = "Univariate Cox model",
+             digits = 4, font_size = 7, scale_down = TRUE)
+
+  if (!is.null(surv$survival$multivariate))
+  {
+    cat("\n\n## Multivariate Cox table\n\n")
+    emit_table(
+      surv$survival$multivariate$table,
+      caption = "Multivariate Cox model",
+      digits = 4,
+      font_size = 7,
+      scale_down = TRUE
+    )
+  }
+
+  cat("\n\n## Proportional hazards table\n\n")
+  emit_table(
+    surv$ph_result$table,
+    caption = "Proportional hazards test",
+    digits = 4
+  )
+}
+```
+
+# Expression Data Summary
+
+```{r}
+#| results: asis
+
+if (!is.null(surv)) {
+
+  expr_cols <- setdiff(
+    colnames(surv$expression_data),
+    c("OS", "OS.time", "score", "score_group")
+  )
+
+  expr_values <- unlist(surv$expression_data[, expr_cols, drop = FALSE])
+
+  expr_stats <- data.frame(
+    Statistic = "Expression",
+    Features = length(expr_cols),
+    t(num_summary(expr_values)),
+    check.names = FALSE
+  )
+
+  emit_table(
+    expr_stats,
+    caption = "Expression summary statistics",
+    digits = 4
+  )
+}
+```
+
+```{r}
+#| fig-width: 7
+#| fig-height: 5
+#| fig-cap: "Global distribution of expression values used for score calculation."
+
+if (!is.null(surv)) {
+
+  expr_cols <- setdiff(
+    colnames(surv$expression_data),
+    c("OS", "OS.time", "score", "score_group")
+  )
+
+  expr_values <- unlist(surv$expression_data[, expr_cols, drop = FALSE])
+
+  expr_df <- data.frame(Expression = as.numeric(expr_values))
+
+  ggplot2::ggplot(expr_df, ggplot2::aes(x = "", y = Expression)) +
+    ggplot2::geom_boxplot(outlier.alpha = 0.35) +
+    ggplot2::theme_minimal() +
+    ggplot2::labs(
+      title = "Expression distribution",
+      x = NULL,
+      y = "Expression"
+    )
+}
+```
+
+# Survival Data Summary
+
+```{r}
+#| results: asis
+
+if (!is.null(surv)) {
+
+  os_df <- as.data.frame(table(status_label(surv$clinical_data$OS)))
+  colnames(os_df) <- c("Status", "Count")
+
+  emit_table(
+    os_df,
+    caption = "Overall survival status",
+    digits = 4
+  )
+
+  followup_years <- infer_followup_years(surv$clinical_data$OS.time)
+
+  followup_df <- data.frame(
+    Followup = c("<= 1 year", "<= 3 years", "<= 5 years", "<= 10 years"),
+    Count = c(
+      sum(followup_years <= 1, na.rm = TRUE),
+      sum(followup_years <= 3, na.rm = TRUE),
+      sum(followup_years <= 5, na.rm = TRUE),
+      sum(followup_years <= 10, na.rm = TRUE)
+    )
+  )
+
+  emit_table(
+    followup_df,
+    caption = "Follow-up time summary",
+    digits = 4
+  )
+
+  followup_stats <- data.frame(
+    Statistic = "OS.time (years)",
+    t(num_summary(followup_years)),
+    check.names = FALSE
+  )
+
+  emit_table(
+    followup_stats,
+    caption = "Follow-up summary statistics",
+    digits = 4
+  )
+}
+```
+
+```{r}
+#| fig-width: 7
+#| fig-height: 5
+#| fig-cap: "Distribution of overall survival status."
+
+if (!is.null(surv)) {
+
+  os_df <- as.data.frame(table(status_label(surv$clinical_data$OS)))
+  colnames(os_df) <- c("Status", "Count")
+  
+  os_df$Percent <- round(100 * os_df$Count / sum(os_df$Count), 1)
+  os_df$Label <- paste0(os_df$Count, " (", os_df$Percent, "%)")
+
+  ggplot2::ggplot(os_df, ggplot2::aes(x = "", y = Count, fill = Status)) +
+    ggplot2::geom_col(width = 1, color = "white") +
+    ggplot2::coord_polar(theta = "y") +
+    ggplot2::geom_text(ggplot2::aes(label = Label),
+                       position = ggplot2::position_stack(vjust = 0.5), size = 4) +
+    ggplot2::scale_fill_manual(values = c("#4E79A7", "#E15759")) +
+    ggplot2::theme_void() +
+    ggplot2::labs(title = "OS distribution", fill = "Status")
+}
+```
+
+```{r}
+#| fig-width: 7
+#| fig-height: 5
+#| fig-cap: "Distribution of follow-up time."
+
+if (!is.null(surv)) {
+
+  followup_years <- infer_followup_years(surv$clinical_data$OS.time)
+
+  followup_plot_df <- data.frame(Followup = followup_years)
+
+  ggplot2::ggplot(followup_plot_df, ggplot2::aes(x = Followup)) +
+    ggplot2::geom_histogram(bins = 30) +
+    ggplot2::theme_minimal() +
+    ggplot2::labs(
+      title = "Follow-up distribution",
+      x = "Follow-up time (years)",
+      y = "Patients"
+    )
+}
+```
+
+# Kaplan-Meier Curve
+
+The Kaplan-Meier curve shows survival differences between patients classified according to the REBOOT score.
+
+```{r}
+#| fig-width: 9
+#| fig-height: 8
+#| fig-cap: "Kaplan-Meier survival curve with risk table."
+
+if (!is.null(surv) && !is.null(surv$plots$km_plot)) {
+  print(surv$plots$km_plot)
+}
+```
+
+# Proportional Hazards Diagnostics
+
+The proportional hazards diagnostic plot summarizes whether the proportional hazards assumption appears compatible with the fitted Cox model.
+
+```{r}
+#| fig-width: 11
+#| fig-height: 8
+#| fig-cap: "Proportional hazards diagnostic plot."
+
+if (!is.null(surv) && !is.null(surv$plots$ph_plot)) {
+  print(surv$plots$ph_plot)
+}
+```
+
+# ROC Analysis
+
+```{r}
+#| results: asis
+
+if (!is.null(surv) && !is.null(surv$roc_result)) {
+
+  roc_df <- data.frame(
+    Cutoff = surv$roc_result$cutoff,
+    AUC = surv$roc_result$auc,
+    Direction = surv$roc_result$direction
+  )
+
+  emit_table(
+    roc_df,
+    caption = "ROC analysis summary",
+    digits = 4
+  )
+}
+```
+
+```{r}
+#| fig-width: 7
+#| fig-height: 6
+#| fig-cap: "ROC curve."
+
+if (!is.null(surv) && !is.null(surv$roc_result$optimal_cutpoint$data)) {
+
+  roc_data <- surv$roc_result$optimal_cutpoint$data
+
+  roc_obj <- pROC::roc(response = roc_data$OS, predictor = roc_data$score,
+    direction = surv$roc_result$direction, quiet = TRUE)
+
+  roc_df <- data.frame(Specificity = rev(roc_obj$specificities),
+                       Sensitivity = rev(roc_obj$sensitivities))
+
+  roc_plot <- ggplot2::ggplot(roc_df, ggplot2::aes(x = 1 - Specificity, y = Sensitivity)) +
+    ggplot2::geom_line(linewidth = 0.5, color = "blue") +
+    ggplot2::geom_abline(slope = 1, intercept = 0, color = "gray") +
+    ggplot2::coord_equal() + ggplot2::theme_minimal() +
+    ggplot2::theme(panel.grid = ggplot2::element_blank(),
+                   axis.line = ggplot2::element_line(color = "black"),
+                   axis.ticks = ggplot2::element_line(color = "black")) +
+    ggplot2::scale_x_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2)) +
+    ggplot2::scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = 0.2)) +
+    ggplot2::labs(title = "ROC curve",
+                  subtitle = paste0("AUC = ", round(surv$roc_result$auc, 3)),
+                  x = "1 - Specificity", y = "Sensitivity")
+  
+  print(roc_plot)
+}
+```
+
+# Forest Plot
+
+The forest plot summarizes the hazard ratio estimates from the multivariate Cox model.
+
+```{r}
+#| fig-width: 12
+#| fig-height: 8
+#| fig-cap: "Forest plot from multivariate Cox model."
+
+if (!is.null(surv) && !is.null(surv$plots$forest_plot)) {
+  print(surv$plots$forest_plot)
+}
+```
+
+# Bootstrap Stability
+
+```{r}
+#| results: asis
+if (!is.null(surv) && !is.null(surv$plots$bar_plot)) {
+  print(surv$plots$bar_plot)
+} else {
+  cat("*No bootstrap was performed for the multivariate survival analysis.*")
+}
+```
+
+# Session Information
+
+```{r}
+#| results: asis
+sessionInfo()
+```

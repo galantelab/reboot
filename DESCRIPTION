@@ -1,0 +1,39 @@
+Package: Reboot
+Title: Bootstrap-Based Multivariate LASSO Cox Regression for Survival
+        Signature Discovery
+Version: 1.2.0
+Authors@R: c(
+    person("Filipe", "Ferreira dos Santos", email = "fferreira@mochsl.org.br", role = c("aut", "cre")),
+    person("Felipe", "Rodolfo Camargo dos Santos", email = "fefelrcs@gmail.com", role = "aut"),
+    person("Gabriela", "Der Agopian Guardia", email = "gguardia@mochsl.org.br", role = "aut"),
+    person("Daniel", "Takatori Ohara", email = "dtohara@mochsl.org.br", role = "aut"),
+    person("Pedro Alexandre", "Favoretto Galante", email = "pgalante@mochsl.org.br", role = "aut")
+  )
+Description: 
+    Provides a framework to identify and validate gene or transcript expression signatures associated with patient survival.
+    The method combines penalized Cox regression (LASSO) with a bootstrap-based multivariate approach to improve robustness in feature selection.
+    Additional statistical filtering steps and visualization tools are included.
+License: GPL (>= 3)
+Encoding: UTF-8
+URL: https://github.com/galantelab/reboot
+BugReports: https://github.com/galantelab/reboot/issues
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
+Imports: dplyr, forcats, ggplot2, mice, penalized, R.utils, survival,
+        survivalROC, OptimalCutpoints, patchwork, data.table,
+        forestmodel, ggpubr, jsonlite, methods, sjstats, survminer
+Suggests: knitr, kableExtra, pROC, quarto, rmarkdown, spelling,
+        testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: knitr
+Depends: R (>= 3.5.0)
+LazyData: true
+Language: en-US
+NeedsCompilation: no
+Packaged: 2026-06-02 23:16:56 UTC; filipe
+Author: Filipe Ferreira dos Santos [aut, cre],
+  Felipe Rodolfo Camargo dos Santos [aut],
+  Gabriela Der Agopian Guardia [aut],
+  Daniel Takatori Ohara [aut],
+  Pedro Alexandre Favoretto Galante [aut]
+Maintainer: Filipe Ferreira dos Santos <fferreira@mochsl.org.br>
