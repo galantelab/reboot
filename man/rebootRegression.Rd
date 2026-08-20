@@ -19,7 +19,8 @@ rebootRegression(
   saveJSON = FALSE,
   saveRDS = FALSE,
   report = FALSE,
-  log = FALSE
+  log = FALSE,
+  seed = 17
 )
 }
 \arguments{
@@ -69,6 +70,13 @@ This can also be done later using \code{write_reboot_rds()}.}
 This can also be done later using \code{write_reboot_report()}.}
 
 \item{log}{Logical. If \code{TRUE}, writes a minimalist log file tracking the pipeline execution (Default: \code{FALSE}).}
+
+\item{seed}{Integer or \code{NULL}. Random seed controlling every stochastic step in the pipeline
+(missing-value imputation, bootstrap feature subsampling, and LASSO cross-validation folds), so
+that results are reproducible across runs for the same input and parameters (Default: \code{17}).
+
+Set to \code{NULL} to disable seeding and restore the previous (non-reproducible) behavior.
+The seed is applied locally and the caller's R session RNG state is restored afterwards.}
 }
 \value{
 An S3 object of class \code{"reboot_signature"} containing:

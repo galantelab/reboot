@@ -242,7 +242,12 @@ reboot_bootstrapfun <- function(full_data, n_boot, group_size, cor_threshold, co
     if (ncol(full_data) == 3) {
       cmatrix <- full_data
     } else {
-      cmatrix <- reboot_subsample(full_data, group_size, i)
+      # NOTE: no per-iteration 'seed' is passed here on purpose. Reproducibility across the whole
+      # bootstrap loop (and the LASSO cross-validation folds and imputation steps that follow) is
+      # controlled once, upstream, by rebootRegression()'s 'seed' argument. Reseeding to a small
+      # sequential integer on every iteration would make draws less random and would not cover the
+      # other stochastic steps in the pipeline (see rebootRegression() for details).
+      cmatrix <- reboot_subsample(full_data, group_size)
       if (group_size > 1 && reboot_corfun(cmatrix, cor_threshold) == 1) {next} # Correlation filter
     }
     

@@ -23,7 +23,8 @@ rebootComplete(
   saveJSON = FALSE,
   saveRDS = FALSE,
   report = FALSE,
-  log = FALSE
+  log = FALSE,
+  seed = 17
 )
 }
 \arguments{
@@ -70,6 +71,11 @@ in \code{rebootSurvival()} (Default: \code{0.2}).}
 \code{TRUE} or \code{"PDF"} to generate a PDF report, or \code{"HTML"} to generate an HTML report.}
 
 \item{log}{Logical. If \code{TRUE}, writes log files for both modules (Default: \code{FALSE}).}
+
+\item{seed}{Integer or \code{NULL}. Random seed controlling every stochastic step in both
+\code{rebootRegression()} and \code{rebootSurvival()}, so that results are reproducible across
+runs for the same input and parameters (Default: \code{17}). Passed through unchanged to both
+modules. Set to \code{NULL} to disable seeding and restore the previous (non-reproducible) behavior.}
 }
 \value{
 An S3 object of class \code{"reboot_complete"} containing:

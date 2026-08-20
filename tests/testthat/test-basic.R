@@ -169,3 +169,31 @@ test_that("rebootComplete runs on toy data", {
   expect_true(!is.null(result$metadata$package_version))
 })
 #######################################################################################################################
+
+################################################# TEST SEED REPRODUCIBILITY ############################################
+test_that("rebootRegression is reproducible for a fixed seed and varies otherwise", {
+  example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
+
+  # Two runs with the same explicit seed must yield an identical signature
+  result_a <- rebootRegression(filein = example_file, bootstrap = 5, groupsize = 10,
+                               type = "transcript", force = TRUE, seed = 123)
+  result_b <- rebootRegression(filein = example_file, bootstrap = 5, groupsize = 10,
+                               type = "transcript", force = TRUE, seed = 123)
+  expect_identical(result_a$signature, result_b$signature)
+
+  # The seed used is recorded in params for reproducibility bookkeeping
+  expect_equal(result_a$params$seed, 123)
+
+  # A different seed is not guaranteed (and, for this stochastic pipeline, not expected)
+  # to produce the exact same signature
+  result_c <- rebootRegression(filein = example_file, bootstrap = 5, groupsize = 10,
+                               type = "transcript", force = TRUE, seed = 456)
+  expect_false(isTRUE(identical(result_a$signature, result_c$signature)))
+
+  # Setting a seed inside the pipeline must not leak into the caller's global RNG state
+  old_seed <- .GlobalEnv$.Random.seed
+  invisible(rebootRegression(filein = example_file, bootstrap = 5, groupsize = 10,
+                             type = "transcript", force = TRUE, seed = 123))
+  expect_identical(.GlobalEnv$.Random.seed, old_seed)
+})
+#######################################################################################################################

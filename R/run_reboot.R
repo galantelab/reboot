@@ -35,6 +35,12 @@
 #'
 #'   This can also be done later using \code{write_reboot_report()}.
 #' @param log Logical. If \code{TRUE}, writes a minimalist log file tracking the pipeline execution (Default: \code{FALSE}).
+#' @param seed Integer or \code{NULL}. Random seed controlling every stochastic step in the pipeline
+#'   (missing-value imputation, bootstrap feature subsampling, and LASSO cross-validation folds), so
+#'   that results are reproducible across runs for the same input and parameters (Default: \code{17}).
+#'
+#'   Set to \code{NULL} to disable seeding and restore the previous (non-reproducible) behavior.
+#'   The seed is applied locally and the caller's R session RNG state is restored afterwards.
 #'
 #' @details
 #' The REBOOT pipeline applies a sequence of preprocessing and modeling steps:
@@ -155,7 +161,8 @@ rebootRegression <- function(filein,
                              saveJSON = FALSE,
                              saveRDS = FALSE,
                              report = FALSE,
-                             log = FALSE)
+                             log = FALSE,
+                             seed = 17)
 {
   # Start time counter
   start_time <- Sys.time()
@@ -163,6 +170,9 @@ rebootRegression <- function(filein,
   # Checks LOG argument
   if (!is.logical(log) || length(log) != 1) {log_stop("Argument 'log' must be a boolean [TRUE or FALSE]")}
   
+  # Checks SEED argument
+  .reboot_check_seed(seed)
+
   # Checks output prefix argument
   if (!is.character(outprefix) || length(outprefix) != 1) {log_stop("Argument 'outprefix' must be a string")}
   
@@ -182,6 +192,17 @@ rebootRegression <- function(filein,
     }
   }, add = TRUE)
   
+  # Sets a local, reproducible seed covering every stochastic step used downstream: missing-value
+  # imputation (mice::mice), bootstrap feature subsampling, and LASSO Cox regression's internal
+  # cross-validation fold assignment (penalized::profL1). The previous global RNG state (if any)
+  # is restored on exit, so this never leaks into the caller's R session. Set 'seed = NULL' to
+  # fall back to ordinary (non-reproducible) random behavior.
+  if (!is.null(seed)) {
+    .reboot_save_seed()
+    on.exit(.reboot_restore_seed(), add = TRUE)
+    set.seed(seed)
+  }
+
   # Handles 2 scenarios: (I) file PATH; (II) R data.frame
   if (is.character(filein))
   {
@@ -344,7 +365,8 @@ rebootRegression <- function(filein,
       variancefilter = variancefilter,
       followup = followup,
       type = type,
-      force = force
+      force = force,
+      seed = seed
     ),
     metadata = list(
       timestamp = Sys.time(),
@@ -376,7 +398,8 @@ rebootRegression <- function(filein,
         saveJSON = saveJSON,
         saveRDS = saveRDS,
         report = report,
-        log = log
+        log = log,
+        seed = seed
       ),
       command = "none"
     )
@@ -471,6 +494,12 @@ rebootRegression <- function(filein,
 #'
 #'   This can also be done later using \code{write_reboot_report()}.
 #' @param log Logical. If \code{TRUE}, writes a minimalist log file tracking the pipeline execution (Default: \code{FALSE}).
+#' @param seed Integer or \code{NULL}. Random seed controlling the stochastic bootstrap resampling
+#'   used to select stable clinical covariates in multivariate analysis, so that results are
+#'   reproducible across runs for the same input and parameters (Default: \code{17}).
+#'
+#'   Set to \code{NULL} to disable seeding and restore the previous (non-reproducible) behavior.
+#'   The seed is applied locally and the caller's R session RNG state is restored afterwards.
 #'
 #' @details
 #' The REBOOT pipeline applies a sequence of analyses steps:
@@ -624,7 +653,8 @@ rebootSurvival <- function(filein,
                            saveJSON = FALSE,
                            saveRDS = FALSE,
                            report = FALSE,
-                           log = FALSE)
+                           log = FALSE,
+                           seed = 17)
 {
   # Start time counter
   start_time <- Sys.time()
@@ -637,6 +667,9 @@ rebootSurvival <- function(filein,
   # Checks LOG argument
   if (!is.logical(log) || length(log) != 1) {log_stop("Argument 'log' must be a boolean [TRUE or FALSE]")}
   
+  # Checks SEED argument
+  .reboot_check_seed(seed)
+
   # Checks output prefix argument
   if (!is.character(outprefix) || length(outprefix) != 1) {log_stop("Argument 'outprefix' must be a string")}
   
@@ -656,6 +689,17 @@ rebootSurvival <- function(filein,
     }
   }, add = TRUE)
   
+  # Sets a local, reproducible seed covering the stochastic step used downstream: bootstrap
+  # resampling of clinical covariates for the multivariate Cox model (sjstats::bootstrap, only
+  # relevant when multivariate = TRUE). The previous global RNG state (if any) is restored on
+  # exit, so this never leaks into the caller's R session. Set 'seed = NULL' to fall back to
+  # ordinary (non-reproducible) random behavior.
+  if (!is.null(seed)) {
+    .reboot_save_seed()
+    on.exit(.reboot_restore_seed(), add = TRUE)
+    set.seed(seed)
+  }
+
   # Handles 2 scenarios: (I) file PATH; (II) R data.frame
   if (!log) {log_message("REBOOT survival log started")}
   log_message("Validating file parameters...")
@@ -1042,7 +1086,8 @@ rebootSurvival <- function(filein,
       followup = followup,
       p_cutoff = p.cutoff,
       bootstrap = bootstrap,
-      force = force
+      force = force,
+      seed = seed
     ),
     metadata = list(
       timestamp = Sys.time(),
@@ -1076,7 +1121,8 @@ rebootSurvival <- function(filein,
         saveJSON = saveJSON,
         saveRDS = saveRDS,
         report = report,
-        log = log
+        log = log,
+        seed = seed
       ),
       command = "none"
     )
@@ -1149,6 +1195,10 @@ rebootSurvival <- function(filein,
 #' @param report Logical or character. Report generation mode. Use \code{FALSE} (default) to disable report generation,
 #' \code{TRUE} or \code{"PDF"} to generate a PDF report, or \code{"HTML"} to generate an HTML report.
 #' @param log Logical. If \code{TRUE}, writes log files for both modules (Default: \code{FALSE}).
+#' @param seed Integer or \code{NULL}. Random seed controlling every stochastic step in both
+#'   \code{rebootRegression()} and \code{rebootSurvival()}, so that results are reproducible across
+#'   runs for the same input and parameters (Default: \code{17}). Passed through unchanged to both
+#'   modules. Set to \code{NULL} to disable seeding and restore the previous (non-reproducible) behavior.
 #'
 #' @details
 #' The molecular signature generated during the regression step is automatically passed to the survival analysis step.
@@ -1228,10 +1278,14 @@ rebootComplete <- function(filein,
                            saveJSON = FALSE,
                            saveRDS = FALSE,
                            report = FALSE,
-                           log = FALSE)
+                           log = FALSE,
+                           seed = 17)
 {
   # Start time counter
   start_time <- Sys.time()
+
+  # Checks SEED argument (module I and II each set/restore it locally around their own work)
+  .reboot_check_seed(seed)
   if (!log) {log_message("REBOOT complete log started")}
   
   # Runs module 1 (regression)
@@ -1251,7 +1305,8 @@ rebootComplete <- function(filein,
     saveJSON = FALSE,
     saveRDS = FALSE,
     report = FALSE,
-    log = log
+    log = log,
+    seed = seed
   )
   log_message("============================================================")
   
@@ -1274,7 +1329,8 @@ rebootComplete <- function(filein,
     saveJSON = FALSE,
     saveRDS = FALSE,
     report = FALSE,
-    log = log
+    log = log,
+    seed = seed
   )
   log_message("============================================================")
   
@@ -1293,7 +1349,8 @@ rebootComplete <- function(filein,
       multivariate = multivariate,
       roc = roc,
       p_cutoff = p.cutoff,
-      force = force
+      force = force,
+      seed = seed
     ),
     metadata = list(
       timestamp = Sys.time(),
@@ -1330,7 +1387,8 @@ rebootComplete <- function(filein,
         saveJSON = saveJSON,
         saveRDS = saveRDS,
         report = report,
-        log = log
+        log = log,
+        seed = seed
       ),
       command = "none"
     )

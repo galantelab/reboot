@@ -4,6 +4,36 @@
 # Internal helper to generate timestamps
 .timestamp <- function() {format(Sys.time(), "%Y-%m-%d %H:%M:%S")}
 
+# Internal helper to validate a user-supplied 'seed' argument
+.reboot_check_seed <- function(seed) {
+  if (!is.null(seed) && (!is.numeric(seed) || length(seed) != 1 || seed %% 1 != 0)) {
+    log_stop("Argument 'seed' must be a single integer or NULL")
+  }
+}
+
+# Internal helper to snapshot the current global RNG state (if any) into .reboot_env,
+# so it can be restored later via .reboot_restore_seed(). This allows REBOOT pipelines
+# to set a local, reproducible seed without permanently altering the user's R session.
+.reboot_save_seed <- function() {
+  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+    .reboot_env$old_seed <- get(".Random.seed", envir = .GlobalEnv)
+  } else {
+    .reboot_env$old_seed <- NULL
+  }
+}
+
+# Internal helper to restore the global RNG state previously saved with .reboot_save_seed().
+# Intended to be registered with on.exit(..., add = TRUE) right after set.seed() is called,
+# so the RNG stream is restored regardless of how the calling function exits (success or error).
+.reboot_restore_seed <- function() {
+  if (!is.null(.reboot_env$old_seed)) {
+    assign(".Random.seed", .reboot_env$old_seed, envir = .GlobalEnv)
+  } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+    rm(".Random.seed", envir = .GlobalEnv)
+  }
+  .reboot_env$old_seed <- NULL
+}
+
 #' Log an informational message
 #'
 #' @description
