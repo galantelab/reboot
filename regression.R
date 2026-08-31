@@ -20,7 +20,11 @@ option_list <- list(
   optparse::make_option(c("-T", "--ty"), action = "store", type = 'character', dest = "ty", default = "gene",
                         help = "Declare which type of transcriptome data to be analyzed: gene or transcript (character). Default: gene"),
   optparse::make_option(c("-F", "--force"), action = "store_true", dest = "force", default = FALSE,
-                        help = "To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F (boolean). Default: FALSE")
+                        help = "To force overcome follow up variance filter and/or proportion filter for survival status (<20%), choose -F (boolean). Default: FALSE"),
+  optparse::make_option(c("-N", "--ncores"), action = "store", type = "integer", dest = "n_cores", default = 1,
+                        help = "Number of CPU cores to use for parallel bootstrap (int). Default: 1"),
+  optparse::make_option(c("-S", "--seed"), action = "store", type = "integer", dest = "seed", default = 123,
+                        help = "Random seed for reproducibility (int). Default: 123")
 )
 
 #Change variables
@@ -31,6 +35,8 @@ outname <- paste(in_object$out, "_signature.txt", sep = "")
 outplot <- in_object$out
 force <- in_object$force
 ty <- in_object$ty
+seed <- in_object$seed
+
  
 ######read input file######
 full_data <- read.table(in_object$fname, header = T, row.names = 1, check.names = F)
@@ -100,7 +106,7 @@ numberfilter1 <- function(dataf, g, outname, outplot) {
 	{
 	  cat("The number of columns per group exceeds the number of columns", "\n", "\n")
 	  cat("Performing single multivariate regression","\n","\n")
-	  coemale <- regression(dataf)
+	  coemale <- regression(dataf, seed)
 	  feature <- names(coemale)
 	  coefficient <- unname(coemale)
 	  
@@ -132,7 +138,7 @@ numberfilter2 <- function(dataf, g, outname, outplot) {
   {
     cat("The number of columns is lower than group size due to variance filter","\n","\n")
     cat("Performing single multivariate regression","\n","\n")
-    coemale <- regression(dataf)
+    coemale <- regression(dataf, seed)
     feature <- names(coemale)
     coefficient <- unname(coemale)
     
@@ -181,62 +187,105 @@ corfun <- function(cmatrix, pf) {
 }
 
 ######Bootfunction######
-bootstrapfun <- function(full_data, boot_iter, nel , outname, outplot, pf, bar) {
-	#setting up hash
-	cat("Starting bootstrap ", boot_iter, "iterations","\n\n")
+bootstrapfun <- function(full_data, boot_iter, nel, outname, outplot, pf, bar, n_cores = 1) {
+	cat("Starting bootstrap ", boot_iter, "iterations\n\n")
 	k <- colnames(full_data[3:length(colnames(full_data))])
 	v <- vector("list", length(k))
-	yield <- hash::hash(k,v)
-	
-	#looping
-	i <- 1
-	while (i <= boot_iter)
-	{
-	  cat("processing iteration: ", i, "\n","\n")
-	  
-	  if (ncol(full_data) == 3)
-	  {
-	    cmatrix <- full_data
-	  } else {
-	    cmatrix <- subsample(full_data, nel, i)
-	    
-	    #checking correlation - 1 element avoided
-	    if (nel > 1) {if (corfun(cmatrix, pf) == 1) {next}}
-	  }
-	  
-	  #running regression
-	  coemale <- regcall(cmatrix, nel, full_data) 
-	  
-	  #saving coeficients
-	  if (!is.null(coemale))
-	  {
-	    i <- i + 1
-	    for (j in 1:length(coemale))
-	    {
+	yield <- hash::hash(k, v)
+
+	collect_coefficients <- function(results_list) {
+	  for (coemale in results_list) {
+	    for (j in 1:length(coemale)) {
 	      name <- names(coemale[j])
-	      val <- coemale[j][[1]]
-	      eval(parse(text = paste("yield$", name, "<- c(yield$", name, "," , val, ")", sep = "")))
+	      val  <- coemale[j][[1]]
+	      eval(parse(text = paste("yield$", name, "<- c(yield$", name, ",", val, ")", sep = "")))
 	    }
 	  }
 	}
-  
+
+	if (n_cores == 1) {
+	  i <- 1
+	  while (i <= boot_iter) {
+	    cat("processing iteration: ", i, "\n\n")
+	    if (ncol(full_data) == 3) {
+	      cmatrix <- full_data
+	    } else {
+	      cmatrix <- subsample(full_data, nel, i)
+	      if (nel > 1) {if (corfun(cmatrix, pf) == 1) {next}}
+	    }
+	    coemale <- regcall(cmatrix, nel, full_data)
+	    if (!is.null(coemale)) {
+	      i <- i + 1
+	      for (j in 1:length(coemale)) {
+	        name <- names(coemale[j])
+	        val  <- coemale[j][[1]]
+	        eval(parse(text = paste("yield$", name, "<- c(yield$", name, ",", val, ")", sep = "")))
+	      }
+	    }
+	  }
+	} else {
+	  cat("Using ", n_cores, " cores for parallel bootstrap\n\n")
+
+	  # One attempt per seed: subsample -> correlation check -> regression
+	  run_attempt <- function(seed_val) {
+	    if (ncol(full_data) == 3) {
+	      cmatrix <- full_data
+	    } else {
+	      set.seed(seed_val)
+	      shuffle  <- sample(colnames(full_data[, 3:ncol(full_data)]), size = nel, replace = FALSE)
+	      cmatrix  <- cbind(full_data[, 1:2], subset(full_data, select = shuffle))
+	      if (nel > 1 && corfun(cmatrix, pf) == 1) return(NULL)
+	    }
+	    tryCatch(
+	      R.utils::withTimeout(regression(cmatrix, seed = seed), timeout = 60, onTimeout = "warning"),
+	      warning = function(w) NULL,
+	      error   = function(e) NULL
+	    )
+	  }
+
+	  cl <- parallel::makeCluster(n_cores)
+	  on.exit(parallel::stopCluster(cl), add = TRUE)
+	  parallel::clusterExport(cl, varlist = c("full_data", "nel", "pf", "seed", "corfun", "regression"),
+	                          envir = environment())
+	  parallel::clusterEvalQ(cl, {
+	    library(survival)
+	    library(penalized)
+	    library(R.utils)
+	  })
+
+	  valid_results <- list()
+	  seed_counter  <- 1
+	  cat("Bootstrap progress: 0/", boot_iter, "\n", sep = "")
+
+	  while (length(valid_results) < boot_iter) {
+	    remaining   <- boot_iter - length(valid_results)
+	    batch_size  <- max(remaining, n_cores)
+	    batch_seeds <- seed_counter:(seed_counter + batch_size - 1)
+	    seed_counter <- seed_counter + batch_size
+
+	    batch       <- parallel::parLapply(cl, batch_seeds, run_attempt)
+	    valid_batch <- Filter(Negate(is.null), batch)
+	    valid_results <- c(valid_results, valid_batch)
+	    cat("Bootstrap progress: ", min(length(valid_results), boot_iter), "/", boot_iter, "\n", sep = "")
+	  }
+
+	  collect_coefficients(valid_results[1:boot_iter])
+	  cat("\n")
+	}
+
 	#Processing result
-	aux <- c(NULL,NULL, NULL)
-	
-	#calculating mean
-	for (feature in hash::keys(yield))
-	{
+	aux <- c(NULL, NULL, NULL)
+	for (feature in hash::keys(yield)) {
 	  coefficient <- suppressWarnings(eval(parse(text = paste("mean(yield$", feature, ")", sep = ""))))
-	  sd <- suppressWarnings(eval(parse(text = paste("sd(yield$", feature, ")", sep = ""))))
+	  sd          <- suppressWarnings(eval(parse(text = paste("sd(yield$", feature, ")", sep = ""))))
 	  aux <- rbind(aux, cbind(feature, coefficient, sd))
 	}
-	
+
 	tt <- as.data.frame(aux)
 	if (any(!complete.cases(tt$coefficient))) {cat("NA coefficient found, increase coverage for a proper analysis", "\n")}
 	tt <- dplyr::filter(tt, abs(as.numeric(as.character(coefficient))) >= bar)
 
-	if (any(!(tt$coefficient == 0)) & dim(tt)[1] != 0)
-	{
+	if (any(!(tt$coefficient == 0)) & dim(tt)[1] != 0) {
 	  tt$feature <- gsub("__", "-", tt$feature)
 	  write.table(tt, outname, sep = "\t", row.names = F, quote = F)
 	  histogram(outplot, tt)
@@ -345,7 +394,7 @@ subsample <- function(full_data, nel, seed=i) {
 
 ######Regression time keeper#######
 regcall <- function(cmatrix, nel, full_data) {
-  tryCatch(R.utils::withTimeout(coemale <- regression(cmatrix), timeout = 60, onTimeout = "warning"),
+  tryCatch(R.utils::withTimeout(coemale <- regression(cmatrix, seed), timeout = 60, onTimeout = "warning"),
            warning = function(warning_condition) {
              cat("Regression time exceeded, you may consider changing variance and/or correlation filters. Trying again \n");
              cmatrix <- subsample(full_data, nel);
@@ -355,7 +404,8 @@ regcall <- function(cmatrix, nel, full_data) {
 }
 
 ######Regression procedure############
-regression <- function(cmatrix) {
+regression <- function(cmatrix, seed = seed) {
+  set.seed(seed)	
   formula <- survival::Surv(OS.time, OS) ~ .
   fit1 <- penalized::profL1(formula, data = cmatrix, fold = 10, plot = F, trace = F)
   opt1 <- penalized::optL1(formula, data = cmatrix, fold = fit1$fold, trace = F)
@@ -418,7 +468,7 @@ numberfilter1(full_data, in_object$nel, outname, outplot)
 numberfilter2(full_data, in_object$nel, outname, outplot)
 
 #Perform Regression
-bootstrapfun(full_data, in_object$boot_iter, in_object$nel, outname, outplot, in_object$pf, bar)
+bootstrapfun(full_data, in_object$boot_iter, in_object$nel, outname, outplot, in_object$pf, bar, in_object$n_cores)
 
 ####Time feedback####
 end_time <- Sys.time()
