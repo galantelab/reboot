@@ -35,6 +35,10 @@
 #'
 #'   This can also be done later using \code{write_reboot_report()}.
 #' @param log Logical. If \code{TRUE}, writes a minimalist log file tracking the pipeline execution (Default: \code{FALSE}).
+#' @param ncores Integer. Number of CPU cores used for parallel bootstrap regression
+#'   (Default: \code{1}, i.e. sequential execution).
+#' @param seed Integer. Random seed used for reproducible bootstrap regression
+#'   in \code{rebootRegression()} (Default: \code{123}).
 #'
 #' @details
 #' The REBOOT pipeline applies a sequence of preprocessing and modeling steps:
@@ -106,7 +110,9 @@
 #'   saveJSON = TRUE,
 #'   saveRDS = TRUE,
 #'   report = TRUE,
-#'   log = TRUE
+#'   log = TRUE,
+#'   ncores = 4,
+#'   seed = 123
 #' )
 #'
 #' # Access signature through custom REBOOT S3 methods
@@ -155,7 +161,9 @@ rebootRegression <- function(filein,
                              saveJSON = FALSE,
                              saveRDS = FALSE,
                              report = FALSE,
-                             log = FALSE)
+                             log = FALSE,
+                             ncores = 1,
+                             seed = 123)
 {
   # Start time counter
   start_time <- Sys.time()
@@ -224,6 +232,22 @@ rebootRegression <- function(filein,
     log_stop("'report' must be a boolean [TRUE or FALSE] or a character ['PDF' or 'HTML']")
   }
   log_message("Done.")
+
+  # Validates ncores and seed parameters
+  if (!is.numeric(ncores) || length(ncores) != 1 ||
+      !is.finite(ncores) || ncores < 1 || ncores %% 1 != 0)
+  {
+    log_stop("Argument 'ncores' must be a positive integer")
+  }
+
+  if (!is.numeric(seed) || length(seed) != 1 ||
+      !is.finite(seed) || seed %% 1 != 0)
+  {
+    log_stop("Argument 'seed' must be an integer")
+  }
+
+  ncores <- as.integer(ncores)
+  seed <- as.integer(seed)
   
   # Reads INput
   log_message("Reading input expression/survival file...")
@@ -285,7 +309,7 @@ rebootRegression <- function(filein,
   
   # Runs simplified regression
   log_message("Checking if simplified regression with no bootstraps is required...")
-  early_signature <- reboot_feature_check(full_data, groupsize)
+  early_signature <- reboot_feature_check(full_data, groupsize, seed = seed)
   log_message("Done.")
   
   # Decides if user needs to use simplified result or go for the more robust Bootstrap approach
@@ -295,7 +319,15 @@ rebootRegression <- function(filein,
     log_message("Done.")
   } else {
     log_message("Running robust regression with bootstraps...")
-    signature <- reboot_bootstrapfun(full_data, bootstrap, groupsize, percentagefilter, bar)
+    signature <- reboot_bootstrapfun(
+      full_data = full_data,
+      n_boot = bootstrap,
+      group_size = groupsize,
+      cor_threshold = percentagefilter,
+      coef_threshold = bar,
+      ncores = ncores,
+      seed = seed
+    )
     log_message("Done.")
   }
   
@@ -344,7 +376,9 @@ rebootRegression <- function(filein,
       variancefilter = variancefilter,
       followup = followup,
       type = type,
-      force = force
+      force = force,
+      ncores = ncores,
+      seed = seed
     ),
     metadata = list(
       timestamp = Sys.time(),
@@ -372,6 +406,8 @@ rebootRegression <- function(filein,
         type = type,
         force = force,
         plots = plots,
+        ncores = ncores,
+        seed = seed,
         table = table,
         saveJSON = saveJSON,
         saveRDS = saveRDS,
@@ -1040,7 +1076,7 @@ rebootSurvival <- function(filein,
       multivariate = multivariate,
       variancefilter = variancefilter,
       followup = followup,
-      p_cutoff = p.cutoff,
+      p.cutoff = p.cutoff,
       bootstrap = bootstrap,
       force = force
     ),
@@ -1149,6 +1185,10 @@ rebootSurvival <- function(filein,
 #' @param report Logical or character. Report generation mode. Use \code{FALSE} (default) to disable report generation,
 #' \code{TRUE} or \code{"PDF"} to generate a PDF report, or \code{"HTML"} to generate an HTML report.
 #' @param log Logical. If \code{TRUE}, writes log files for both modules (Default: \code{FALSE}).
+#' @param ncores Integer. Number of CPU cores used for parallel bootstrap regression
+#'   in \code{rebootRegression()} (Default: \code{1}).
+#' @param seed Integer. Random seed used for reproducible bootstrap regression
+#'   in \code{rebootRegression()} (Default: \code{123}).
 #'
 #' @details
 #' The molecular signature generated during the regression step is automatically passed to the survival analysis step.
@@ -1191,7 +1231,9 @@ rebootSurvival <- function(filein,
 #'   saveJSON = TRUE,
 #'   saveRDS = TRUE,
 #'   report = TRUE,
-#'   log = TRUE
+#'   log = TRUE,
+#'   ncores = 4,
+#'   seed = 123
 #' )
 #'
 #' # Explore complete analysis results
@@ -1228,7 +1270,9 @@ rebootComplete <- function(filein,
                            saveJSON = FALSE,
                            saveRDS = FALSE,
                            report = FALSE,
-                           log = FALSE)
+                           log = FALSE,
+                           ncores = 1,
+                           seed = 123)
 {
   # Start time counter
   start_time <- Sys.time()
@@ -1251,7 +1295,9 @@ rebootComplete <- function(filein,
     saveJSON = FALSE,
     saveRDS = FALSE,
     report = FALSE,
-    log = log
+    log = log,
+    ncores = ncores,
+    seed = seed
   )
   log_message("============================================================")
   
@@ -1291,9 +1337,12 @@ rebootComplete <- function(filein,
       followup = followup,
       type = type,
       multivariate = multivariate,
+      clinin = clinin,
       roc = roc,
-      p_cutoff = p.cutoff,
-      force = force
+      p.cutoff = p.cutoff,
+      force = force,
+      ncores = ncores,
+      seed = seed
     ),
     metadata = list(
       timestamp = Sys.time(),
@@ -1325,6 +1374,8 @@ rebootComplete <- function(filein,
         bootstrap = bootstrap,
         type = type,
         force = force,
+        ncores = ncores,
+        seed = seed,
         plots = plots,
         table = table,
         saveJSON = saveJSON,

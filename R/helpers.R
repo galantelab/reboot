@@ -170,7 +170,7 @@ reboot_ph_assumptions <- function(full_data) {
 }
 
 #' Feature count validation for REBOOT pipeline
-#' Substitutes the old numberfilter1() and numberfilter2() functions
+#' Substitutes the old numberfilter1() and numberfilter2()
 #'
 #' @description Internal helper function used by \code{rebootRegression()}.
 #' Checks if sufficient features remain for bootstrap regression.
@@ -178,25 +178,38 @@ reboot_ph_assumptions <- function(full_data) {
 #'
 #' @param dataf A data.frame with survival data and features.
 #' @param g Integer. Group size.
+#' @param seed Integer or NULL. Random seed used for direct regression
+#'   when the number of features is smaller than the group size.
 #'
 #' @return NULL if pipeline should continue, or a data.frame signature.
 #' @keywords internal
-reboot_feature_check <- function(dataf, g) {
-  
+reboot_feature_check <- function(dataf, g, seed = NULL) {
+
   n_features <- ncol(dataf) - 2
-  
+
   # Extreme case: no features
   if (n_features <= 0) {stop("No features remaining after filtering steps")}
-  
+
   # Low features case: direct regression
   if (n_features < g) {
     message("Number of features is smaller than group size. Performing single multivariate regression...")
-    coefs <- reboot_regression(dataf)
-    if (is.null(coefs) || length(coefs) == 0 || all(coefs == 0)) {stop("No signature found: all coefficients are zero")}
-    signature <- data.frame(feature = names(coefs), coefficient = unname(coefs), stringsAsFactors = FALSE)
+    coefs <- reboot_regression(dataf, seed = seed)
+
+    if (is.null(coefs) || length(coefs) == 0 || all(coefs == 0)) {
+      stop("No signature found: all coefficients are zero")
+    }
+
+    signature <- data.frame(
+      feature = names(coefs),
+      coefficient = unname(coefs),
+      stringsAsFactors = FALSE
+    )
+
     signature$feature <- gsub("__", "-", signature$feature)
+
     return(signature)
   }
+
   # Normal expected case: move forward in the pipeline
   return(NULL)
 }
@@ -212,6 +225,10 @@ reboot_feature_check <- function(dataf, g) {
 #' @param group_size Integer. Number of features sampled per iteration.
 #' @param cor_threshold Numeric. Correlation filter threshold.
 #' @param coef_threshold Numeric. Minimum absolute coefficient value to retain features.
+#' @param ncores Integer. Number of CPU cores used for parallel bootstrap
+#'   regression (Default: \code{1}).
+#' @param seed Integer. Random seed used for reproducible bootstrap regression
+#'   (Default: \code{123}).
 #'
 #' @return A data.frame with the following signature columns:
 #' \describe{
@@ -220,66 +237,277 @@ reboot_feature_check <- function(dataf, g) {
 #'   \item{sd}{Standard deviation of coefficients}
 #' }
 #' @keywords internal
-reboot_bootstrapfun <- function(full_data, n_boot, group_size, cor_threshold, coef_threshold) {
-  
+reboot_bootstrapfun <- function(full_data,
+                                n_boot,
+                                group_size,
+                                cor_threshold,
+                                coef_threshold,
+                                ncores = 1,
+                                seed = 123) {
+
   message("Starting bootstrap with ", n_boot, " iterations...")
+
   features <- colnames(full_data)[-c(1, 2)]
   results <- stats::setNames(vector("list", length(features)), features)
-  i <- 1
-  
+
   # Avoids infinite loop
   attempts <- 0
   max_attempts <- n_boot * 10
-  
-  while (i <= n_boot) {
-    attempts <- attempts + 1
-    if (attempts > max_attempts) {stop("Too many failed bootstrap attempts (correlation filter too strict?)")}
-    
-    # Avoids spam messages
-    if (i %% 10 == 0) {message("Processing iteration: ", i)}
-    
-    # Subsampling
-    if (ncol(full_data) == 3) {
-      cmatrix <- full_data
-    } else {
-      cmatrix <- reboot_subsample(full_data, group_size, i)
-      if (group_size > 1 && reboot_corfun(cmatrix, cor_threshold) == 1) {next} # Correlation filter
-    }
-    
-    # Regression
-    coefs <- reboot_regcall(cmatrix, group_size, full_data)
-    
-    if (!is.null(coefs)) {
-      if (is.null(names(coefs))) {stop("reboot_regcall() must return a named vector")}
-      coef_names <- names(coefs)
-      for (j in seq_along(coefs)) {
-        fname <- coef_names[j]
-        results[[fname]] <- c(results[[fname]], coefs[[j]])
+
+  # Collects coefficients returned by one or more bootstrap attempts
+  collect_coefficients <- function(results_list) {
+
+    for (coefs in results_list) {
+
+      if (is.null(coefs)) {
+        next
       }
-      i <- i + 1
+
+      if (is.null(names(coefs))) {
+        stop("Regression result must be a named vector")
+      }
+
+      for (j in seq_along(coefs)) {
+
+        fname <- names(coefs)[j]
+
+        if (!fname %in% names(results)) {
+          results[[fname]] <- numeric(0)
+        }
+
+        results[[fname]] <<- c(results[[fname]], coefs[[j]])
+      }
     }
   }
-  
+
+  # Runs one bootstrap attempt.
+  #
+  # IMPORTANT:
+  # seed_val controls feature subsampling.
+  # seed controls the regression itself. This intentionally preserves
+  # the current master behavior where every regression receives the
+  # same user-provided seed.
+  run_attempt <- function(seed_val, retry = FALSE) {
+
+    # Subsampling
+    if (ncol(full_data) == 3) {
+
+      cmatrix <- full_data
+
+    } else {
+
+      cmatrix <- reboot_subsample(
+        full_data = full_data,
+        group_size = group_size,
+        seed = seed_val
+      )
+
+      # Correlation filter
+      if (group_size > 1 &&
+          reboot_corfun(cmatrix, cor_threshold) == 1) {
+        return(NULL)
+      }
+    }
+
+    # Regression
+    if (retry) {
+
+      # Serial path preserves the existing reboot_regcall() retry behavior.
+      return(
+        reboot_regcall(
+          cmatrix = cmatrix,
+          group_size = group_size,
+          full_data = full_data,
+          seed = seed
+        )
+      )
+
+    } else {
+
+      # Parallel path mirrors the master implementation:
+      # direct regression with timeout and no retry.
+      return(
+        tryCatch(
+          R.utils::withTimeout(
+            reboot_regression(cmatrix, seed = seed),
+            timeout = 60,
+            onTimeout = "warning"
+          ),
+          warning = function(w) NULL,
+          error = function(e) NULL
+        )
+      )
+    }
+  }
+
+  if (ncores == 1) {
+
+    # Serial path
+    i <- 1
+
+    while (i <= n_boot) {
+
+      attempts <- attempts + 1
+
+      if (attempts > max_attempts) {
+        stop("Too many failed bootstrap attempts (correlation filter too strict?)")
+      }
+
+      # Avoids spam messages
+      if (i %% 10 == 0) {
+        message("Processing iteration: ", i)
+      }
+
+      coefs <- run_attempt(
+        seed_val = i,
+        retry = TRUE
+      )
+
+      if (!is.null(coefs)) {
+        collect_coefficients(list(coefs))
+        i <- i + 1
+      }
+    }
+
+  } else {
+
+    # Parallel path
+    cl <- parallel::makeCluster(ncores)
+
+    on.exit(
+      parallel::stopCluster(cl),
+      add = TRUE
+    )
+
+    # Export the objects and helper functions required by workers.
+    parallel::clusterExport(
+      cl,
+      varlist = c(
+        "full_data",
+        "group_size",
+        "cor_threshold",
+        "seed",
+        "reboot_subsample",
+        "reboot_corfun",
+        "reboot_regcall",
+        "reboot_regression",
+        "run_attempt"
+      ),
+      envir = environment()
+    )
+
+    parallel::clusterEvalQ(
+      cl,
+      {
+        library(survival)
+        library(penalized)
+        library(R.utils)
+        NULL
+      }
+    )
+
+    valid_results <- list()
+    seed_counter <- 1
+
+    while (length(valid_results) < n_boot) {
+
+      attempts_needed <- n_boot - length(valid_results)
+
+      # Preserve the master implementation's batching behavior:
+      # each batch contains at least ncores attempts.
+      batch_size <- max(attempts_needed, ncores)
+
+      if (attempts + batch_size > max_attempts) {
+        batch_size <- max_attempts - attempts
+      }
+
+      if (batch_size <= 0) {
+        stop("Too many failed bootstrap attempts (correlation filter too strict?)")
+      }
+
+      batch_seeds <- seed_counter:(seed_counter + batch_size - 1)
+
+      seed_counter <- seed_counter + batch_size
+      attempts <- attempts + batch_size
+
+      batch <- parallel::parLapply(
+        cl,
+        batch_seeds,
+        function(seed_val) {
+          run_attempt(seed_val, retry = FALSE)
+        }
+      )
+
+      valid_batch <- Filter(Negate(is.null), batch)
+
+      valid_results <- c(valid_results, valid_batch)
+
+      if (length(valid_results) >= n_boot) {
+        break
+      }
+
+      message(
+        "Bootstrap progress: ",
+        min(length(valid_results), n_boot),
+        "/",
+        n_boot,
+        " valid iterations"
+      )
+    }
+
+    # Only the requested number of successful iterations contribute.
+    collect_coefficients(
+      valid_results[seq_len(n_boot)]
+    )
+  }
+
   # Aggregates results
   summary_list <- lapply(names(results), function(feature) {
+
     vals <- results[[feature]]
-    if (length(vals) == 0) return(NULL)
-    data.frame(feature = feature, coefficient = mean(vals, na.rm = TRUE),
-               sd = if (sum(!is.na(vals)) > 1) stats::sd(vals, na.rm = TRUE) else NA_real_,
-               stringsAsFactors = FALSE)
+
+    if (length(vals) == 0) {
+      return(NULL)
+    }
+
+    data.frame(
+      feature = feature,
+      coefficient = mean(vals, na.rm = TRUE),
+      sd = if (sum(!is.na(vals)) > 1) {
+        stats::sd(vals, na.rm = TRUE)
+      } else {
+        NA_real_
+      },
+      stringsAsFactors = FALSE
+    )
   })
-  
+
   summary_list <- Filter(Negate(is.null), summary_list)
+
   tt <- do.call(rbind, summary_list)
-  
+
   # Checks validity of results
-  if (is.null(tt) || nrow(tt) == 0) {stop("No coefficients estimated during bootstrap")}
-  if (anyNA(tt$coefficient)) {warning("NA coefficients detected. Consider increasing bootstrap iterations.")}
-  
+  if (is.null(tt) || nrow(tt) == 0) {
+    stop("No coefficients estimated during bootstrap")
+  }
+
+  if (anyNA(tt$coefficient)) {
+    warning("NA coefficients detected. Consider increasing bootstrap iterations.")
+  }
+
   # Applies coefficient threshold
-  tt <- tt[abs(tt$coefficient) >= coef_threshold, , drop = FALSE]
-  if (nrow(tt) == 0 || all(tt$coefficient == 0)) {stop("No signature found: coefficients below threshold")}
+  tt <- tt[
+    abs(tt$coefficient) >= coef_threshold,
+    ,
+    drop = FALSE
+  ]
+
+  if (nrow(tt) == 0 || all(tt$coefficient == 0)) {
+    stop("No signature found: coefficients below threshold")
+  }
+
   tt$feature <- gsub("__", "-", tt$feature)
+
   message("Bootstrap completed successfully.")
 
   return(tt)
@@ -387,21 +615,39 @@ reboot_subsample <- function(full_data, group_size, seed = NULL) {
 #' @param cmatrix A data.frame with survival data and features.
 #' @param group_size Integer. Number of features used in subsampling.
 #' @param full_data Original full dataset used for resampling if needed.
+#' @param seed Integer or NULL. Random seed used for reproducible regression.
 #'
 #' @return Named numeric vector of regression coefficients, or NULL if failure.
 #' @keywords internal
-reboot_regcall <- function(cmatrix, group_size, full_data) {
-  
+reboot_regcall <- function(cmatrix, group_size, full_data, seed = NULL) {
+
   # Double tryCatch to avoid calling the function itself
   result <- tryCatch(
-    R.utils::withTimeout(reboot_regression(cmatrix), timeout = 60, onTimeout = "error"),
+
+    R.utils::withTimeout(
+      reboot_regression(cmatrix, seed = seed),
+      timeout = 60,
+      onTimeout = "error"
+    ),
+
     error = function(e) {
+
       message("Regression timeout/error: retrying with new subsample...")
-      new_matrix <- reboot_subsample(full_data, group_size)
-      
+
+      new_matrix <- reboot_subsample(
+        full_data,
+        group_size
+      )
+
       # Retries one more time
       tryCatch(
-        R.utils::withTimeout(reboot_regression(new_matrix), timeout = 60, onTimeout = "error"),
+
+        R.utils::withTimeout(
+          reboot_regression(new_matrix, seed = seed),
+          timeout = 60,
+          onTimeout = "error"
+        ),
+
         error = function(e2) {
           message("Retry failed: ", conditionMessage(e2))
           return(NULL)
@@ -409,7 +655,7 @@ reboot_regcall <- function(cmatrix, group_size, full_data) {
       )
     }
   )
-  
+
   return(result)
 }
 
@@ -419,29 +665,53 @@ reboot_regcall <- function(cmatrix, group_size, full_data) {
 #' Fits a penalized Cox regression model using L1 (LASSO) penalty and returns coefficients.
 #'
 #' @param cmatrix A data.frame with survival data and features.
+#' @param seed Integer or NULL. Random seed used for reproducible regression.
+#'   If NULL, the current random-number-generator state is used.
 #'
 #' @return Named numeric vector of regression coefficients.
 #' @keywords internal
-reboot_regression <- function(cmatrix) {
-  
+reboot_regression <- function(cmatrix, seed = NULL) {
+
+  # Sets random seed when provided.
+  if (!is.null(seed)) {
+    set.seed(seed)
+  }
+
   # Ensures data has OS and OS.time data
-  if (!all(c("OS", "OS.time") %in% colnames(cmatrix))) {stop("'cmatrix' must contain 'OS' and 'OS.time' names")}
-  
+  if (!all(c("OS", "OS.time") %in% colnames(cmatrix))) {
+    stop("'cmatrix' must contain 'OS' and 'OS.time' names")
+  }
+
   # Ensures survival formula exists correctly
   form <- survival::Surv(OS.time, OS) ~ .
-  
+
   # Model exploration (initial cross-validation using fold = 10)
   fit1 <- tryCatch(
-    penalized::profL1(form, data = cmatrix, fold = 10, plot = FALSE, trace = FALSE),
-    error = function(e) {stop("'profL1' failed: ", conditionMessage(e))}
+    penalized::profL1(
+      form,
+      data = cmatrix,
+      fold = 10,
+      plot = FALSE,
+      trace = FALSE
+    ),
+    error = function(e) {
+      stop("'profL1' failed: ", conditionMessage(e))
+    }
   )
-  
+
   # Selection of the best lambda
   opt1 <- tryCatch(
-    penalized::optL1(form, data = cmatrix, fold = fit1$fold, trace = FALSE),
-    error = function(e) {stop("'optL1' failed: ", conditionMessage(e))}
+    penalized::optL1(
+      form,
+      data = cmatrix,
+      fold = fit1$fold,
+      trace = FALSE
+    ),
+    error = function(e) {
+      stop("'optL1' failed: ", conditionMessage(e))
+    }
   )
-  
+
   # Final penalized model
   fit <- tryCatch(
     penalized::penalized(
@@ -450,11 +720,17 @@ reboot_regression <- function(cmatrix) {
       lambda1 = opt1$lambda,
       trace = FALSE
     ),
-    error = function(e) {stop("'penalized' model failed: ", conditionMessage(e))}
+    error = function(e) {
+      stop("'penalized' model failed: ", conditionMessage(e))
+    }
   )
-  
+
   coefs <- penalized::coefficients(fit, "all")
-  if (is.null(coefs) || length(coefs) == 0) {stop("No coefficients returned by penalized regression model")}
+
+  if (is.null(coefs) || length(coefs) == 0) {
+    stop("No coefficients returned by penalized regression model")
+  }
+
   return(coefs)
 }
 

@@ -4,10 +4,13 @@
 \alias{reboot_regression}
 \title{Penalized (LASSO) Cox regression core for REBOOT pipeline}
 \usage{
-reboot_regression(cmatrix)
+reboot_regression(cmatrix, seed = NULL)
 }
 \arguments{
 \item{cmatrix}{A data.frame with survival data and features.}
+
+\item{seed}{Integer or NULL. Random seed used for reproducible regression.
+If NULL, the current random-number-generator state is used.}
 }
 \value{
 Named numeric vector of regression coefficients.

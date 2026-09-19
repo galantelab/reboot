@@ -23,7 +23,9 @@ rebootComplete(
   saveJSON = FALSE,
   saveRDS = FALSE,
   report = FALSE,
-  log = FALSE
+  log = FALSE,
+  ncores = 1,
+  seed = 123
 )
 }
 \arguments{
@@ -70,6 +72,12 @@ in \code{rebootSurvival()} (Default: \code{0.2}).}
 \code{TRUE} or \code{"PDF"} to generate a PDF report, or \code{"HTML"} to generate an HTML report.}
 
 \item{log}{Logical. If \code{TRUE}, writes log files for both modules (Default: \code{FALSE}).}
+
+\item{ncores}{Integer. Number of CPU cores used for parallel bootstrap regression
+in \code{rebootRegression()} (Default: \code{1}).}
+
+\item{seed}{Integer. Random seed used for reproducible bootstrap regression
+in \code{rebootRegression()} (Default: \code{123}).}
 }
 \value{
 An S3 object of class \code{"reboot_complete"} containing:
@@ -113,7 +121,9 @@ result <- rebootComplete(
   saveJSON = TRUE,
   saveRDS = TRUE,
   report = TRUE,
-  log = TRUE
+  log = TRUE,
+  ncores = 4,
+  seed = 123
 )
 
 # Explore complete analysis results

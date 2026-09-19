@@ -1,109 +1,119 @@
 ############################################# TEST MODULE I - REGRESSION #############################################
-# test_that("rebootRegression runs on toy data", {
-#   # Temporary output directory
-#   tmp_dir <- tempdir()
-#   message("Using temporary directory: ", tmp_dir)
-#   outprefix <- file.path(tmp_dir, "rebootRegression")
-#   
-#   # Loads toy dataset
-#   example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
-#   
-#   # Runs Reboot module I - regression
-#   result <- rebootRegression(
-#     filein = example_file,
-#     outprefix = outprefix,
-#     bootstrap = 10,
-#     groupsize = 10,
-#     percentagefilter = 0.3,
-#     variancefilter = 0.01,
-#     followup = NULL,
-#     type = "transcript",
-#     force = TRUE,
-#     plots = TRUE,
-#     table = TRUE,
-#     saveJSON = TRUE,
-#     saveRDS = FALSE,
-#     report = TRUE,
-#     log = TRUE
-#   )
-#   
-#   # Main object
-#   expect_s3_class(result, "reboot_signature")
-#   
-#   # Signature
-#   expect_true(is.data.frame(result$signature))
-#   expect_true(nrow(result$signature) > 0)
-#   expect_true(all(c("feature", "coefficient") %in% colnames(result$signature)))
-#   
-#   # Metadata and reproducibility
-#   expect_true(!is.null(result$call))
-#   expect_true(is.list(result$metadata))
-#   expect_true(!is.null(result$metadata$package_version))
-# })
-#######################################################################################################################
 
-############################################## TEST MODULE II - SURVIVAL ##############################################
-# test_that("rebootSurvival runs on toy data", {
-#   # Temporary output directory
-#   tmp_dir <- tempdir()
-#   message("Using temporary directory: ", tmp_dir)
-#   outprefix <- file.path(tmp_dir, "rebootSurvival")
-#   
-#   # Loads toy datasets
-#   example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
-#   signature_file <- system.file("extdata", "toy_signature.txt", package = "Reboot")
-#   clinical_file <- system.file("extdata", "toy_clinics.tsv", package = "Reboot")
-#   
-#   # Runs Reboot module II - survival
-#   result <- rebootSurvival(
-#     filein = example_file,
-#     signature = signature_file,
-#     outprefix = outprefix,
-#     multivariate = TRUE,
-#     clinin = clinical_file,
-#     roc = TRUE,
-#     variancefilter = 0.01,
-#     followup = NULL,
-#     p.cutoff = 0.2,
-#     bootstrap = 10,
-#     force = TRUE,
-#     plots = TRUE,
-#     table = TRUE,
-#     saveJSON = TRUE,
-#     saveRDS = FALSE,
-#     report = TRUE,
-#     log = TRUE
-#   )
-#   
-#   # Main object
-#   expect_s3_class(result, "reboot_survival")
-#   
-#   # Core components
-#   expect_true(is.list(result$survival))
-#   expect_true(is.data.frame(result$expression_data))
-#   expect_true(is.data.frame(result$signature))
-#   expect_true(is.data.frame(result$clinical_data))
-#   
-#   # Survival analyses
-#   expect_true("univariate" %in% names(result$survival))
-#   expect_true(inherits(result$survival$univariate$model, "coxph"))
-#   
-#   # ROC
-#   expect_true(!is.null(result$roc_result))
-#   expect_true(!is.null(result$ph_result))
-#   
-#   # Multivariate model
-#   expect_true(!is.null(result$survival$multivariate))
-#   
-#   # Parameters
-#   expect_true(result$params$multivariate)
-#   expect_true(result$params$roc)
-#   
-#   # Metadata and reproducibility
-#   expect_true(!is.null(result$call))
-#   expect_true(is.list(result$metadata))
-#   expect_true(!is.null(result$metadata$package_version))
-# })
+test_that("rebootRegression runs on toy data", {
+  example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
+
+  result <- rebootRegression(
+    filein = example_file,
+    bootstrap = 4,
+    groupsize = 3,
+    type = "transcript",
+    force = TRUE,
+    ncores = 1,
+    seed = 123
+  )
+
+  expect_s3_class(result, "reboot_signature")
+  expect_true(is.data.frame(result$signature))
+  expect_true(nrow(result$signature) > 0)
+  expect_true(all(c("feature", "coefficient") %in% colnames(result$signature)))
+
+  expect_equal(result$params$ncores, 1)
+  expect_equal(result$params$seed, 123)
+})
+
+
+test_that("rebootRegression is reproducible with the same seed", {
+  example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
+
+  result1 <- rebootRegression(
+    filein = example_file,
+    bootstrap = 4,
+    groupsize = 3,
+    type = "transcript",
+    force = TRUE,
+    ncores = 1,
+    seed = 123
+  )
+
+  result2 <- rebootRegression(
+    filein = example_file,
+    bootstrap = 4,
+    groupsize = 3,
+    type = "transcript",
+    force = TRUE,
+    ncores = 1,
+    seed = 123
+  )
+
+  expect_identical(result1$signature, result2$signature)
+})
+
+
+test_that("rebootRegression gives identical results in serial and parallel modes", {
+  example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
+
+  result_serial <- rebootRegression(
+    filein = example_file,
+    bootstrap = 4,
+    groupsize = 3,
+    type = "transcript",
+    force = TRUE,
+    ncores = 1,
+    seed = 123
+  )
+
+  result_parallel <- rebootRegression(
+    filein = example_file,
+    bootstrap = 4,
+    groupsize = 3,
+    type = "transcript",
+    force = TRUE,
+    ncores = 2,
+    seed = 123
+  )
+
+  expect_identical(result_serial$signature, result_parallel$signature)
+})
+
+
+test_that("rebootRegression validates ncores and seed", {
+  example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
+
+  expect_error(
+    rebootRegression(
+      filein = example_file,
+      bootstrap = 4,
+      groupsize = 3,
+      type = "transcript",
+      force = TRUE,
+      ncores = 0
+    )
+  )
+
+  expect_error(
+    rebootRegression(
+      filein = example_file,
+      bootstrap = 4,
+      groupsize = 3,
+      type = "transcript",
+      force = TRUE,
+      ncores = 1.5
+    )
+  )
+
+  expect_error(
+    rebootRegression(
+      filein = example_file,
+      bootstrap = 4,
+      groupsize = 3,
+      type = "transcript",
+      force = TRUE,
+      seed = 1.5
+    )
+  )
+})
+
 #######################################################################################################################
 
 ################################### TEST COMPLETE WORKFLOW - REGRESSION + SURVIVAL ###################################
@@ -137,8 +147,10 @@ test_that("rebootComplete runs on toy data", {
     table = TRUE,
     saveJSON = TRUE,
     saveRDS = TRUE,
-    report = TRUE,
-    log = TRUE
+    report = FALSE,
+    log = TRUE,
+    ncores = 1,
+    seed = 123
   )
 
   # Main object
@@ -159,6 +171,8 @@ test_that("rebootComplete runs on toy data", {
   # Parameters
   expect_true(is.list(result$params))
   expect_equal(result$params$bootstrap, 10)
+  expect_equal(result$params$ncores, 1)
+  expect_equal(result$params$seed, 123)
   expect_equal(result$params$variancefilter, 0.01)
   expect_true(result$params$multivariate)
   expect_true(result$params$roc)

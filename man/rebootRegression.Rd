@@ -19,7 +19,9 @@ rebootRegression(
   saveJSON = FALSE,
   saveRDS = FALSE,
   report = FALSE,
-  log = FALSE
+  log = FALSE,
+  ncores = 1,
+  seed = 123
 )
 }
 \arguments{
@@ -69,6 +71,12 @@ This can also be done later using \code{write_reboot_rds()}.}
 This can also be done later using \code{write_reboot_report()}.}
 
 \item{log}{Logical. If \code{TRUE}, writes a minimalist log file tracking the pipeline execution (Default: \code{FALSE}).}
+
+\item{ncores}{Integer. Number of CPU cores used for parallel bootstrap regression
+(Default: \code{1}, i.e. sequential execution).}
+
+\item{seed}{Integer. Random seed used for reproducible bootstrap regression
+in \code{rebootRegression()} (Default: \code{123}).}
 }
 \value{
 An S3 object of class \code{"reboot_signature"} containing:
@@ -134,7 +142,9 @@ result <- rebootRegression(
   saveJSON = TRUE,
   saveRDS = TRUE,
   report = TRUE,
-  log = TRUE
+  log = TRUE,
+  ncores = 4,
+  seed = 123
 )
 
 # Access signature through custom REBOOT S3 methods

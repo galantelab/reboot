@@ -4,7 +4,7 @@
 \alias{reboot_regcall}
 \title{Regression call with timeout and retry logic}
 \usage{
-reboot_regcall(cmatrix, group_size, full_data)
+reboot_regcall(cmatrix, group_size, full_data, seed = NULL)
 }
 \arguments{
 \item{cmatrix}{A data.frame with survival data and features.}
@@ -12,6 +12,8 @@ reboot_regcall(cmatrix, group_size, full_data)
 \item{group_size}{Integer. Number of features used in subsampling.}
 
 \item{full_data}{Original full dataset used for resampling if needed.}
+
+\item{seed}{Integer or NULL. Random seed used for reproducible regression.}
 }
 \value{
 Named numeric vector of regression coefficients, or NULL if failure.

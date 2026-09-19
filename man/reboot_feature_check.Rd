@@ -3,14 +3,17 @@
 \name{reboot_feature_check}
 \alias{reboot_feature_check}
 \title{Feature count validation for REBOOT pipeline
-Substitutes the old numberfilter1() and numberfilter2() functions}
+Substitutes the old numberfilter1() and numberfilter2()}
 \usage{
-reboot_feature_check(dataf, g)
+reboot_feature_check(dataf, g, seed = NULL)
 }
 \arguments{
 \item{dataf}{A data.frame with survival data and features.}
 
 \item{g}{Integer. Group size.}
+
+\item{seed}{Integer or NULL. Random seed used for direct regression
+when the number of features is smaller than the group size.}
 }
 \value{
 NULL if pipeline should continue, or a data.frame signature.

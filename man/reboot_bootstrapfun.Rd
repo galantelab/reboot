@@ -9,7 +9,9 @@ reboot_bootstrapfun(
   n_boot,
   group_size,
   cor_threshold,
-  coef_threshold
+  coef_threshold,
+  ncores = 1,
+  seed = 123
 )
 }
 \arguments{
@@ -22,6 +24,12 @@ reboot_bootstrapfun(
 \item{cor_threshold}{Numeric. Correlation filter threshold.}
 
 \item{coef_threshold}{Numeric. Minimum absolute coefficient value to retain features.}
+
+\item{ncores}{Integer. Number of CPU cores used for parallel bootstrap
+regression (Default: \code{1}).}
+
+\item{seed}{Integer. Random seed used for reproducible bootstrap regression
+(Default: \code{123}).}
 }
 \value{
 A data.frame with the following signature columns:
