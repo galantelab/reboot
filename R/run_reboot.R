@@ -233,21 +233,40 @@ rebootRegression <- function(filein,
   }
   log_message("Done.")
 
-  # Validates ncores and seed parameters
+  # Validates ncores parameter
   if (!is.numeric(ncores) || length(ncores) != 1 ||
       !is.finite(ncores) || ncores < 1 || ncores %% 1 != 0)
   {
     log_stop("Argument 'ncores' must be a positive integer")
   }
 
+  ncores <- as.integer(ncores)
+
+  # Validates seed parameter
   if (!is.numeric(seed) || length(seed) != 1 ||
       !is.finite(seed) || seed %% 1 != 0)
   {
     log_stop("Argument 'seed' must be an integer")
   }
 
-  ncores <- as.integer(ncores)
   seed <- as.integer(seed)
+
+  # Snapshot the current global RNG state (if any) into old_seed,
+  # so it can be restored when rebootRegression() exits
+  old_seed <- if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+    get(".Random.seed", envir = .GlobalEnv)
+  } else {
+    NULL
+  }
+
+  # Restore the global RNG state previously saved
+  on.exit({
+    if (!is.null(old_seed)) {
+      assign(".Random.seed", old_seed, envir = .GlobalEnv)
+    } else if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+      rm(".Random.seed", envir = .GlobalEnv)
+    }
+  }, add = TRUE)
   
   # Reads INput
   log_message("Reading input expression/survival file...")

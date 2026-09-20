@@ -114,6 +114,47 @@ test_that("rebootRegression validates ncores and seed", {
   )
 })
 
+test_that("rebootRegression restores the global RNG state", {
+  example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
+
+  set.seed(42)
+  expected <- .Random.seed
+
+  rebootRegression(
+    filein = example_file,
+    bootstrap = 4,
+    groupsize = 3,
+    type = "transcript",
+    force = TRUE,
+    seed = 123,
+    ncores = 1
+  )
+
+  expect_identical(.Random.seed, expected)
+})
+
+test_that("rebootRegression restores absence of the global RNG state", {
+  example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
+
+  if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
+    rm(".Random.seed", envir = .GlobalEnv)
+  }
+
+  rebootRegression(
+    filein = example_file,
+    bootstrap = 4,
+    groupsize = 3,
+    type = "transcript",
+    force = TRUE,
+    seed = 123,
+    ncores = 1
+  )
+
+  expect_false(
+    exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)
+  )
+})
+
 #######################################################################################################################
 
 ################################### TEST COMPLETE WORKFLOW - REGRESSION + SURVIVAL ###################################
