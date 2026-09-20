@@ -2,9 +2,10 @@
 
 test_that("rebootRegression runs on toy data", {
   example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
+  example_data <- read_reboot_table(example_file, sep = "\t")
 
   result <- rebootRegression(
-    filein = example_file,
+    data = example_data,
     bootstrap = 4,
     groupsize = 3,
     type = "transcript",
@@ -25,9 +26,10 @@ test_that("rebootRegression runs on toy data", {
 
 test_that("rebootRegression is reproducible with the same seed", {
   example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
+  example_data <- read_reboot_table(example_file, sep = "\t")
 
   result1 <- rebootRegression(
-    filein = example_file,
+    data = example_data,
     bootstrap = 4,
     groupsize = 3,
     type = "transcript",
@@ -37,7 +39,7 @@ test_that("rebootRegression is reproducible with the same seed", {
   )
 
   result2 <- rebootRegression(
-    filein = example_file,
+    data = example_data,
     bootstrap = 4,
     groupsize = 3,
     type = "transcript",
@@ -52,9 +54,10 @@ test_that("rebootRegression is reproducible with the same seed", {
 
 test_that("rebootRegression gives identical results in serial and parallel modes", {
   example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
+  example_data <- read_reboot_table(example_file, sep = "\t")
 
   result_serial <- rebootRegression(
-    filein = example_file,
+    data = example_data,
     bootstrap = 4,
     groupsize = 3,
     type = "transcript",
@@ -64,7 +67,7 @@ test_that("rebootRegression gives identical results in serial and parallel modes
   )
 
   result_parallel <- rebootRegression(
-    filein = example_file,
+    data = example_data,
     bootstrap = 4,
     groupsize = 3,
     type = "transcript",
@@ -79,10 +82,11 @@ test_that("rebootRegression gives identical results in serial and parallel modes
 
 test_that("rebootRegression validates ncores and seed", {
   example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
+  example_data <- read_reboot_table(example_file, sep = "\t")
 
   expect_error(
     rebootRegression(
-      filein = example_file,
+      data = example_data,
       bootstrap = 4,
       groupsize = 3,
       type = "transcript",
@@ -93,7 +97,7 @@ test_that("rebootRegression validates ncores and seed", {
 
   expect_error(
     rebootRegression(
-      filein = example_file,
+      data = example_data,
       bootstrap = 4,
       groupsize = 3,
       type = "transcript",
@@ -104,7 +108,7 @@ test_that("rebootRegression validates ncores and seed", {
 
   expect_error(
     rebootRegression(
-      filein = example_file,
+      data = example_data,
       bootstrap = 4,
       groupsize = 3,
       type = "transcript",
@@ -116,12 +120,13 @@ test_that("rebootRegression validates ncores and seed", {
 
 test_that("rebootRegression restores the global RNG state", {
   example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
+  example_data <- read_reboot_table(example_file, sep = "\t")
 
   set.seed(42)
   expected <- .Random.seed
 
   rebootRegression(
-    filein = example_file,
+    data = example_data,
     bootstrap = 4,
     groupsize = 3,
     type = "transcript",
@@ -135,13 +140,14 @@ test_that("rebootRegression restores the global RNG state", {
 
 test_that("rebootRegression restores absence of the global RNG state", {
   example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
+  example_data <- read_reboot_table(example_file, sep = "\t")
 
   if (exists(".Random.seed", envir = .GlobalEnv, inherits = FALSE)) {
     rm(".Random.seed", envir = .GlobalEnv)
   }
 
   rebootRegression(
-    filein = example_file,
+    data = example_data,
     bootstrap = 4,
     groupsize = 3,
     type = "transcript",
@@ -168,10 +174,12 @@ test_that("rebootComplete runs on toy data", {
   # Loads toy datasets
   example_file <- system.file("extdata", "toy_expression.tsv", package = "Reboot")
   clinical_file <- system.file("extdata", "toy_clinics.tsv", package = "Reboot")
+  example_data <- read_reboot_table(example_file, sep = "\t")
+  clinical_data <- read_reboot_table(clinical_file, sep = "\t")
 
   # Runs Reboot modules I + II - regression + survival
   result <- rebootComplete(
-    filein = example_file,
+    data = example_data,
     outprefix = outprefix,
     bootstrap = 10,
     groupsize = 10,
@@ -180,7 +188,7 @@ test_that("rebootComplete runs on toy data", {
     followup = NULL,
     type = "transcript",
     multivariate = TRUE,
-    clinin = clinical_file,
+    clindata = clinical_data,
     roc = TRUE,
     p.cutoff = 0.2,
     force = TRUE,

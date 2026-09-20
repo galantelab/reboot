@@ -3,8 +3,8 @@
 #' @description
 #' Main function for finding a molecular signature using bootstrap resampling and penalized (LASSO) Cox regression.
 #'
-#' @param filein Character or data.frame. A data.frame or a path to a tab-separated file containing survival data
-#' (e.g., OS, OS.time) and expression values (genes or transcripts). Example: \code{"myPATH/myTPM.tsv"}.
+#' @param data Data.frame. A data.frame containing survival data
+#' (e.g., OS, OS.time) and expression values (genes or transcripts).
 #' @param outprefix Character. Output prefix used for generated files (Default: \code{"reboot"}).
 #' @param bootstrap Integer. Number of bootstrap iterations (Default: \code{1}).
 #' @param groupsize Integer. Number of genes/transcripts sampled per iteration (Default: \code{10}).
@@ -96,7 +96,7 @@
 #' \dontrun{
 #' # Example usage
 #' result <- rebootRegression(
-#'   filein = "expression_data.tsv",
+#'   data = expression_data,
 #'   outprefix = "my_analysis",
 #'   bootstrap = 100,
 #'   groupsize = 10,
@@ -147,7 +147,7 @@
 #' }
 #'
 #' @export
-rebootRegression <- function(filein,
+rebootRegression <- function(data,
                              outprefix = "reboot",
                              bootstrap = 1,
                              groupsize = 10,
@@ -190,11 +190,8 @@ rebootRegression <- function(filein,
     }
   }, add = TRUE)
   
-  # Handles 2 scenarios: (I) file PATH; (II) R data.frame
-  if (is.character(filein))
-  {
-    if (!file.exists(filein)) {log_stop("Input file does not exist: ", filein)}
-  } else if (!is.data.frame(filein)) {log_stop("'filein' must be either a valid file path or a data.frame")}
+  # Validate R data.frame
+  if (!is.data.frame(data)) {log_stop("'data' must be a data.frame")}
   
   # Validates input parameters
   if (!log) {log_message("REBOOT regression log started")}
@@ -269,8 +266,8 @@ rebootRegression <- function(filein,
   }, add = TRUE)
   
   # Reads INput
-  log_message("Reading input expression/survival file...")
-  if (is.character(filein)) {full_data <- read_reboot_table(filein, sep = "\t")} else {full_data <- filein}
+  log_message("Processing expression/survival data...")
+  full_data <- data
   colnames(full_data) <- gsub("-", "__", colnames(full_data))
   log_message("Done.")
   
@@ -415,7 +412,7 @@ rebootRegression <- function(filein,
       module = "rebootRegression",
       outprefix = outprefix,
       parameters = list(
-        filein = if (is.character(filein)) {filein} else {"data.frame"},
+        data = "data.frame",
         outprefix = outprefix,
         bootstrap = bootstrap,
         groupsize = groupsize,
@@ -477,8 +474,8 @@ rebootRegression <- function(filein,
 #' Applies a molecular signature to survival data, generating prognostic scores and performing
 #' survival analyses (univariate and, optionally, multivariate Cox regression).
 #'
-#' @param filein Character or data.frame. A data.frame or a path to a tab-separated file containing survival data
-#' (e.g., OS, OS.time) and expression values (genes or transcripts). Example: \code{"myPATH/myTPM.tsv"}.
+#' @param data Data.frame. A data.frame containing survival data
+#' (e.g., OS, OS.time) and expression values (genes or transcripts).
 #' @param signature A molecular signature. Can be:
 #'   \itemize{
 #'     \item An object of class \code{"reboot_signature"} from the \code{rebootRegression()} Reboot function (regression - module I)
@@ -487,9 +484,9 @@ rebootRegression <- function(filein,
 #'   }
 #' @param outprefix Character. Output prefix used for generated files (Default: \code{"reboot"}).
 #' @param multivariate Logical. If \code{TRUE}, performs multivariate survival analysis including clinical variables
-#'   present in \code{clinin} (Default: \code{FALSE}).
-#' @param clinin Character or data.frame. A data.frame or a path to a tab-separated file containing binary-categorized
-#' clinical data (e.g., Age, Gender, ...) (required if \code{multivariate = TRUE}). Example: \code{"myPATH/myClinics.tsv"}.
+#'   present in \code{clindata} (Default: \code{FALSE}).
+#' @param clindata Data.frame. A data.frame containing binary-categorized
+#' clinical data (e.g., Age, Gender, ...) (required if \code{multivariate = TRUE}).
 #' @param roc Logical. If \code{TRUE}, uses a ROC curve to define the score cutoff instead of median (Default: \code{FALSE}).
 #' @param variancefilter Numeric. Minimum normalized variance for follow-up time (0–1; Default: \code{0.01}).
 #' @param followup Numeric. Maximum followup time (Default: \code{NULL}).
@@ -593,11 +590,11 @@ rebootRegression <- function(filein,
 #' \dontrun{
 #' # Example usage
 #' result <- rebootSurvival(
-#'   filein = "expression_data.tsv",
+#'   data = expression_data,
 #'   signature = "signature_data.tsv",
 #'   outprefix = "my_analysis",
 #'   multivariate = TRUE,
-#'   clinin = "clinical_data.tsv",
+#'   clindata = clinical_data,
 #'   roc = TRUE,
 #'   variancefilter = 0.01,
 #'   followup = NULL,
@@ -663,11 +660,11 @@ rebootRegression <- function(filein,
 #' }
 #'
 #' @export
-rebootSurvival <- function(filein,
+rebootSurvival <- function(data,
                            signature,
                            outprefix = "reboot",
                            multivariate = FALSE,
-                           clinin = NULL,
+                           clindata = NULL,
                            roc = FALSE,
                            variancefilter = 0.01,
                            followup = NULL,
@@ -686,6 +683,7 @@ rebootSurvival <- function(filein,
   
   # Initializes specific multivariate objects
   multi_cox <- NULL
+  multi_cox_initial <- NULL
   multi_model <- NULL
   clin <- NULL
   
@@ -711,25 +709,20 @@ rebootSurvival <- function(filein,
     }
   }, add = TRUE)
   
-  # Handles 2 scenarios: (I) file PATH; (II) R data.frame
   if (!log) {log_message("REBOOT survival log started")}
-  log_message("Validating file parameters...")
-  if (is.character(filein))
-  {
-    if (!file.exists(filein)) {log_stop("Input file does not exist: ", filein)}
-  } else if (!is.data.frame(filein)) {log_stop("'filein' must be either a valid file path or a data.frame")}
+  log_message("Validating input parameters...")
+
+  # Validate R data.frame
+  if (!is.data.frame(data)) {log_stop("'data' must be a data.frame")}
   
-  # Validates file input parameters
+  # Validates input parameters
   if (!is.logical(multivariate) || length(multivariate) != 1) {log_stop("Argument 'multivariate' must be a boolean [TRUE or FALSE]")}
   
   # Validates clinical input for multivariate analysis
   if (multivariate)
   {
-    if (is.null(clinin)) {log_stop("'clinin' must be provided when 'multivariate = TRUE'")}
-    if (is.character(clinin))
-    {
-      if (!file.exists(clinin)) {log_stop("Clinical input file does not exist: ", clinin)}
-    } else if (!is.data.frame(clinin)) {log_stop("'clinin' must be either a valid file path or a data.frame")}
+    if (is.null(clindata)) {log_stop("'clindata' must be provided when 'multivariate = TRUE'")}
+    if (!is.data.frame(clindata)) {log_stop("'clindata' must be a data.frame")}
   }
   log_message("Done.")
   
@@ -800,8 +793,7 @@ rebootSurvival <- function(filein,
   log_message("Done.")
   
   # Loads INput with expression and survival data
-  log_message("Reading input expression/survival file...")
-  if (is.character(filein)) {data <- read_reboot_table(filein, sep = "\t")} else {data <- filein}
+  log_message("Processing expression/survival data...")
   colnames(data) <- gsub("-", "__", colnames(data))
   log_message("Done.")
   
@@ -852,7 +844,7 @@ rebootSurvival <- function(filein,
     }
   }
   
-  # Checks if all features in signature are present in the expression file
+  # Checks if all features in signature are present in the expression data
   log_message("Checking compatibility between expression/survival and signature files...")
   expr_features <- colnames(data)[-(1:2)]
   if (anyDuplicated(expr_features)) {log_stop("Duplicated features are not allowed in expression data")}
@@ -943,12 +935,12 @@ rebootSurvival <- function(filein,
     log_message("Running multivariate survival analysis...")
     
     # Reads clinical data
-    log_message("Reading input clinical file...")
-    if (is.character(clinin)) {clin <- read_reboot_table(clinin, sep = "\t")} else {clin <- clinin}
+    log_message("Preparing clinical data...")
+    clin <- clindata
     log_message("Done.")
     
     # Checks if all samples are present in both datasets
-    log_message("Checking compatibility between expression/survival and clinical files...")
+    log_message("Checking compatibility between expression/survival and clinical data...")
     if (!identical(sort(rownames(clin)), sort(rownames(data))))
     {
       miss_in_clin <- setdiff(rownames(data), rownames(clin))
@@ -968,7 +960,7 @@ rebootSurvival <- function(filein,
     clin <- cbind(data_surv, clin)
     
     # Validates if all clinical variables are binary categorical
-    log_message("Checking if all variables in clinical file are binary...")
+    log_message("Checking if all variables in clinical data are binary...")
     for (i in seq_len(ncol(clin))[-(1:4)])
     {
       if (nlevels(as.factor(clin[, i])) != 2)
@@ -1115,8 +1107,8 @@ rebootSurvival <- function(filein,
       module = "rebootSurvival",
       outprefix = outprefix,
       parameters = list(
-        filein = if (is.character(filein)) {filein} else {"data.frame"},
-        clinin = if (is.null(clinin)) {NULL} else if (is.character(clinin)) {clinin} else {"data.frame"},
+        data = "data.frame",
+        clindata = if (is.null(clindata)) {NULL} else {"data.frame"},
         signature = if (is.character(signature)) {signature} else {class(signature)[1]},
         outprefix = outprefix,
         multivariate = multivariate,
@@ -1179,7 +1171,7 @@ rebootSurvival <- function(filein,
 #'   \item \code{rebootSurvival()} (module 2)
 #' }
 #'
-#' @param filein Character or data.frame. A data.frame or a path to a tab-separated expression/survival file
+#' @param data Data.frame. A data.frame to expression/survival table.
 #' @param outprefix Character. Output prefix used for generated files (Default: \code{"reboot"}).
 #' @param bootstrap Integer. Number of bootstraps iterations used in both \code{rebootRegression()} and
 #' \code{rebootSurvival()} modules (Default: \code{1}).
@@ -1191,7 +1183,7 @@ rebootSurvival <- function(filein,
 #' @param type Character. Feature type: either \code{"gene"} (default) or \code{"transcript"} used in \code{rebootRegression()}.
 #' @param multivariate Logical. If \code{TRUE}, performs multivariate survival analysis
 #' in \code{rebootSurvival()} (Default: \code{FALSE}).
-#' @param clinin Character or data.frame. A data.frame or a path to a tab-separated clinical file used for multivariate analysis.
+#' @param clindata Data.frame. A data.frame to a clinical table used for multivariate analysis.
 #' @param roc Logical. If \code{TRUE}, uses ROC-based cutoff instead of median for scores
 #' in \code{rebootSurvival()} (Default: \code{FALSE}).
 #' @param p.cutoff Numeric. Univariate covariate filtering cutoff used for multivariate analysis
@@ -1232,7 +1224,7 @@ rebootSurvival <- function(filein,
 #' \dontrun{
 #' # Example usage
 #' result <- rebootComplete(
-#'   filein = "expression_data.tsv",
+#'   data = expression_data,
 #'   outprefix = "my_analysis",
 #'   bootstrap = 100,
 #'   groupsize = 10,
@@ -1241,7 +1233,7 @@ rebootSurvival <- function(filein,
 #'   followup = NULL,
 #'   type = "gene",
 #'   multivariate = TRUE,
-#'   clinin = "clinical_data.tsv",
+#'   clindata = clinical_data,
 #'   roc = TRUE,
 #'   p.cutoff = 0.2,
 #'   force = TRUE,
@@ -1271,7 +1263,7 @@ rebootSurvival <- function(filein,
 #' }
 #'
 #' @export
-rebootComplete <- function(filein,
+rebootComplete <- function(data,
                            outprefix = "reboot",
                            bootstrap = 1,
                            groupsize = 10,
@@ -1280,7 +1272,7 @@ rebootComplete <- function(filein,
                            followup = NULL,
                            type = "gene",
                            multivariate = FALSE,
-                           clinin = NULL,
+                           clindata = NULL,
                            roc = FALSE,
                            p.cutoff = 0.2,
                            force = FALSE,
@@ -1300,7 +1292,7 @@ rebootComplete <- function(filein,
   # Runs module 1 (regression)
   log_message("=============== REBOOT: module I - regression ===============")
   regression_result <- rebootRegression(
-    filein = filein,
+    data = data,
     outprefix = outprefix,
     bootstrap = bootstrap,
     groupsize = groupsize,
@@ -1323,11 +1315,11 @@ rebootComplete <- function(filein,
   # Runs module 2 (survival)
   log_message("=============== REBOOT: module II - survival ===============")
   survival_result <- rebootSurvival(
-    filein = filein,
+    data = data,
     signature = regression_result,
     outprefix = outprefix,
     multivariate = multivariate,
-    clinin = clinin,
+    clindata = clindata,
     roc = roc,
     variancefilter = variancefilter,
     followup = followup,
@@ -1356,7 +1348,7 @@ rebootComplete <- function(filein,
       followup = followup,
       type = type,
       multivariate = multivariate,
-      clinin = clinin,
+      clindata = clindata,
       roc = roc,
       p.cutoff = p.cutoff,
       force = force,
@@ -1379,8 +1371,8 @@ rebootComplete <- function(filein,
       module = "rebootComplete",
       outprefix = outprefix,
       parameters = list(
-        filein = if (is.character(filein)) {filein} else {"data.frame"},
-        clinin = if (is.null(clinin)) {NULL} else if (is.character(clinin)) {clinin} else {"data.frame"},
+        data = "data.frame",
+        clindata = if (is.null(clindata)) {NULL} else {"data.frame"},
         signature = "data.frame",
         outprefix = outprefix,
         multivariate = multivariate,

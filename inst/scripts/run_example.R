@@ -19,7 +19,7 @@ data("toy_clinics")
 ##### EXECUTES REBOOT #####
 # Runs REBOOT complete workflow --> modules I (regression) + II (survival)
 result_complete <- rebootComplete(
-  filein = toy_expression,
+  data = toy_expression,
   outprefix = "toy_testComplete",
   bootstrap = 10,
   groupsize = 10,
@@ -28,7 +28,7 @@ result_complete <- rebootComplete(
   followup = NULL,
   type = "transcript",
   multivariate = T,
-  clinin = toy_clinics,
+  clindata = toy_clinics,
   roc = T,
   p.cutoff = 0.2,
   force = T,
@@ -92,7 +92,7 @@ write_reboot_multivariate(result_complete$survival, "extra_toy_testComplete_mult
 
 # Exports metadata manually for reproducibility
 write_reboot_metadata(module = "rebootComplete", outprefix = "extra_toy_testComplete", command = "none",
-                      parameters = list(filein = "data.frame", clinin = "data.frame", signature = "data.frame",
+                      parameters = list(data = "data.frame", clindata = "data.frame", signature = "data.frame",
                                         outprefix = "extra_toy_testComplete", multivariate = T, roc = T, groupsize = 10,
                                         percentagefilter = 0.3, variancefilter = 0.01, followup = NULL, p.cutoff = 0.2,
                                         bootstrap = 10, type = "transcript", force = T, plots = T,
