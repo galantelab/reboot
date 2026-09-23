@@ -438,9 +438,11 @@ if (args$sub_name == "survival") {
     NULL
   }
 
+  signature <- read_reboot_table(args$sig, sep = "\t", row.names = FALSE)
+
   rebootSurvival(
     data = data,
-    signature = args$sig,
+    signature = signature,
     outprefix = args$out,
     multivariate = args$multi,
     clindata = clindata,
