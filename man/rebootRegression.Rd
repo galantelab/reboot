@@ -5,7 +5,7 @@
 \title{Run REBOOT pipeline - module 1 (regression)}
 \usage{
 rebootRegression(
-  filein,
+  data,
   outprefix = "reboot",
   bootstrap = 1,
   groupsize = 10,
@@ -25,8 +25,8 @@ rebootRegression(
 )
 }
 \arguments{
-\item{filein}{Character or data.frame. A data.frame or a path to a tab-separated file containing survival data
-(e.g., OS, OS.time) and expression values (genes or transcripts). Example: \code{"myPATH/myTPM.tsv"}.}
+\item{data}{Data.frame. A data.frame containing survival data
+(e.g., OS, OS.time) and expression values (genes or transcripts).}
 
 \item{outprefix}{Character. Output prefix used for generated files (Default: \code{"reboot"}).}
 
@@ -128,7 +128,7 @@ Keeping \code{force = FALSE} parameter is recommended, especially if other endpo
 \dontrun{
 # Example usage
 result <- rebootRegression(
-  filein = "expression_data.tsv",
+  data = expression_data,
   outprefix = "my_analysis",
   bootstrap = 100,
   groupsize = 10,

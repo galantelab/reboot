@@ -5,7 +5,7 @@
 \title{Run REBOOT complete pipeline}
 \usage{
 rebootComplete(
-  filein,
+  data,
   outprefix = "reboot",
   bootstrap = 1,
   groupsize = 10,
@@ -14,7 +14,7 @@ rebootComplete(
   followup = NULL,
   type = "gene",
   multivariate = FALSE,
-  clinin = NULL,
+  clindata = NULL,
   roc = FALSE,
   p.cutoff = 0.2,
   force = FALSE,
@@ -29,7 +29,7 @@ rebootComplete(
 )
 }
 \arguments{
-\item{filein}{Character or data.frame. A data.frame or a path to a tab-separated expression/survival file}
+\item{data}{Data.frame. A data.frame to expression/survival table.}
 
 \item{outprefix}{Character. Output prefix used for generated files (Default: \code{"reboot"}).}
 
@@ -50,7 +50,7 @@ and \code{rebootSurvival()} modules (Default: \code{0.01}).}
 \item{multivariate}{Logical. If \code{TRUE}, performs multivariate survival analysis
 in \code{rebootSurvival()} (Default: \code{FALSE}).}
 
-\item{clinin}{Character or data.frame. A data.frame or a path to a tab-separated clinical file used for multivariate analysis.}
+\item{clindata}{Data.frame. A data.frame to a clinical table used for multivariate analysis.}
 
 \item{roc}{Logical. If \code{TRUE}, uses ROC-based cutoff instead of median for scores
 in \code{rebootSurvival()} (Default: \code{FALSE}).}
@@ -103,7 +103,7 @@ The molecular signature generated during the regression step is automatically pa
 \dontrun{
 # Example usage
 result <- rebootComplete(
-  filein = "expression_data.tsv",
+  data = expression_data,
   outprefix = "my_analysis",
   bootstrap = 100,
   groupsize = 10,
@@ -112,7 +112,7 @@ result <- rebootComplete(
   followup = NULL,
   type = "gene",
   multivariate = TRUE,
-  clinin = "clinical_data.tsv",
+  clindata = clinical_data,
   roc = TRUE,
   p.cutoff = 0.2,
   force = TRUE,
