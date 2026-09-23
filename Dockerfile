@@ -1,4 +1,6 @@
-FROM rocker/r-ver:4.4.0
+FROM rocker/r-ver:4.6.1
+
+ENV OPENBLAS_NUM_THREADS=1
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
