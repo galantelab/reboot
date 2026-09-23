@@ -11,7 +11,7 @@ COPY . /app
 RUN R -e "install.packages('remotes')" \
     && R -e "remotes::install_local('.', upgrade = 'never', dependencies = TRUE)"
 
-RUN chmod +x /app/inst/exec/Reboot.R \
-    && ln -s /app/inst/exec/Reboot.R /usr/local/bin/Reboot.R
+RUN chmod +x /app/inst/scripts/Reboot.R \
+    && ln -s /app/inst/scripts/Reboot.R /usr/local/bin/Reboot.R
 
 CMD ["Reboot.R"]
